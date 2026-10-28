@@ -1,0 +1,34 @@
+AppType=StandardJava
+Build1=Default,b4j.pakaiui
+Group=PakaiUI
+Library1=b4xcollections
+Library2=jcore
+Library3=json
+Library4=minihtml
+Module1=PUI
+NumberOfFiles=0
+NumberOfLibraries=4
+NumberOfModules=1
+Version=10.7
+@EndOfDesignText@
+' PakaiUI library project
+' Version: 0.10 (M0 proof of concept)
+' License: MIT
+' HTML foundation: MiniHTML 4.02
+#Region Project Attributes
+	#CommandLineArgs:
+	#MergeLibraries: True
+#End Region
+
+Sub Process_Globals
+
+End Sub
+
+' Smoke test entry point. The distributed PakaiUI.b4xlib contains only PUI.bas,
+' manifest.txt and LICENSE (see build_b4xlib.bat).
+Sub AppStart (Args() As String)
+	Dim options As PUIButtonOptions = PUI.NewButtonOptions("PakaiUI")
+	options.Variant = PUI.VariantPrimary
+	Log("PakaiUI v" & PUI.VERSION & " smoke test:")
+	Log(PUI.Button(options).build)
+End Sub

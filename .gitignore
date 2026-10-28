@@ -10,4 +10,7 @@ demo/logs/
 source/Objects/
 source/AutoBackups/
 source/logs/
+tests/*/Objects/
+tests/*/AutoBackups/
+tests/*/logs/
 *.b4j.meta

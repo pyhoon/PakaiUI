@@ -1,0 +1,156 @@
+AppType=StandardJava
+Build1=Default,b4j.pakaiui.m0
+Group=PakaiUI
+Library1=b4xcollections
+Library2=javaobject
+Library3=jcore
+Library4=json
+Library5=minihtml
+Library6=pakaiui
+NumberOfFiles=0
+NumberOfLibraries=6
+NumberOfModules=0
+Version=10.7
+@EndOfDesignText@
+' PakaiUI M0 proof of concept
+' Version: 0.10
+' Renders a Card that contains a Button through MiniHTML, then verifies the
+' safety and composition contract. Console (non-UI) application.
+#Region Project Attributes
+	#CommandLineArgs:
+	#MergeLibraries: True
+#End Region
+
+Sub Process_Globals
+	Private mPassed As Int
+	Private mFailed As Int
+End Sub
+
+Sub AppStart (Args() As String)
+	Dim hostileText As String = "<script>alert(" & QUOTE & "x" & QUOTE & ")</script> & 'y'"
+	Dim hostileId As String = "x" & QUOTE & " onmouseover=" & QUOTE & "alert(1)"
+
+	' --- Component composition: Card containing a Button -------------------
+	Dim cardOptions As PUICardOptions = PUI.NewCardOptions("Welcome", "Body text with <b>markup</b> & 'quotes'")
+	cardOptions.Subtitle = "M0 proof of concept"
+	cardOptions.Id = "m0-card"
+	Dim card1 As MiniHtml = PUI.Card(cardOptions)
+	Dim cardBody As MiniHtml = card1.ChildByClass("card-body")
+	Check("Card exposes a card-body slot", cardBody <> Null)
+
+	Dim buttonOptions As PUIButtonOptions = PUI.NewButtonOptions(hostileText)
+	buttonOptions.Variant = PUI.VariantDanger
+	buttonOptions.Id = hostileId
+	If cardBody <> Null Then cardBody.down(PUI.Button(buttonOptions))
+
+	Dim html As String = card1.build
+
+	' --- Escaping ----------------------------------------------------------
+	Check("No unescaped script tag", html.IndexOf("<script") = -1)
+	Check("Button text escaped", html.Contains("&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; &#39;y&#39;"))
+	Check("Card body text escaped", html.Contains("Body text with &lt;b&gt;markup&lt;/b&gt; &amp; &#39;quotes&#39;"))
+	Check("Hostile id stays one escaped attribute", html.Contains("id=" & QUOTE & "x&quot; onmouseover=&quot;alert(1)" & QUOTE))
+	Check("Button variant class present", html.Contains("btn btn-danger"))
+
+	' --- Parse the rendered HTML back --------------------------------------
+	Dim root As MiniHtml = PUI.RawHtml("").parse(html)
+	Check("Rendered HTML parses", root <> Null)
+	If root <> Null Then
+		Dim hostileButton As MiniHtml = root.ChildByClass("btn-danger")
+		Check("Parsed button found", hostileButton <> Null)
+		If hostileButton <> Null Then
+			Dim attributes As Map = hostileButton.GetAttributes
+			Check("No onmouseover attribute injected", attributes.ContainsKey("onmouseover") = False)
+			' The parser keeps entity-escaped source intact, so the id must still be escaped.
+			Check("Id attribute escaped and intact", PUI.EscapeHtml(hostileId) = attributes.Get("id"))
+		End If
+	End If
+
+	' --- Link-style button -------------------------------------------------
+	Dim linkOptions As PUIButtonOptions = PUI.NewButtonOptions("Docs")
+	linkOptions.Href = "https://example.com/a?x=1&y=2"
+	linkOptions.Variant = PUI.VariantOutlinePrimary
+	Dim link1 As MiniHtml = PUI.Button(linkOptions)
+	Check("Href renders an anchor", link1.getName = "a")
+	Check("Href scheme allowed", link1.GetAttributes.ContainsKey("href"))
+	Check("Href value escaped", "https://example.com/a?x=1&amp;y=2" = link1.GetAttributes.Get("href"))
+	Check("Outline variant class present", link1.build.Contains("btn btn-outline-primary"))
+
+	' --- Rejected URL scheme ----------------------------------------------
+	Dim unsafeOptions As PUIButtonOptions = PUI.NewButtonOptions("Unsafe")
+	unsafeOptions.Href = "javascript:alert(1)"
+	Dim unsafeLink As MiniHtml = PUI.Button(unsafeOptions)
+	Check("Unsafe href rejected", unsafeLink.GetAttributes.ContainsKey("href") = False)
+	Check("Safe https URL accepted", PUI.IsSafeUrl("https://example.com"))
+	Check("Safe relative URL accepted", PUI.IsSafeUrl("/products/1"))
+	Check("Unsafe javascript URL rejected", PUI.IsSafeUrl("javascript:alert(1)") = False)
+	Check("Unsafe data URL rejected", PUI.IsSafeUrl("data:text/html;base64,eA==") = False)
+
+	' --- State attributes --------------------------------------------------
+	Dim disabledOptions As PUIButtonOptions = PUI.NewButtonOptions("Disabled")
+	disabledOptions.Disabled = True
+	Dim disabledButton As MiniHtml = PUI.Button(disabledOptions)
+	Check("Disabled emits disabled attribute", disabledButton.GetAttributes.ContainsKey("disabled"))
+	Check("Disabled stays a button", disabledButton.getName = "button")
+
+	Dim hiddenOptions As PUIButtonOptions = PUI.NewButtonOptions("Hidden")
+	hiddenOptions.Hidden = True
+	Dim hiddenButton As MiniHtml = PUI.Button(hiddenOptions)
+	Check("Hidden emits hidden attribute", hiddenButton.GetAttributes.ContainsKey("hidden"))
+
+	Dim submitOptions As PUIButtonOptions = PUI.NewButtonOptions("Save")
+	submitOptions.ButtonType = "submit"
+	Check("Submit type preserved", "submit" = PUI.Button(submitOptions).GetAttributes.Get("type"))
+
+	' --- Explicit raw HTML and text helpers --------------------------------
+	Check("RawHtml is exact", PUI.RawHtml("<strong>raw</strong>").build = "<strong>raw</strong>")
+	Check("EscapeHtml covers five characters", "&lt;&gt;&amp;&quot;&#39;" = PUI.EscapeHtml("<>&" & QUOTE & "'"))
+
+	Dim addTextTarget As MiniHtml = PUI.CardBody
+	PUI.AddText(addTextTarget, "<script>")
+	Check("AddText escapes", addTextTarget.build.Contains("&lt;script&gt;"))
+
+	Dim addHtmlTarget As MiniHtml = PUI.CardBody
+	PUI.AddHtml(addHtmlTarget, "<em>trusted</em>")
+	Check("AddHtml is explicit", addHtmlTarget.build.Contains("<em>trusted</em>"))
+
+	' --- Part-factory composition ------------------------------------------
+	Dim manualCard As MiniHtml
+	manualCard.Initialize("div")
+	manualCard.cls("card")
+	Dim manualBody As MiniHtml = PUI.CardBody
+	manualBody.up(manualCard)
+	Dim manualButtonOptions As PUIButtonOptions = PUI.NewButtonOptions("Compose")
+	manualButtonOptions.Variant = PUI.VariantSuccess
+	manualBody.down(PUI.Button(manualButtonOptions))
+	Dim manualSlot As MiniHtml = manualCard.ChildByClass("card-body")
+	If manualSlot <> Null Then
+		Check("Part factories compose", manualSlot.ChildByClass("btn-success") <> Null)
+	Else
+		Check("Part factories compose", False)
+	End If
+
+	' --- Output ------------------------------------------------------------
+	File.WriteString("Objects", "m0-output.html", html)
+	Log("")
+	Log($"M0 PoC: ${mPassed} passed, ${mFailed} failed"$)
+	Log("Output written to: " & File.Combine("Objects", "m0-output.html"))
+
+	Dim system As JavaObject
+	system.InitializeStatic("java.lang.System")
+	If mFailed > 0 Then
+		system.RunMethod("exit", Array(1))
+	Else
+		system.RunMethod("exit", Array(0))
+	End If
+End Sub
+
+Private Sub Check (Name As String, Condition As Boolean)
+	If Condition Then
+		mPassed = mPassed + 1
+		Log("PASS " & Name)
+	Else
+		mFailed = mFailed + 1
+		Log("FAIL " & Name)
+	End If
+End Sub
