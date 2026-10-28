@@ -103,8 +103,9 @@ cd C:\Projects\PakaiUI\tests\m0-poc
 ```
 
 Expected: 28 `PASS` lines, `M0 PoC: 28 passed, 0 failed`, exit code 0. The rendered page is written to
-`tests/m0-poc/Objects/m0-output.html`. The `PakaiUI: rejected unsafe button URL` line is an expected
-stderr message from the negative URL test.
+`File.DirApp`: `Objects\m0-output.html` when run from the B4J IDE, or the current directory when the jar is
+launched from a terminal. The `PakaiUI: rejected unsafe button URL` line is an expected stderr message from
+the negative URL test.
 
 **Always rebuild the `.b4xlib` and reinstall it before testing a consumer project.** The PoC compiles
 `PUI.bas` from the installed library, not from `source/` directly.
@@ -199,6 +200,11 @@ MiniHTML; handle them in `PUI`.
   not call `MH`; `PUI` only uses the `MiniHtml` class.
 - B4X converts `Null` assigned to a `String` into the literal text `"null"`. Normalise application data
   (Map, JSON, database) before assigning it to option fields; PakaiUI cannot tell `"null"` from real text.
+- `File.DirApp` is the `Objects` folder when a project runs from the B4J IDE, but the current directory when
+  a jar is launched from a terminal. Write runtime output to `File.DirApp`, never to a hard-coded
+  `Objects` path.
+- The B4J IDE saves project and module files with a UTF-8 BOM and may re-save them on open. BOM-only diffs
+  are expected and harmless.
 
 ## 7. Testing rules
 

@@ -25,8 +25,8 @@ executed is labelled as a plan or an open question.
 | Installed EndsMeet | **4.03** | `manifest.txt` inside `C:\B4X\Additional\B4J\EndsMeet.b4xlib` |
 | Pakai Server demo pin | EndsMeet **4.02**, MiniHTML **4.02**, MiniJS **0.60**, MiniCSS **0.40**, MiniORMUtils **6.04**, WebApiUtils **7.00** | `demo/libs.json` |
 | Demo template | Pakai Server Web Demo `6.99 rev4` | `demo/demo.b4j` lines 40-43 |
-| PakaiUI b4xlib SHA-256 | `1E841EAC48F0A50FD58E382EA8E108172D36795A92047198D90BE60E1FD44AFF` | `Get-FileHash` |
-| `PUI.bas` SHA-256 | `5E1F44F219134AD2B05F102FB5DAFDBD5E17E4C4A93B9476529D42CCA818EDA6` | `Get-FileHash` |
+| PakaiUI b4xlib SHA-256 | `84E1BB446A16905E2F6304CC50A80116B00274B902CD9F86FD413BB7F8F5A974` | `Get-FileHash` |
+| `PUI.bas` SHA-256 | `C7E5CAFBA61ADB9B0D7F86642D0B8A3ABBF63FD48EA0E4BC4CC659A4AEFEBA95` | `Get-FileHash` |
 
 **Dependency drift found:** the demo pins EndsMeet 4.02 but 4.03 is installed. PakaiUI does not depend on
 EndsMeet, so this does not affect M0, but Pin-and-verify must be part of the M5 compatibility matrix.

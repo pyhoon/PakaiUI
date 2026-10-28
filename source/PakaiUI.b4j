@@ -1,4 +1,4 @@
-AppType=StandardJava
+﻿AppType=StandardJava
 Build1=Default,b4j.pakaiui
 Group=PakaiUI
 Library1=b4xcollections

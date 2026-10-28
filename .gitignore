@@ -13,4 +13,5 @@ source/logs/
 tests/*/Objects/
 tests/*/AutoBackups/
 tests/*/logs/
+tests/*/m0-output.html
 *.b4j.meta

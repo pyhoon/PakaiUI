@@ -1,4 +1,4 @@
-AppType=StandardJava
+﻿AppType=StandardJava
 Build1=Default,b4j.pakaiui.m0
 Group=PakaiUI
 Library1=b4xcollections
@@ -131,10 +131,11 @@ Sub AppStart (Args() As String)
 	End If
 
 	' --- Output ------------------------------------------------------------
-	File.WriteString("Objects", "m0-output.html", html)
+	' File.DirApp is Objects in the B4J IDE and the current directory when a jar is launched.
+	File.WriteString(File.DirApp, "m0-output.html", html)
 	Log("")
 	Log($"M0 PoC: ${mPassed} passed, ${mFailed} failed"$)
-	Log("Output written to: " & File.Combine("Objects", "m0-output.html"))
+	Log("Output written to: " & File.Combine(File.DirApp, "m0-output.html"))
 
 	Dim system As JavaObject
 	system.InitializeStatic("java.lang.System")
