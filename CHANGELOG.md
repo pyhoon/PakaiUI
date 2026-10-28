@@ -34,7 +34,9 @@ APIs may change, and breaking changes are documented explicitly.
 
 ### Verified
 
-- Library and PoC compile with B4J 10.7 / JDK 19 (`B4JBuilder`), with no warnings reported.
+- Library and PoC compile with B4J 10.7 / JDK 19 (`B4JBuilder`).
+- The CLI does not print IDE warning numbers; warning compliance (#19/#35/#9/#12) was audited by pattern
+  and recorded in `docs/M0-RECONNAISSANCE.md`.
 - PoC result: 28 passed, 0 failed, exit code 0.
 - Local Bootstrap 5.3.8 and HTMX 2.0.8 assets serve byte-identically over HTTP without Node.js.
 

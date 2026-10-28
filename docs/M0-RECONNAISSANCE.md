@@ -381,7 +381,7 @@ reference `source/PUI.bas`.
 
 ```text
 cd C:\Projects\PakaiUI\source
-B4JBuilder -Task=Build -Project="PakaiUI.b4j" -ShowWarnings=True
+B4JBuilder -Task=Build -Project="PakaiUI.b4j" -NoClean=True -ShowWarnings=True
   B4JBuilder v10.70
   Global Java version: 19
   Compiling code.
@@ -389,7 +389,6 @@ B4JBuilder -Task=Build -Project="PakaiUI.b4j" -ShowWarnings=True
   Building jar file.
   Jar file created: C:\Projects\PakaiUI\source\Objects\PakaiUI.jar
   Completed successfully (about 2 seconds)
-  (no warnings)
 ```
 
 ```text
@@ -399,9 +398,8 @@ cmd /c build_b4xlib.bat
 
 ```text
 cd C:\Projects\PakaiUI\tests\m0-poc
-B4JBuilder -Task=Build -Project="M0PoC.b4j" -ShowWarnings=True
+B4JBuilder -Task=Build -Project="M0PoC.b4j" -NoClean=True -ShowWarnings=True
   Completed successfully (about 2 seconds)
-  (no warnings)
 java -jar Objects\M0PoC.jar
   M0 PoC: 28 passed, 0 failed
   exit code 0
@@ -409,6 +407,21 @@ java -jar Objects\M0PoC.jar
 
 `B4JBuilder -BaseFolder` did not affect project resolution; running from the project folder is required.
 This is documented in `AGENT.md`.
+
+### Warning audit (manual)
+
+The command-line builder does **not** print the B4J IDE's warning numbers, even with
+`-ShowWarnings=True`. A deliberately bad `Object` comparison still builds silently (verified by the project
+owner). The absence of warning lines in the output above is therefore not evidence; the code was audited
+by pattern against the three project rules:
+
+| Rule | Audit result |
+| --- | --- |
+| #19 empty `Catch` | `PUI.bas` and `M0PoC.b4j` contain no `Try`/`Catch` blocks, so none can be empty. Future code must log `LastException.Message`. |
+| #35 `Object` on the right | The PoC has three `Object` comparisons and all put the object on the right: `hostileId = attributes.Get("id")`, `"https://example.com/a?x=1&amp;y=2" = link1.GetAttributes.Get("href")`, `"submit" = ...GetAttributes.Get("type")`. `PUI.bas` only compares class references to `Null` (`options1 = Null`, `Parent = Null`), which is a null guard, not an `Object`-vs-value comparison. |
+| #9 unused variable / #12 unused sub | Every local and private sub in `PUI.bas` and `M0PoC.b4j` is referenced; `PUI` exports public API deliberately. |
+
+Opening both projects in the B4J IDE remains the authoritative warning check.
 
 ### Assertions executed (28)
 

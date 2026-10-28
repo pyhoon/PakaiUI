@@ -53,18 +53,35 @@ demo/                        Pakai Server Web 6.99 starter (reference; not a Pak
 
 ## 3. Build, package and test commands (verified)
 
-B4JBuilder resolves `-Project` against the **current directory** (its `-BaseFolder` argument does not
-change project resolution), so always run it from the project folder.
+B4JBuilder resolves `-Project` against the **current directory** (its `-BaseFolder` argument has an open
+issue upstream), so always run it from the project folder. If the folder contains exactly one `.b4j` file,
+`-Project` can be omitted and the builder selects it. Running `B4JBuilder.exe` with no arguments prints its
+supported parameters; v10.70 reports `-Task` (`Build` default, `BuildLibrary`), `-BaseFolder`, `-Project`,
+`-Obfuscate`, `-ShowWarnings`, `-Configuration`, `-NoClean` and `-Output`.
+
+Use `-NoClean=True` when a project has user-managed runtime files under `Objects/` (SQLite databases, local
+configuration). Never delete or overwrite those as part of a build. Preserve the builder output and exit
+status; a build is successful only if the process exits successfully.
+
+The `java` on `PATH` is Java 8 and cannot load the Java 19 class files produced by the builder. Always run
+jars with `C:\Java\jdk-19.0.2\bin\java.exe` (or the B4J IDE's Run command).
+
+The command-line builder does **not** print the B4J IDE's warning numbers, even with `-ShowWarnings=True`:
+a deliberately bad `Object` comparison still builds silently. `-ShowWarnings=True` is therefore not proof
+that warnings are absent. Audit the warning rules in section 5 by pattern, and use the IDE when available.
+
+Builder reference: [B4ABuilder / B4JBuilder command-line compilation](https://www.b4x.com/android/forum/threads/b4abuilder-b4jbuilder-command-line-compilation.50154/).
 
 ### Compile and run the library smoke test
 
 ```powershell
 cd C:\Projects\PakaiUI\source
-& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="PakaiUI.b4j" -ShowWarnings=True
+& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="PakaiUI.b4j" -NoClean=True -ShowWarnings=True
 & "C:\Java\jdk-19.0.2\bin\java.exe" -jar Objects\PakaiUI.jar
 ```
 
-Expected: `Completed successfully`, no warnings, and one rendered `<button>` line.
+Expected: `Completed successfully` and one rendered `<button>` line. Warning compliance is audited
+manually, not inferred from this output.
 
 ### Package and install the `.b4xlib`
 
@@ -81,7 +98,7 @@ MiniHTML uses). Use `%JAVABIN%` to override the JDK path.
 
 ```powershell
 cd C:\Projects\PakaiUI\tests\m0-poc
-& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="M0PoC.b4j" -ShowWarnings=True
+& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="M0PoC.b4j" -NoClean=True -ShowWarnings=True
 & "C:\Java\jdk-19.0.2\bin\java.exe" -jar Objects\M0PoC.jar
 ```
 
@@ -91,6 +108,13 @@ stderr message from the negative URL test.
 
 **Always rebuild the `.b4xlib` and reinstall it before testing a consumer project.** The PoC compiles
 `PUI.bas` from the installed library, not from `source/` directly.
+
+### Dependencies
+
+The builder resolves `#AdditionalJar` names from `C:\Program Files\B4X\B4J\libraries`, while `.b4xlib`
+libraries are resolved from `C:\B4X\Additional`. Ensure every `libs.json` dependency is installed before
+treating a missing-jar build failure as a source error, and keep versions consistent between `libs.json`
+and any `#AdditionalJar` declarations.
 
 ## 4. Architecture rules (non-negotiable)
 
@@ -114,7 +138,8 @@ stderr message from the negative URL test.
 
 ## 5. B4J IDE code smells to avoid (mandatory review checklist)
 
-These warnings must not be introduced. Verify with `-ShowWarnings=True`.
+These warnings must not be introduced. The command-line builder does not surface them, so audit by
+pattern during review (and use the B4J IDE when available).
 
 ### 5.1 Never leave an empty `Catch` block (warning #19)
 
@@ -126,12 +151,19 @@ Catch
 End Try
 ```
 
+Do the same in cleanup helpers such as `CloseQuietly` and defensive `Db.Close` calls: either log
+`LastException.Message` or deliberately set a safe fallback value.
+
 ### 5.2 Put an `Object` on the right side of a comparison (warning #35)
 
-Comparison of `Object` with other types fails when the exact types do not match.
+Comparison of `Object` with other types fails when the exact types do not match. Apply this to any
+expression typed `As Object` (including `Map.Get`):
 
 ```b4j
 If 1 = Index.Get("unique") Then UniqueLabel = " · unique"
+If False = KeyResult.Get("ok") Then
+If 0 < Column.Get("pk") Then
+If ColumnName = Column.Get("name") Then
 ```
 
 Not:
@@ -139,6 +171,9 @@ Not:
 ```b4j
 If Index.Get("unique") = 1 Then UniqueLabel = " · unique"
 ```
+
+Comparing a class reference to `Null` (`If options1 = Null Then`) is a null guard, not an
+`Object`-versus-value comparison, and is allowed.
 
 ### 5.3 No unused variables or subs
 
