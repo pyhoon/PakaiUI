@@ -1,0 +1,11 @@
+{
+    "Libraries": [
+        {
+            "Name": "EndsMeet.b4xlib",
+            "Platform": "B4J",
+            "Version": 3.01,
+            "Link": "https://github.com/pyhoon/EndsMeet/releases/download/v3.01/EndsMeet.b4xlib",
+            "Update": "https://github.com/pyhoon/EndsMeet/releases/download/v3.01/update.json"
+        }
+    ]
+}

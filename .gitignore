@@ -1,4 +1,10 @@
-demo/Objects/
+demo/Objects/b4xlibs
+demo/Objects/bin
+demo/Objects/logs
+demo/Objects/shell
+demo/Objects/src
+demo/Objects/*.ini
+demo/Objects/*db*
 demo/AutoBackups/
 demo/logs/
 source/Objects/

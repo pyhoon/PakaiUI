@@ -1,0 +1,65 @@
+﻿AppType=StandardJava
+Build1=Default,com.puterise
+Group=App
+Library1=b4xcollections
+Library2=endsmeet
+Library3=jcore
+Library4=json
+Library5=minijs
+Library6=minihtml
+Module1=Boilerplate
+Module2=Cache
+Module3=Helper
+Module4=Index
+Module5=MainView
+Module6=MC
+Module7=MH
+Module8=MiniHtml
+Module9=MiniHtmlParser
+NumberOfFiles=0
+NumberOfLibraries=6
+NumberOfModules=9
+Version=10.7
+@EndOfDesignText@
+'Product: MiniHtml
+'Version: 4.02
+'License: MIT License
+'Developer: Poon Yip Hoon (Aeric)
+#Region Project Attributes
+#CommandLineArgs:
+#MergeLibraries: True
+#End Region
+#Region Macros
+'#Macro: Title, Export State, ide://run?File=%B4X%\CodeBundle.jar&Args=%STATE1%&autosave=True
+'Step 1
+#Macro: Title, Create Templates, ide://run?File=%PROJECT%\create_excluded.bat&Args=..\MainView.bas
+'Step 2
+#Macro: Title, Create Snippets, ide://run?File=%PROJECT%\create_snippets_with_checking.bat&Args=..\Cache.bas&Args=..\Helper.bas&Args=..\Handler.bas&Args=..\Model.bas&Args=..\View.bas&Args=..\Boilerplate.bas
+'Step 3
+#Macro: Title, Update Manifest, ide://run?File=%ADDITIONAL%\manifest-writer.jar&Args=%PROJECT%&Args=%PROJECT%&Args=Author&Args=Aeric+Poon&Args=Version&Args=4.02&Args=B4A.DependsOn&Args=B4XCollections,JSON&Args=B4i.DependsOn&Args=B4XCollections,iJSON&Args=B4J.DependsOn&Args=B4XCollections,Json&Args=CustomClassTemplates&Args=View+Class+(Main)|MainView
+'Step 4
+#Macro: Title, Create B4X Lib, ide://run?File=%JAVABIN%\jar.exe&WorkingDirectory=..&Args=-cMf&Args=..\release\%PROJECT_NAME%.b4xlib&Args=Snippets&Args=MiniHtml.bas&Args=MiniHtmlParser.bas&Args=MainView.b4x_excluded&Args=manifest.txt&Args=LICENSE
+'Step 5
+#Macro: Title, Copy to B4X AddLibs, ide://run?File=%COMSPEC%&Args=/c&Args=copy&Args=%PROJECT%\..\release\%PROJECT_NAME%.b4xlib&Args=%ADDITIONAL%\..\B4X
+'Step 6
+#Macro: Title, Release Folder, ide://run?File=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\..\release
+#End Region
+Sub Process_Globals
+	Public App As EndsMeet
+End Sub
+
+' <link>Open in browser|http://127.0.0.1:8080</link>
+' <link>Donate|https://paypal.me/aeric80/</link> | <link>Forum|https://www.b4x.com/android/forum/threads/b4x-web-MiniHTML3/</link> | <link>GitHub|https://github.com/pyhoon/MiniHTML3</link>
+Sub AppStart (Args() As String)
+    App.Initialize
+	App.AssetsFolder = File.Combine(File.DirApp, "www")
+	' Setting ctx map
+	App.ctx.Put("APP_TITLE", "MiniHtml")
+	App.ctx.Put("SERVER_URL", App.ServerUrl)
+	App.ctx.Put("APP_TRADEMARK", "Demo")
+	App.ctx.Put("APP_COPYRIGHT", "Copyright Computerise System Solutions 2026")
+    App.Get("", "Index")
+    App.Post("/modal", "Index")
+    App.Start
+    StartMessageLoop
+End Sub
