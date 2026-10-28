@@ -1,0 +1,7 @@
+demo/Objects/
+demo/AutoBackups/
+demo/logs/
+source/Objects/
+source/AutoBackups/
+source/logs/
+*.b4j.meta
