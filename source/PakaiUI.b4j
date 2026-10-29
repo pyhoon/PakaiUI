@@ -12,7 +12,7 @@ NumberOfModules=1
 Version=10.7
 @EndOfDesignText@
 ' PakaiUI library project
-' Version: 0.13 (M3 forms and data display)
+' Version: 0.14 (M4 optional interactions)
 ' License: MIT
 ' HTML foundation: MiniHTML 4.02
 #Region Project Attributes
@@ -52,4 +52,13 @@ Sub AppStart (Args() As String)
 	row1.Put("name", "PakaiUI")
 	tableOptions.Rows.Add(row1)
 	Log(PUI.Table(tableOptions).build)
+
+	Dim htmxOptions As PUIHtmxOptions = PUI.NewHtmxOptions("/hx/ping")
+	htmxOptions.Target = "#result"
+	Dim pingButton As PUIButtonOptions = PUI.NewButtonOptions("Ping")
+	Dim ping1 As MiniHtml = PUI.Button(pingButton)
+	Log(PUI.Htmx(ping1, htmxOptions).build)
+
+	Dim themeOptions As PUIThemeSwitcherOptions = PUI.NewThemeSwitcherOptions(PUI.ThemeDark)
+	Log(PUI.ThemeSwitcher(themeOptions).build)
 End Sub

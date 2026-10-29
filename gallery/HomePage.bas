@@ -13,7 +13,8 @@ Sub Class_Globals
 	Private Const BootstrapVersion As String = "5.3.8"
 	Private Const IconsVersion As String = "1.13.1"
 	Private Const HtmxVersion As String = "2.0.8"
-	Private Const PakaiUIVersion As String = "0.13"
+	Private Const AlpineVersion As String = "3.15.8"
+	Private Const PakaiUIVersion As String = "0.14"
 	Private Const UrlPing As String = "/hx/ping"
 	Private Const UrlEcho As String = "/hx/echo"
 	Private Const UrlSpin As String = "/hx/spin"
@@ -67,7 +68,9 @@ Private Sub BuildPage (Theme As String) As String
 	lead1.cls("lead text-body-secondary")
 	lead1.up(hero1)
 	PUI.AddText(lead1, "Standalone jServer demo. The page is composed with PUI components, no Pakai Server involved.")
-	ThemeNav(Theme).up(hero1)
+	Dim themeOptions As PUIThemeSwitcherOptions = PUI.NewThemeSwitcherOptions(Theme)
+	themeOptions.CssClass = "mt-3"
+	PUI.ThemeSwitcher(themeOptions).up(hero1)
 
 	' Two-column row: components and the HTMX fixture ----------------------
 	Dim grid1 As MiniHtml = PUI.Row(Null)
@@ -143,9 +146,46 @@ Private Sub BuildPage (Theme As String) As String
 	tableCard1.cls("mt-3")
 	tableCard1.up(container1)
 
+	' Optional interactions (M4) ------------------------------------------
+	Dim interactionsHeaderOptions As PUIPageHeaderOptions = PUI.NewPageHeaderOptions("Optional interactions")
+	interactionsHeaderOptions.Subtitle = "HTMX and Alpine helpers, Bootstrap modal/toast, a server-side theme switcher and a static sidebar."
+	interactionsHeaderOptions.CssClass = "mt-5"
+	interactionsHeaderOptions.Id = "interactions"
+	PUI.PageHeader(interactionsHeaderOptions).up(container1)
+
+	Dim interactionsGrid As MiniHtml = PUI.Row(Null)
+	interactionsGrid.cls("g-3")
+	interactionsGrid.up(container1)
+	Dim halfColOptions As PUIColOptions
+	halfColOptions.Initialize
+	halfColOptions.Breakpoint = "md"
+	halfColOptions.Width = 6
+	Dim htmxCol1 As MiniHtml = PUI.Col(halfColOptions)
+	htmxCol1.up(interactionsGrid)
+	htmxCol1.down(HtmxHelperCard)
+	Dim alpineCol1 As MiniHtml = PUI.Col(halfColOptions)
+	alpineCol1.up(interactionsGrid)
+	alpineCol1.down(AlpineStateCard)
+
+	Dim dialogColOptions As PUIColOptions
+	dialogColOptions.Initialize
+	dialogColOptions.Breakpoint = "md"
+	dialogColOptions.Width = 7
+	Dim dialogCol1 As MiniHtml = PUI.Col(dialogColOptions)
+	dialogCol1.up(interactionsGrid)
+	dialogCol1.down(DialogToastCard)
+	Dim sidebarColOptions2 As PUIColOptions
+	sidebarColOptions2.Initialize
+	sidebarColOptions2.Breakpoint = "md"
+	sidebarColOptions2.Width = 5
+	Dim sidebarCol2 As MiniHtml = PUI.Col(sidebarColOptions2)
+	sidebarCol2.up(interactionsGrid)
+	sidebarCol2.down(SidebarCard)
+
 	' Scripts at the end of the body --------------------------------------
 	PUI.Script(body1, AssetBase & "/assets/js/bootstrap.min.js?v=" & BootstrapVersion, True)
 	PUI.Script(body1, AssetBase & "/assets/js/htmx.min.js?v=" & HtmxVersion, True)
+	PUI.Script(body1, AssetBase & "/assets/js/alpine.min.js?v=" & AlpineVersion, True)
 
 	' Footer --------------------------------------------------------------
 	Dim footer1 As MiniHtml
@@ -155,31 +195,6 @@ Private Sub BuildPage (Theme As String) As String
 	PUI.AddText(footer1, "PakaiUI " & PakaiUIVersion & " - Bootstrap " & BootstrapVersion & " - HTMX " & HtmxVersion _
 		& " - assets self-hosted, no CSS or JS build step, no Node.js.")
 	Return page.build
-End Sub
-
-' Server-side light/dark switch: two links rather than client-side JS.
-Private Sub ThemeNav (Current As String) As MiniHtml
-	Dim nav1 As MiniHtml
-	nav1.Initialize("nav")
-	nav1.cls("mt-3")
-	nav1.attr("aria-label", "Theme switch")
-	Dim lightOptions As PUIButtonOptions
-	lightOptions.Initialize
-	lightOptions.Text = "Light theme"
-	lightOptions.Variant = PUI.VariantOutlineSecondary
-	lightOptions.Href = "/?theme=light"
-	Dim light1 As MiniHtml = PUI.Button(lightOptions)
-	If Current = PUI.ThemeLight Then light1.attr("aria-current", "page")
-	light1.up(nav1)
-	Dim darkOptions As PUIButtonOptions
-	darkOptions.Initialize
-	darkOptions.Text = "Dark theme"
-	darkOptions.Variant = PUI.VariantOutlineSecondary
-	darkOptions.Href = "/?theme=dark"
-	Dim dark1 As MiniHtml = PUI.Button(darkOptions)
-	If Current = PUI.ThemeDark Then dark1.attr("aria-current", "page")
-	dark1.up(nav1)
-	Return nav1
 End Sub
 
 Private Sub ComponentsCard As MiniHtml
@@ -354,6 +369,7 @@ Private Sub NavigationCard As MiniHtml
 	navOptions.Items.Add(PUI.NewNavItemOptions("HTMX baseline", "#m0-htmx"))
 	navOptions.Items.Add(PUI.NewNavItemOptions("States", "#core-states"))
 	navOptions.Items.Add(PUI.NewNavItemOptions("Forms", "#forms-data"))
+	navOptions.Items.Add(PUI.NewNavItemOptions("Interactions", "#interactions"))
 	Dim nav1 As MiniHtml = PUI.Nav(navOptions)
 	nav1.cls("mb-3")
 	nav1.up(body1)
@@ -550,6 +566,169 @@ Private Sub TableCard As MiniHtml
 	pageOptions.AriaLabel = "Recent sign-ups pages"
 	pageOptions.CssClass = "mt-3 mb-0"
 	PUI.Pagination(pageOptions).up(body1)
+	Return card1
+End Sub
+
+Private Sub HtmxHelperCard As MiniHtml
+	Dim options As PUICardOptions = PUI.NewCardOptions("HTMX helper", "")
+	Dim card1 As MiniHtml = PUI.Card(options)
+	card1.attr("id", "m4-htmx")
+	Dim body1 As MiniHtml = card1.ChildByClass("card-body")
+
+	Dim note1 As MiniHtml
+	note1.Initialize("p")
+	note1.cls("text-body-secondary small")
+	note1.up(body1)
+	PUI.AddText(note1, "The helper adds typed hx-* attributes. Without HTMX the same form still posts to /hx/echo and renders the fragment alone.")
+
+	Dim filterOptions As PUIFilterBarOptions = PUI.NewFilterBarOptions
+	filterOptions.Action = "/hx/echo"
+	filterOptions.Method = "post"
+	filterOptions.AriaLabel = "HTMX echo form"
+	Dim form1 As MiniHtml = PUI.FilterBar(filterOptions)
+	form1.up(body1)
+
+	Dim nameOptions As PUIInputOptions = PUI.NewInputOptions("Name", "name")
+	nameOptions.Value = "Pakai"
+	nameOptions.CssClass = "col-auto"
+	PUI.Input(nameOptions).up(form1)
+
+	Dim sendOptions As PUIButtonOptions = MakeButton("Send", PUI.VariantPrimary, PUI.SizeSmall)
+	sendOptions.ButtonType = "submit"
+	PUI.Button(sendOptions).up(form1)
+
+	Dim htmxOptions As PUIHtmxOptions = PUI.NewHtmxOptions("/hx/echo")
+	htmxOptions.Method = "post"
+	htmxOptions.Target = "#m4-echo"
+	htmxOptions.Swap = "innerHTML"
+	PUI.Htmx(form1, htmxOptions)
+
+	Dim result1 As MiniHtml
+	result1.Initialize("div")
+	result1.cls("p-2 mt-2 bg-body-tertiary rounded")
+	result1.attr("id", "m4-echo")
+	result1.up(body1)
+	PUI.AddText(result1, "No response yet.")
+	Return card1
+End Sub
+
+Private Sub AlpineStateCard As MiniHtml
+	Dim options As PUICardOptions = PUI.NewCardOptions("Alpine local state", "")
+	Dim card1 As MiniHtml = PUI.Card(options)
+	card1.attr("id", "m4-alpine")
+	Dim stateOptions As PUIAlpineOptions = PUI.NewAlpineOptions
+	stateOptions.Data = "{ open: false, count: 0 }"
+	PUI.Alpine(card1, stateOptions)
+	Dim body1 As MiniHtml = card1.ChildByClass("card-body")
+
+	Dim note1 As MiniHtml
+	note1.Initialize("p")
+	note1.cls("text-body-secondary small")
+	note1.up(body1)
+	PUI.AddText(note1, "Alpine " & AlpineVersion & " is optional. With it the panel toggles and the counter updates; without it the panel stays visible and the buttons are inert.")
+
+	Dim toggleOptions As PUIButtonOptions = MakeButton("Toggle panel", PUI.VariantOutlinePrimary, PUI.SizeSmall)
+	Dim toggle1 As MiniHtml = PUI.Button(toggleOptions)
+	Dim toggleAlpine As PUIAlpineOptions = PUI.NewAlpineOptions
+	toggleAlpine.Click = "open = !open"
+	PUI.Alpine(toggle1, toggleAlpine).up(body1)
+
+	Dim panel1 As MiniHtml
+	panel1.Initialize("div")
+	panel1.cls("border rounded p-2 mt-2")
+	Dim panelAlpine As PUIAlpineOptions = PUI.NewAlpineOptions
+	panelAlpine.Show = "open"
+	PUI.Alpine(panel1, panelAlpine)
+	panel1.up(body1)
+	PUI.AddText(panel1, "This panel is shown while open is true.")
+
+	Dim counter1 As MiniHtml
+	counter1.Initialize("div")
+	counter1.cls("d-flex align-items-center gap-2 mt-3")
+	counter1.up(body1)
+	PUI.AddText(counter1, "Count: ")
+	Dim countOptions As PUIAlpineOptions = PUI.NewAlpineOptions
+	countOptions.Text = "count"
+	PUI.Alpine(PUI.Badge(PUI.NewBadgeOptions("0")), countOptions).up(counter1)
+	Dim incrementOptions As PUIButtonOptions = MakeButton("Increment", PUI.VariantOutlineSecondary, PUI.SizeSmall)
+	Dim increment1 As MiniHtml = PUI.Button(incrementOptions)
+	Dim incrementAlpine As PUIAlpineOptions = PUI.NewAlpineOptions
+	incrementAlpine.Click = "count++"
+	PUI.Alpine(increment1, incrementAlpine).up(counter1)
+	Return card1
+End Sub
+
+Private Sub DialogToastCard As MiniHtml
+	Dim options As PUICardOptions = PUI.NewCardOptions("Dialog and toast", "")
+	Dim card1 As MiniHtml = PUI.Card(options)
+	card1.attr("id", "m4-dialog")
+	Dim body1 As MiniHtml = card1.ChildByClass("card-body")
+
+	Dim note1 As MiniHtml
+	note1.Initialize("p")
+	note1.cls("text-body-secondary small")
+	note1.up(body1)
+	PUI.AddText(note1, "Both components are plain Bootstrap markup. Bootstrap's JavaScript opens the dialog and dismisses the toast; the content is readable without it.")
+
+	Dim triggerOptions As PUIModalTriggerOptions = PUI.NewModalTriggerOptions("Open dialog", "m4-confirm-dialog")
+	triggerOptions.Variant = PUI.VariantDanger
+	PUI.ModalTrigger(triggerOptions).up(body1)
+
+	Dim modalOptions As PUIModalOptions = PUI.NewModalOptions("Server-rendered dialog", "The dialog body is escaped text; compose arbitrary content into the modal-body slot.")
+	modalOptions.Id = "m4-confirm-dialog"
+	modalOptions.FooterText = "Nothing is deleted in this demo."
+	modalOptions.CloseText = "Cancel"
+	modalOptions.StaticBackdrop = True
+	PUI.Modal(modalOptions).up(body1)
+
+	Dim toastOptions As PUIToastOptions = PUI.NewToastOptions("Toast content is server-rendered; Bootstrap JavaScript adds dismissal.")
+	toastOptions.Id = "m4-toast"
+	toastOptions.Title = "Saved"
+	toastOptions.Variant = PUI.VariantSuccess
+	toastOptions.CssClass = "mt-3"
+	PUI.Toast(toastOptions).up(body1)
+	Return card1
+End Sub
+
+Private Sub SidebarCard As MiniHtml
+	Dim options As PUICardOptions = PUI.NewCardOptions("Sidebar navigation", "Static links and CSS; no JavaScript.")
+	Dim card1 As MiniHtml = PUI.Card(options)
+	card1.attr("id", "m4-sidebar")
+	Dim body1 As MiniHtml = card1.ChildByClass("card-body")
+
+	Dim layout1 As MiniHtml = PUI.Row(Null)
+	layout1.cls("g-0 border rounded overflow-hidden")
+	layout1.up(body1)
+
+	Dim sideColOptions As PUIColOptions
+	sideColOptions.Initialize
+	sideColOptions.Breakpoint = "md"
+	sideColOptions.Width = 4
+	Dim sideCol1 As MiniHtml = PUI.Col(sideColOptions)
+	sideCol1.up(layout1)
+
+	Dim sidebarOptions As PUISidebarOptions = PUI.NewSidebarOptions("PakaiUI")
+	sidebarOptions.Href = "/"
+	sidebarOptions.Title = "Navigate"
+	sidebarOptions.CssClass = "h-100"
+	Dim overviewItem As PUINavItemOptions = PUI.NewNavItemOptions("Overview", "/")
+	overviewItem.Active = True
+	sidebarOptions.Items.Add(overviewItem)
+	sidebarOptions.Items.Add(PUI.NewNavItemOptions("Forms", "#forms-data"))
+	sidebarOptions.Items.Add(PUI.NewNavItemOptions("Interactions", "#interactions"))
+	PUI.Sidebar(sidebarOptions).up(sideCol1)
+
+	Dim contentColOptions As PUIColOptions
+	contentColOptions.Initialize
+	contentColOptions.Breakpoint = "md"
+	contentColOptions.Width = 8
+	Dim contentCol1 As MiniHtml = PUI.Col(contentColOptions)
+	contentCol1.up(layout1)
+	Dim content1 As MiniHtml
+	content1.Initialize("div")
+	content1.cls("p-3 h-100")
+	content1.up(contentCol1)
+	PUI.AddText(content1, "The sidebar is an aside with a vertical nav. It stacks above content on narrow screens and needs no collapse script.")
 	Return card1
 End Sub
 

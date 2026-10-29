@@ -8,18 +8,20 @@ Alpine.js are optional enhancements, never requirements.
 
 ## Status
 
-**v0.13 — M3 complete (experimental API).**
+**v0.14 — M4 complete (experimental API).**
 
 M0 delivered the verified MiniHTML4 reconnaissance, the escaping/composition contract and a compiled
 proof of concept. M1 added theme tokens (light/dark via `data-bs-theme`), the document skeleton
 (`PUI.Document` / `Head` / `Body`), page-layout primitives (`PUI.Container`, `PUI.Row`, `PUI.Col`), the
 tracked `assets/` folder, the asset sync script and the standalone gallery. M2 added the core component
 set: `Badge`, `Alert`, `Breadcrumb`, `PageHeader`, `Nav` / `NavItem` / `Navbar`, `EmptyState`,
-`LoadingState` and card extensions. M3 adds form and data-display components: `Input`, `Textarea`,
-`SelectField`, `Checkbox`, `Radio`, validation feedback, `Table`, `Pagination` and `FilterBar`. See
-[`docs/M2-COMPONENTS.md`](docs/M2-COMPONENTS.md) and [`docs/M3-FORMS.md`](docs/M3-FORMS.md) for the
-component references, and [`docs/M0-RECONNAISSANCE.md`](docs/M0-RECONNAISSANCE.md) for the verified
-MiniHTML behaviour.
+`LoadingState` and card extensions. M3 added form and data-display components: `Input`, `Textarea`,
+`SelectField`, `Checkbox`, `Radio`, validation feedback, `Table`, `Pagination` and `FilterBar`. M4 adds
+optional interactions: typed `Htmx` and `Alpine` attribute helpers, `Modal` / `ModalTrigger`, `Toast`,
+`ThemeSwitcher` and `Sidebar`. None of them makes HTMX or Alpine.js mandatory. See
+[`docs/M2-COMPONENTS.md`](docs/M2-COMPONENTS.md), [`docs/M3-FORMS.md`](docs/M3-FORMS.md) and
+[`docs/M4-INTERACTIONS.md`](docs/M4-INTERACTIONS.md) for the component references, and
+[`docs/M0-RECONNAISSANCE.md`](docs/M0-RECONNAISSANCE.md) for the verified MiniHTML behaviour.
 
 ## Requirements
 
@@ -102,6 +104,25 @@ body1.down(PUI.Table(tableOptions))
 
 Dim pagerOptions As PUIPaginationOptions = PUI.NewPaginationOptions(1, 5, "/?page={page}")
 body1.down(PUI.Pagination(pagerOptions))
+
+' Optional interactions: helpers emit attributes, scripts load separately
+Dim pingOptions As PUIButtonOptions = PUI.NewButtonOptions("Ping")
+Dim pingButton As MiniHtml = PUI.Button(pingOptions)
+Dim htmxOptions As PUIHtmxOptions = PUI.NewHtmxOptions("/ping")
+htmxOptions.Target = "#result"
+PUI.Htmx(pingButton, htmxOptions).up(body1)
+
+Dim localState As PUIAlpineOptions = PUI.NewAlpineOptions
+localState.Data = "{ open: false }"
+PUI.Alpine(card1, localState)
+
+Dim dialogOptions As PUIModalOptions = PUI.NewModalOptions("Confirm", "Continue?")
+dialogOptions.Id = "confirm-dialog"
+PUI.Modal(dialogOptions).up(body1)
+PUI.ModalTrigger(PUI.NewModalTriggerOptions("Open", "confirm-dialog")).up(body1)
+
+Dim themeOptions As PUIThemeSwitcherOptions = PUI.NewThemeSwitcherOptions(PUI.ThemeDark)
+PUI.ThemeSwitcher(themeOptions).up(body1)
 ```
 
 `PUI.Select` is named `PUI.SelectField` because `Select` is a reserved B4X keyword. Form controls return
@@ -119,14 +140,15 @@ PUI.AddText(body1, "<script>this is escaped</script>")
 
 ```
 source/                      PakaiUI library project (PUI.bas, manifest, b4xlib build script)
-assets/                      Tracked frontend assets (Bootstrap 5.3.8, icons, HTMX 2.0.8, pakaiui.css)
+assets/                      Tracked frontend assets (Bootstrap 5.3.8, icons, HTMX 2.0.8, Alpine 3.15.8, pakaiui.css)
 sync-assets.bat              Copies assets/ into <project>\Objects\www\assets (additive)
 tests/m0-poc/                Console proof of concept consuming the installed b4xlib
 tests/m1-foundation/         M1 foundation API tests (35 assertions)
 tests/m2-components/         M2 core component tests (135 assertions)
 tests/m3-forms/              M3 form and data-display tests (203 assertions)
+tests/m4-interactions/       M4 optional interaction tests (162 assertions)
 gallery/                     Standalone jServer demo and HTMX 2.x baseline host
-docs/                        M0 findings, M2/M3 component references, specification and API inputs
+docs/                        M0 findings, M2/M3/M4 component references, specification and API inputs
 demo/                        Pakai Server Web starter kept for reference
 AGENT.md                     Build/test commands and contribution rules
 CHANGELOG.md                 Version history and breaking changes
@@ -166,7 +188,12 @@ cd ..\m3-forms
 & "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="M3Forms.b4j" -NoClean=True -ShowWarnings=True
 & "C:\Java\jdk-19.0.2\bin\java.exe" -jar Objects\M3Forms.jar
 
-# Standalone gallery (HTMX baseline + M2/M3 components) on http://localhost:51010/
+# M4 optional interaction tests (expects 162/162 PASS and exit code 0)
+cd ..\m4-interactions
+& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="M4Interactions.b4j" -NoClean=True -ShowWarnings=True
+& "C:\Java\jdk-19.0.2\bin\java.exe" -jar Objects\M4Interactions.jar
+
+# Standalone gallery (HTMX baseline + M2/M3/M4 components) on http://localhost:51010/
 cd ..\..\gallery
 cmd /c ..\sync-assets.bat .
 & "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="Gallery.b4j" -NoClean=True -ShowWarnings=True

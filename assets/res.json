@@ -1,6 +1,6 @@
 {
   "comment": "PakaiUI tracked frontend assets, manifest of upstream sources. Re-download and verify the SHA-256 hashes in assets/README.md before trusting fresh copies.",
-  "Version": "0.13",
+  "Version": "0.14",
   "Resources": [
     {
       "File": "www\\assets\\css\\bootstrap.min.css",
@@ -48,6 +48,18 @@
       "Link": "https://raw.githubusercontent.com/pyhoon/pakai-server-b4j/refs/heads/main/source/Objects/www/assets/js/htmx.min.js",
       "Version": "2.0.8",
       "SHA256": "22283EF68CB7545914F0A88A1BDEDC7256A703D1D580C1D255217D0A50D31313"
+    },
+    {
+      "File": "www\\assets\\js\\alpine.min.js",
+      "Link": "https://cdn.jsdelivr.net/npm/alpinejs@3.15.8/dist/cdn.min.js",
+      "Version": "3.15.8",
+      "SHA256": "899842782A7FD16FCC2D7A7C877FF9EC159394044C87B158B2EF132786606932"
+    },
+    {
+      "File": "www\\assets\\js\\LICENSE\\alpine\\LICENSE.md",
+      "Link": "https://raw.githubusercontent.com/alpinejs/alpine/v3.15.8/LICENSE.md",
+      "Version": "3.15.8",
+      "SHA256": "08B7502DA6E7AA1D0BBDC97D220FBF669B9366C61BD0F072238283C89BC4773A"
     }
   ]
 }

@@ -5,8 +5,8 @@ Type=StaticCode
 Version=10.7
 @EndOfDesignText@
 ' PakaiUI - server-rendered UI components for B4J web applications.
-' Version: 0.13 (M3 forms and data display: input, textarea, select, checkbox,
-'          radio, table, pagination and filter bar)
+' Version: 0.14 (M4 optional interactions: HTMX and Alpine helpers, modal,
+'          toast, theme switcher and sidebar)
 ' HTML foundation: MiniHTML 4.02 (https://github.com/pyhoon/MiniHTML4)
 '
 ' Safety contract:
@@ -18,7 +18,7 @@ Version=10.7
 '   - Public option types are prefixed with PUI because B4X types share a global namespace.
 '   - No dependency on Pakai Server, MiniJS or MiniCSS.
 Sub Process_Globals
-	Public Const VERSION As String = "0.13"
+	Public Const VERSION As String = "0.14"
 
 	' Bootstrap 5.3 semantic variants
 	Public Const VariantPrimary As String = "primary"
@@ -92,6 +92,17 @@ Sub Process_Globals
 	Type PUITableOptions (Columns As List, Rows As List, Caption As String, EmptyText As String, RowIdField As String, Responsive As Boolean, Striped As Boolean, Hover As Boolean, Bordered As Boolean, Compact As Boolean, Id As String, CssClass As String, Hidden As Boolean)
 	Type PUIPaginationOptions (CurrentPage As Int, TotalPages As Int, HrefPattern As String, AriaLabel As String, Size As String, Id As String, CssClass As String, Hidden As Boolean)
 	Type PUIFilterBarOptions (Action As String, Method As String, AriaLabel As String, Id As String, CssClass As String, Hidden As Boolean)
+
+	' Optional interaction options (M4). Htmx and Alpine emit typed attributes;
+	' they never load a script. Modal and Toast use Bootstrap's JavaScript when
+	' it is present, and ThemeSwitcher/Sidebar work without any JavaScript.
+	Type PUIHtmxOptions (Url As String, Method As String, Target As String, Swap As String, Trigger As String, Confirm As String, Indicator As String, PushUrl As Boolean)
+	Type PUIAlpineOptions (Data As String, Show As String, Text As String, Model As String, Click As String, Init As String, ClassName As String)
+	Type PUIModalOptions (Id As String, Title As String, BodyText As String, FooterText As String, CloseText As String, Size As String, Scrollable As Boolean, Centered As Boolean, StaticBackdrop As Boolean)
+	Type PUIModalTriggerOptions (Text As String, Target As String, Variant As String, Size As String, ButtonType As String, Id As String, CssClass As String, Disabled As Boolean, Hidden As Boolean)
+	Type PUIToastOptions (Id As String, Title As String, Message As String, Variant As String, Dismissible As Boolean, Autohide As Boolean, DelayMs As Int, CssClass As String, Hidden As Boolean)
+	Type PUIThemeSwitcherOptions (Current As String, LightHref As String, DarkHref As String, AutoHref As String, AriaLabel As String, Size As String, Id As String, CssClass As String, Hidden As Boolean)
+	Type PUISidebarOptions (Brand As String, Href As String, Title As String, Items As List, AriaLabel As String, Sticky As Boolean, Border As Boolean, Id As String, CssClass As String, Hidden As Boolean)
 
 	' Counter for generated field ids when neither Id nor Name is provided.
 	Private mFieldCounter As Int
@@ -374,6 +385,69 @@ Public Sub NewFilterBarOptions As PUIFilterBarOptions
 	options.Initialize
 	options.Method = "get"
 	options.AriaLabel = "Filters"
+	Return options
+End Sub
+
+Public Sub NewHtmxOptions (Url As String) As PUIHtmxOptions
+	Dim options As PUIHtmxOptions
+	options.Initialize
+	options.Url = Url
+	options.Method = "get"
+	Return options
+End Sub
+
+Public Sub NewAlpineOptions As PUIAlpineOptions
+	Dim options As PUIAlpineOptions
+	options.Initialize
+	Return options
+End Sub
+
+Public Sub NewModalOptions (Title As String, BodyText As String) As PUIModalOptions
+	Dim options As PUIModalOptions
+	options.Initialize
+	options.Title = Title
+	options.BodyText = BodyText
+	options.CloseText = "Close"
+	Return options
+End Sub
+
+Public Sub NewModalTriggerOptions (Text As String, Target As String) As PUIModalTriggerOptions
+	Dim options As PUIModalTriggerOptions
+	options.Initialize
+	options.Text = Text
+	options.Target = Target
+	Return options
+End Sub
+
+Public Sub NewToastOptions (Message As String) As PUIToastOptions
+	Dim options As PUIToastOptions
+	options.Initialize
+	options.Message = Message
+	options.Dismissible = True
+	options.DelayMs = 5000
+	Return options
+End Sub
+
+Public Sub NewThemeSwitcherOptions (Current As String) As PUIThemeSwitcherOptions
+	Dim options As PUIThemeSwitcherOptions
+	options.Initialize
+	options.Current = Current
+	options.AutoHref = "?theme=auto"
+	options.LightHref = "?theme=light"
+	options.DarkHref = "?theme=dark"
+	options.AriaLabel = "Theme"
+	Return options
+End Sub
+
+Public Sub NewSidebarOptions (Brand As String) As PUISidebarOptions
+	Dim options As PUISidebarOptions
+	options.Initialize
+	Dim items1 As List
+	items1.Initialize
+	options.Brand = Brand
+	options.Items = items1
+	options.AriaLabel = "Sidebar"
+	options.Border = True
 	Return options
 End Sub
 
@@ -1318,6 +1392,271 @@ Public Sub FilterBar (Options As PUIFilterBarOptions) As MiniHtml
 	Return form1
 End Sub
 
+' Applies typed HTMX attributes to an existing element and returns it.
+' The helper never loads HTMX; without the script the element renders normally.
+' Unsafe URLs are rejected and logged. Trigger and Confirm are trusted strings.
+Public Sub Htmx (Element As MiniHtml, Options As PUIHtmxOptions) As MiniHtml
+	If Element = Null Or Options = Null Then Return Element
+	Dim url1 As String = Options.Url.Trim
+	If url1 = "" Then
+		Log("PakaiUI: Htmx requires a Url; rendering the element without hx-* attributes")
+		Return Element
+	End If
+	If Not(IsSafeUrl(url1)) Then
+		LogError("PakaiUI: rejected unsafe HTMX URL: " & url1)
+		Return Element
+	End If
+
+	Element.attr("hx-" & NormalizeHtmxMethod(Options.Method), EscapeHtml(url1))
+	Dim target1 As String = Options.Target.Trim
+	If target1 <> "" Then Element.attr("hx-target", EscapeHtml(target1))
+	Dim swap1 As String = NormalizeHtmxSwap(Options.Swap)
+	If swap1 <> "" Then Element.attr("hx-swap", swap1)
+	Dim trigger1 As String = Options.Trigger.Trim
+	If trigger1 <> "" Then Element.attr("hx-trigger", EscapeHtml(trigger1))
+	If Options.Confirm <> "" Then Element.attr("hx-confirm", EscapeHtml(Options.Confirm))
+	Dim indicator1 As String = Options.Indicator.Trim
+	If indicator1 <> "" Then Element.attr("hx-indicator", EscapeHtml(indicator1))
+	If Options.PushUrl Then Element.attr("hx-push-url", "true")
+	Return Element
+End Sub
+
+' Applies typed Alpine.js attributes to an existing element and returns it.
+' The helper never loads Alpine. Expression fields are trusted developer code,
+' like PUI.RawHtml: never pass request data to Data, Show, Text, Model, Click,
+' Init or ClassName.
+Public Sub Alpine (Element As MiniHtml, Options As PUIAlpineOptions) As MiniHtml
+	If Element = Null Or Options = Null Then Return Element
+	If Options.Data.Trim <> "" Then Element.attr("x-data", EscapeHtml(Options.Data.Trim))
+	If Options.Show.Trim <> "" Then Element.attr("x-show", EscapeHtml(Options.Show.Trim))
+	If Options.Text.Trim <> "" Then Element.attr("x-text", EscapeHtml(Options.Text.Trim))
+	If Options.Model.Trim <> "" Then Element.attr("x-model", EscapeHtml(Options.Model.Trim))
+	If Options.Click.Trim <> "" Then Element.attr("x-on:click", EscapeHtml(Options.Click.Trim))
+	If Options.Init.Trim <> "" Then Element.attr("x-init", EscapeHtml(Options.Init.Trim))
+	If Options.ClassName.Trim <> "" Then Element.attr("x-bind:class", EscapeHtml(Options.ClassName.Trim))
+	Return Element
+End Sub
+
+' Bootstrap modal dialog. Behavior owner: Bootstrap's JavaScript. The markup
+' is inert without it; the content still exists in the DOM. Compose into
+' ChildByClass("modal-body"). The returned id is available on the root.
+' Named Modal rather than Dialog to match the Bootstrap component.
+Public Sub Modal (Options As PUIModalOptions) As MiniHtml
+	Dim options1 As PUIModalOptions = Options
+	If options1 = Null Then options1 = NewModalOptions("", "")
+
+	Dim modalId As String = ResolveFieldId(options1.Id, "", "modal")
+
+	Dim modal1 As MiniHtml = Tag("div").cls("modal fade")
+	modal1.attr("id", EscapeHtml(modalId))
+	modal1.attr("tabindex", "-1")
+	If options1.Title <> "" Then modal1.attr("aria-labelledby", EscapeHtml(modalId & "-label"))
+	modal1.attr("aria-hidden", "true")
+	If options1.StaticBackdrop Then
+		modal1.attr("data-bs-backdrop", "static")
+		modal1.attr("data-bs-keyboard", "false")
+	End If
+
+	Dim dialog1 As MiniHtml = Tag("div").cls("modal-dialog")
+	Dim size1 As String = NormalizeModalSize(options1.Size)
+	If size1 <> "" Then dialog1.cls(size1)
+	If options1.Scrollable Then dialog1.cls("modal-dialog-scrollable")
+	If options1.Centered Then dialog1.cls("modal-dialog-centered")
+	dialog1.up(modal1)
+
+	Dim content1 As MiniHtml = Tag("div").cls("modal-content")
+	content1.up(dialog1)
+
+	If options1.Title <> "" Then
+		Dim header1 As MiniHtml = Tag("div").cls("modal-header")
+		header1.up(content1)
+		Dim title1 As MiniHtml = Tag("h2").cls("modal-title fs-5")
+		title1.attr("id", EscapeHtml(modalId & "-label"))
+		title1.text(EscapeHtml(options1.Title))
+		title1.up(header1)
+		Dim closeX1 As MiniHtml = Tag("button")
+		closeX1.attr("type", "button")
+		closeX1.cls("btn-close")
+		closeX1.attr("data-bs-dismiss", "modal")
+		closeX1.attr("aria-label", "Close")
+		closeX1.up(header1)
+	End If
+
+	Dim body1 As MiniHtml = Tag("div").cls("modal-body")
+	body1.text(EscapeHtml(options1.BodyText))
+	body1.up(content1)
+
+	If options1.FooterText <> "" Or options1.CloseText <> "" Then
+		Dim footer1 As MiniHtml = Tag("div").cls("modal-footer")
+		footer1.up(content1)
+		If options1.FooterText <> "" Then
+			Dim footerText1 As MiniHtml = Tag("p").cls("mb-0 me-auto")
+			footerText1.text(EscapeHtml(options1.FooterText))
+			footerText1.up(footer1)
+		End If
+		If options1.CloseText <> "" Then
+			Dim closeButton1 As MiniHtml = Tag("button")
+			closeButton1.attr("type", "button")
+			closeButton1.cls("btn btn-secondary")
+			closeButton1.attr("data-bs-dismiss", "modal")
+			closeButton1.text(EscapeHtml(options1.CloseText))
+			closeButton1.up(footer1)
+		End If
+	End If
+	Return modal1
+End Sub
+
+' Button that opens a Bootstrap modal. Target accepts an id with or without a
+' leading #. The trigger is inert without Bootstrap's JavaScript.
+Public Sub ModalTrigger (Options As PUIModalTriggerOptions) As MiniHtml
+	Dim options1 As PUIModalTriggerOptions = Options
+	If options1 = Null Then options1 = NewModalTriggerOptions("", "")
+
+	Dim buttonOptions1 As PUIButtonOptions = NewButtonOptions(options1.Text)
+	buttonOptions1.Variant = options1.Variant
+	buttonOptions1.Size = options1.Size
+	buttonOptions1.ButtonType = options1.ButtonType
+	buttonOptions1.Id = options1.Id
+	buttonOptions1.CssClass = options1.CssClass
+	buttonOptions1.Disabled = options1.Disabled
+	buttonOptions1.Hidden = options1.Hidden
+	Dim button1 As MiniHtml = Button(buttonOptions1)
+
+	Dim target1 As String = options1.Target.Trim
+	If target1.StartsWith("#") Then target1 = target1.SubString(1)
+	If target1 = "" Then
+		Log("PakaiUI: ModalTrigger requires a Target; rendering the button without modal attributes")
+		Return button1
+	End If
+	button1.attr("data-bs-toggle", "modal")
+	button1.attr("data-bs-target", EscapeHtml("#" & target1))
+	Return button1
+End Sub
+
+' Bootstrap toast, rendered visible (toast show) so it is readable without
+' JavaScript. Behavior owner: Bootstrap's JavaScript, which adds dismissal and
+' autohide when it is loaded. The close button is inert without it.
+Public Sub Toast (Options As PUIToastOptions) As MiniHtml
+	Dim options1 As PUIToastOptions = Options
+	If options1 = Null Then options1 = NewToastOptions("")
+
+	Dim toast1 As MiniHtml = Tag("div").cls("toast show")
+	Dim variant1 As String = NormalizeToastVariant(options1.Variant)
+	If variant1 <> "" Then toast1.cls("text-bg-" & variant1)
+	If options1.CssClass <> "" Then toast1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then toast1.attr("id", EscapeHtml(options1.Id))
+	toast1.attr("role", "status")
+	toast1.attr("aria-live", "polite")
+	toast1.attr("aria-atomic", "true")
+	If options1.Autohide Then
+		toast1.attr("data-bs-autohide", "true")
+		Dim delay1 As Int = options1.DelayMs
+		If delay1 <= 0 Then delay1 = 5000
+		toast1.attr("data-bs-delay", "" & delay1)
+	Else
+		toast1.attr("data-bs-autohide", "false")
+	End If
+	If options1.Hidden Then toast1.hidden
+
+	If options1.Title <> "" Or options1.Dismissible Then
+		Dim header1 As MiniHtml = Tag("div").cls("toast-header")
+		header1.up(toast1)
+		If options1.Title <> "" Then
+			Dim title1 As MiniHtml = Tag("strong").cls("me-auto")
+			title1.text(EscapeHtml(options1.Title))
+			title1.up(header1)
+		End If
+		If options1.Dismissible Then
+			Dim close1 As MiniHtml = Tag("button")
+			close1.attr("type", "button")
+			close1.cls("btn-close")
+			If variant1 = VariantPrimary Or variant1 = VariantSecondary Or variant1 = VariantSuccess _
+				Or variant1 = VariantDanger Or variant1 = VariantDark Then
+				close1.cls("btn-close-white")
+			End If
+			close1.attr("data-bs-dismiss", "toast")
+			close1.attr("aria-label", "Close")
+			close1.up(header1)
+		End If
+	End If
+
+	Dim body1 As MiniHtml = Tag("div").cls("toast-body")
+	body1.text(EscapeHtml(options1.Message))
+	body1.up(toast1)
+	Return toast1
+End Sub
+
+' Theme switcher as a Bootstrap button group of server-rendered links.
+' Behavior owner: the server. It works without JavaScript; the active link gets
+' .active and aria-current="page". Hrefs are validated like every other URL.
+Public Sub ThemeSwitcher (Options As PUIThemeSwitcherOptions) As MiniHtml
+	Dim options1 As PUIThemeSwitcherOptions = Options
+	If options1 = Null Then options1 = NewThemeSwitcherOptions(ThemeAuto)
+
+	Dim group1 As MiniHtml = Tag("div").cls("btn-group")
+	group1.attr("role", "group")
+	Dim label1 As String = options1.AriaLabel.Trim
+	If label1 = "" Then label1 = "Theme"
+	group1.attr("aria-label", EscapeHtml(label1))
+	If options1.CssClass <> "" Then group1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then group1.attr("id", EscapeHtml(options1.Id))
+	If options1.Hidden Then group1.hidden
+
+	Dim current1 As String = NormalizeTheme(options1.Current)
+	AppendThemeButton(group1, "Auto", options1.AutoHref, current1 = ThemeAuto, options1.Size)
+	AppendThemeButton(group1, "Light", options1.LightHref, current1 = ThemeLight, options1.Size)
+	AppendThemeButton(group1, "Dark", options1.DarkHref, current1 = ThemeDark, options1.Size)
+	Return group1
+End Sub
+
+' Sidebar navigation: an aside with optional brand, section title and a
+' vertical Nav. Behavior owner: plain links and CSS; no JavaScript required.
+' Sticky adds Bootstrap's sticky-top; place it in a flex/grid column.
+Public Sub Sidebar (Options As PUISidebarOptions) As MiniHtml
+	Dim options1 As PUISidebarOptions = Options
+	If options1 = Null Then options1 = NewSidebarOptions("")
+
+	Dim aside1 As MiniHtml = Tag("aside").cls("bg-body-tertiary p-3")
+	If options1.Border Then aside1.cls("border-end")
+	If options1.Sticky Then
+		aside1.cls("sticky-top")
+		aside1.cls("align-self-start")
+	End If
+	If options1.CssClass <> "" Then aside1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then aside1.attr("id", EscapeHtml(options1.Id))
+	If options1.Hidden Then aside1.hidden
+
+	If options1.Brand <> "" Then
+		Dim brand1 As MiniHtml = Tag("a").cls("navbar-brand d-block mb-2")
+		If options1.Href <> "" Then
+			If IsSafeUrl(options1.Href) Then
+				brand1.attr("href", EscapeHtml(options1.Href))
+			Else
+				LogError("PakaiUI: rejected unsafe sidebar brand URL: " & options1.Href)
+			End If
+		End If
+		brand1.text(EscapeHtml(options1.Brand))
+		brand1.up(aside1)
+	End If
+
+	If options1.Title <> "" Then
+		Dim title1 As MiniHtml = Tag("h2").cls("h6 text-uppercase text-body-secondary")
+		title1.text(EscapeHtml(options1.Title))
+		title1.up(aside1)
+	End If
+
+	Dim navOptions1 As PUINavOptions = NewNavOptions
+	navOptions1.Vertical = True
+	navOptions1.Items = options1.Items
+	Dim label1 As String = options1.AriaLabel.Trim
+	If label1 = "" Then label1 = "Sidebar"
+	navOptions1.AriaLabel = label1
+	Dim nav1 As MiniHtml = Nav(navOptions1)
+	nav1.cls("mb-0")
+	nav1.up(aside1)
+	Return aside1
+End Sub
+
 ' Returns True for relative URLs and for the http, https, mailto and tel schemes.
 ' Anything else, including javascript:, data: and vbscript:, is rejected.
 Public Sub IsSafeUrl (Url As String) As Boolean
@@ -1598,6 +1937,79 @@ Private Sub NormalizeFormMethod (Method As String) As String
 			Log("PakaiUI: unsupported filter method '" & value & "'; using get")
 			Return "get"
 	End Select
+End Sub
+
+Private Sub NormalizeHtmxMethod (Method As String) As String
+	Dim value As String = Method.Trim.ToLowerCase
+	Select value
+		Case "get", "post", "put", "patch", "delete"
+			Return value
+		Case ""
+			Return "get"
+		Case Else
+			Log("PakaiUI: unsupported HTMX method '" & value & "'; using get")
+			Return "get"
+	End Select
+End Sub
+
+Private Sub NormalizeHtmxSwap (Swap As String) As String
+	Dim value As String = Swap.Trim.ToLowerCase
+	Select value
+		Case "innerhtml"
+			Return "innerHTML"
+		Case "outerhtml"
+			Return "outerHTML"
+		Case "beforebegin", "afterbegin", "beforeend", "afterend", "delete", "none"
+			Return value
+		Case ""
+			Return ""
+		Case Else
+			Log("PakaiUI: unsupported HTMX swap '" & value & "'; using the HTMX default")
+			Return ""
+	End Select
+End Sub
+
+Private Sub NormalizeModalSize (Size As String) As String
+	Dim value As String = Size.Trim.ToLowerCase
+	Select value
+		Case SizeSmall
+			Return "modal-sm"
+		Case SizeLarge
+			Return "modal-lg"
+		Case "xl"
+			Return "modal-xl"
+		Case Else
+			If value <> "" Then Log("PakaiUI: unsupported modal size '" & value & "'; using the default")
+			Return ""
+	End Select
+End Sub
+
+Private Sub NormalizeToastVariant (Variant As String) As String
+	Dim value As String = Variant.Trim.ToLowerCase
+	Select value
+		Case ""
+			Return ""
+		Case VariantPrimary, VariantSecondary, VariantSuccess, VariantDanger, _
+			VariantWarning, VariantInfo, VariantLight, VariantDark
+			Return value
+		Case Else
+			Log("PakaiUI: unknown toast variant '" & value & "'; rendering a neutral toast")
+			Return ""
+	End Select
+End Sub
+
+' Appends one link-style button to the theme group.
+Private Sub AppendThemeButton (Group As MiniHtml, Text As String, Href As String, Active As Boolean, Size As String)
+	Dim buttonOptions1 As PUIButtonOptions = NewButtonOptions(Text)
+	buttonOptions1.Variant = VariantOutlineSecondary
+	buttonOptions1.Size = Size
+	buttonOptions1.Href = Href
+	Dim button1 As MiniHtml = Button(buttonOptions1)
+	If Active Then
+		button1.cls("active")
+		button1.attr("aria-current", "page")
+	End If
+	button1.up(Group)
 End Sub
 
 Private Sub NormalizeVariant (Variant As String) As String

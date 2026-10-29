@@ -3,6 +3,57 @@
 All notable changes to PakaiUI are recorded here. The project follows a `0.x` versioning policy: public
 APIs may change, and breaking changes are documented explicitly.
 
+## 0.14.0 (unreleased) — M4: optional interactions
+
+### Added
+
+- `PUI.Htmx` (`PUIHtmxOptions`): typed `hx-*` attributes on any element, with URL validation, method and
+  swap whitelists, target, trigger, confirm, indicator and push-url support. The helper never loads HTMX.
+- `PUI.Alpine` (`PUIAlpineOptions`): typed `x-data`, `x-show`, `x-text`, `x-model`, `x-on:click`, `x-init`
+  and `x-bind:class` attributes. The helper never loads Alpine; expression fields are documented as
+  trusted developer code.
+- `PUI.Modal` (`PUIModalOptions`) and `PUI.ModalTrigger` (`PUIModalTriggerOptions`): Bootstrap dialog
+  markup with title labels, sizes, scrollable/centered/static-backdrop options and dismiss buttons.
+- `PUI.Toast` (`PUIToastOptions`): visible Bootstrap toast with optional title, variant, close button,
+  autohide data and escaped message.
+- `PUI.ThemeSwitcher` (`PUIThemeSwitcherOptions`): server-rendered Auto/Light/Dark link group with an
+  active state; works without JavaScript.
+- `PUI.Sidebar` (`PUISidebarOptions`): static aside with optional brand, title, vertical nav, sticky and
+  border options; no JavaScript required.
+- Option factories: `NewHtmxOptions`, `NewAlpineOptions`, `NewModalOptions`, `NewModalTriggerOptions`,
+  `NewToastOptions`, `NewThemeSwitcherOptions` and `NewSidebarOptions`.
+- Tracked Alpine.js 3.15.8 asset with its MIT license, hashes and resource manifest entry.
+- `tests/m4-interactions` console test project: 162 assertions covering markup, escaping, validation,
+  defaults, trust boundaries and composition.
+- `docs/M4-INTERACTIONS.md` behavior-owner table, component reference, security notes and verification.
+- The gallery now demonstrates the HTMX helper, Alpine local state, a modal, a toast, the theme switcher
+  and a sidebar.
+
+### Changed
+
+- `PUI.VERSION` and `manifest.txt` version bumped to 0.14.
+- The gallery theme switch now uses `PUI.ThemeSwitcher` instead of hand-built buttons.
+- The gallery loads Alpine 3.15.8 as an optional deferred script; the library core still loads nothing.
+
+### Verified
+
+- M4 optional interaction tests: 162 passed, 0 failed, exit code 0.
+- M3 form/data-display tests still pass: 203 passed, 0 failed, exit code 0.
+- M2 component tests still pass: 135 passed, 0 failed, exit code 0.
+- M1 foundation tests still pass: 35 passed, 0 failed, exit code 0.
+- M0 proof of concept still passes: 28 passed, 0 failed, exit code 0.
+- Gallery: 33 unique ids, 12 labels with no broken `for` targets, Bootstrap/HTMX/Alpine loaded and no
+  console errors.
+- Alpine: panel hidden at initialization and opened by the toggle; counter updates to 1.
+- Bootstrap modal opens and closes; toast dismisses.
+- Theme switcher: Dark loads `?theme=dark` with Dark active; Auto removes the theme attribute.
+- HTMX helper form POSTs and swaps escaped content; the M0 ping/POST/outerHTML baseline still passes.
+
+### Not included (later milestone)
+
+- Pakai Server adapter/examples, first consumer integration (`pakai-asadi`), compatibility matrix,
+  migration/versioning policy and release (M5).
+
 ## 0.13.0 (unreleased) — M3: forms and data display
 
 ### Added

@@ -10,8 +10,8 @@ works without Pakai Server. HTMX 2.x and Alpine.js are optional enhancements onl
 
 | Item | Value |
 | --- | --- |
-| Library version | `0.13` (experimental; public API may change) |
-| Current milestone | **M3 complete** - forms and data display (input, textarea, select, checkbox/radio, validation feedback, tables, pagination, filter bar) |
+| Library version | `0.14` (experimental; public API may change) |
+| Current milestone | **M4 complete** - optional interactions (HTMX and Alpine helpers, modal, toast, theme switcher, sidebar) |
 | B4J | 10.7 (`C:\Program Files\B4X\B4J`) |
 | JDK used for builds/runs | 19 (`C:\Java\jdk-19.0.2`) |
 | HTML foundation | MiniHTML 4.02 (`C:\B4X\Additional\B4X\MiniHTML.b4xlib`) |
@@ -31,8 +31,9 @@ CHANGELOG.md                 Release history (0.x, breaking changes documented)
 docs/M0-RECONNAISSANCE.md    Verified findings, API inventory, M0 evidence
 docs/M2-COMPONENTS.md        M2 component reference: options, markup, accessibility, dependencies
 docs/M3-FORMS.md             M3 form and data-display reference: options, markup, accessibility, verification
+docs/M4-INTERACTIONS.md      M4 optional interaction reference: behavior owners, options, security, verification
 docs/PakaiUI-*.md            Design inputs: specification, API proposal, considerations (read-only)
-assets/                      Tracked frontend assets (Bootstrap 5.3.8, icons, HTMX 2.0.8, pakaiui.css)
+assets/                      Tracked frontend assets (Bootstrap 5.3.8, icons, HTMX 2.0.8, Alpine 3.15.8, pakaiui.css)
   README.md                  Versions, SHA-256 hashes, serving and upgrade notes
   res.json                   Pakai-style manifest of upstream sources
 sync-assets.bat              Copies assets/ into <project>\Objects\www\assets (additive)
@@ -46,6 +47,7 @@ tests/m0-poc/                Console proof of concept (consumes the installed b4
 tests/m1-foundation/         M1 foundation API tests (35 assertions)
 tests/m2-components/         M2 core component tests (135 assertions)
 tests/m3-forms/              M3 form and data-display tests (203 assertions)
+tests/m4-interactions/       M4 optional interaction tests (162 assertions)
 gallery/                     Standalone jServer demo (plain jServer, no Pakai Server) + HTMX baseline
 demo/                        Pakai Server Web 6.99 starter (reference; not a PakaiUI demo)
 ```
@@ -164,6 +166,19 @@ Expected: 203 `PASS` lines, `M3 tests: 203 passed, 0 failed`, exit code 0. The s
 `File.DirApp\m3-output.html`. Lines about rejected pagination URLs, unsupported input types/methods,
 clamped rows and missing `{page}` patterns are expected from the negative tests.
 
+### Build and run the M4 optional interaction tests
+
+```powershell
+cd C:\Projects\PakaiUI\tests\m4-interactions
+& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="M4Interactions.b4j" -NoClean=True -ShowWarnings=True
+& "C:\Java\jdk-19.0.2\bin\java.exe" -jar Objects\M4Interactions.jar
+```
+
+Expected: 162 `PASS` lines, `M4 tests: 162 passed, 0 failed`, exit code 0. The sample page is written to
+`File.DirApp\m4-output.html`. Rejected HTMX/button/sidebar URLs, missing targets, unsupported
+methods/swaps, unknown modal sizes, toast variants and themes produce expected log lines from the
+negative tests.
+
 ### Build and run the standalone gallery (HTMX baseline host)
 
 ```powershell
@@ -176,9 +191,10 @@ cd Objects
 
 The server listens on `http://localhost:51010/`. The gallery exercises the HTMX 2.x baseline
 fixture defined in `docs/M0-RECONNAISSANCE.md` section 9 plus the M2 component set (badges, alerts,
-breadcrumb, page header, nav, navbar, empty and loading states) and the M3 set (form fields, choices,
-validation feedback, responsive table and pagination); the verified results are recorded there, in
-`docs/M2-COMPONENTS.md` and in `docs/M3-FORMS.md`.
+breadcrumb, page header, nav, navbar, empty and loading states), the M3 set (form fields, choices,
+validation feedback, responsive table and pagination) and the M4 set (HTMX/Alpine helpers, modal, toast,
+theme switcher, sidebar); the verified results are recorded there, in `docs/M2-COMPONENTS.md`,
+`docs/M3-FORMS.md` and `docs/M4-INTERACTIONS.md`.
 
 **Always rebuild the `.b4xlib` and reinstall it before testing a consumer project.** The PoC compiles
 `PUI.bas` from the installed library, not from `source/` directly.
@@ -209,6 +225,9 @@ and any `#AdditionalJar` declarations.
 8. **Option-type defaults.** B4X booleans default to `False`, so never introduce a `Visible` option that
    defaults to `False`. Use `Hidden` (and similar negative flags). `Type` and `Select` are reserved words,
    hence `InputType` / `ButtonType` and `PUI.SelectField`.
+9. **Enhancement helpers only emit attributes.** `PUI.Htmx` and `PUI.Alpine` never load scripts or contain
+   inline JavaScript, and no core component requires HTMX, Alpine.js or Bootstrap JavaScript. Document the
+   behavior owner and the no-JS fallback for every interactive component.
 
 ## 5. B4J IDE code smells to avoid (mandatory review checklist)
 
@@ -297,10 +316,10 @@ MiniHTML; handle them in `PUI`.
 | Milestone | Scope | Status |
 | --- | --- | --- |
 | M0 | Reconnaissance, verified MiniHTML API, escaping/dependency/asset findings, minimal PoC | **Done** |
-| M1 | Foundation, theme tokens, page/container primitives, standalone gallery demo, asset docs | Next |
-| M2 | Button, Badge, Alert, Card, Breadcrumb, page header, navigation, empty/loading states | Not started |
-| M3 | Forms, validation feedback, tables, pagination, filters | Not started |
-| M4 | Optional HTMX/Alpine interactions (dialogs, toasts, theme switcher) | Not started |
+| M1 | Foundation, theme tokens, page/container primitives, standalone gallery demo, asset docs | **Done** |
+| M2 | Button, Badge, Alert, Card, Breadcrumb, page header, navigation, empty/loading states | **Done** |
+| M3 | Forms, validation feedback, tables, pagination, filters | **Done** |
+| M4 | Optional HTMX/Alpine interactions (dialogs, toasts, theme switcher) | **Done** |
 | M5 | Pakai Server adapter/examples, first consumer integration (`pakai-asadi`), docs, compatibility matrix, release | Not started |
 
 M0 scope deliberately stops at Button + Card. Do not implement the rest of the catalogue without moving

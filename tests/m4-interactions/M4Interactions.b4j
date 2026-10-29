@@ -1,0 +1,470 @@
+﻿AppType=StandardJava
+Build1=Default,b4j.pakaiui.m4
+Group=PakaiUI
+Library1=b4xcollections
+Library2=javaobject
+Library3=jcore
+Library4=json
+Library5=minihtml
+Library6=pakaiui
+NumberOfFiles=0
+NumberOfLibraries=6
+NumberOfModules=0
+Version=10.7
+@EndOfDesignText@
+' PakaiUI M4 optional interaction tests
+' Version: 0.14
+' Verifies the HTMX and Alpine attribute helpers, modal and trigger, toast,
+' theme switcher and sidebar: markup, escaping, validation, defaults and
+' composition. Console (non-UI) application; no browser is involved.
+#Region Project Attributes
+	#CommandLineArgs:
+	#MergeLibraries: True
+#End Region
+
+Sub Process_Globals
+	Private mPassed As Int
+	Private mFailed As Int
+End Sub
+
+Sub AppStart (Args() As String)
+	Dim hostile As String = "<img src=x onerror=alert(1)> & 'x'"
+
+	' =====================================================================
+	' HTMX helper
+	' =====================================================================
+	Dim pingButton As PUIButtonOptions = PUI.NewButtonOptions("Ping")
+	Dim ping1 As MiniHtml = PUI.Button(pingButton)
+	Dim htmxOptions As PUIHtmxOptions = PUI.NewHtmxOptions("/hx/ping?x=1&y=2")
+	htmxOptions.Target = "#result"
+	htmxOptions.Swap = "outerHTML"
+	htmxOptions.Trigger = "click"
+	htmxOptions.Confirm = hostile
+	htmxOptions.Indicator = "#busy"
+	htmxOptions.PushUrl = True
+	Dim ping1Applied As MiniHtml = PUI.Htmx(ping1, htmxOptions)
+	Dim pingHtml As String = ping1Applied.build
+	Check("Htmx returns the same element", ping1Applied = ping1)
+	Check("Htmx default method is get", ping1.GetAttributes.Get("hx-get") = "/hx/ping?x=1&amp;y=2")
+	Check("Htmx target", ping1.GetAttributes.Get("hx-target") = "#result")
+	Check("Htmx canonical outerHTML swap", ping1.GetAttributes.Get("hx-swap") = "outerHTML")
+	Check("Htmx trigger", ping1.GetAttributes.Get("hx-trigger") = "click")
+	Check("Htmx confirm escaped", ping1.GetAttributes.Get("hx-confirm") = PUI.EscapeHtml(hostile))
+	Check("Htmx indicator", ping1.GetAttributes.Get("hx-indicator") = "#busy")
+	Check("Htmx push-url", ping1.GetAttributes.Get("hx-push-url") = "true")
+	Check("Htmx renders no raw markup", pingHtml.Contains("<img") = False)
+
+	Dim postOptions As PUIHtmxOptions = PUI.NewHtmxOptions("/hx/echo")
+	postOptions.Method = "POST"
+	postOptions.Swap = "innerhtml"
+	Dim postButton1 As MiniHtml = PUI.Button(PUI.NewButtonOptions("Save"))
+	PUI.Htmx(postButton1, postOptions)
+	Check("Htmx method is lower-cased", postButton1.GetAttributes.ContainsKey("hx-post"))
+	Check("Htmx get is not added for post", postButton1.GetAttributes.ContainsKey("hx-get") = False)
+	Check("Htmx canonical innerHTML swap", postButton1.GetAttributes.Get("hx-swap") = "innerHTML")
+
+	Dim deleteOptions As PUIHtmxOptions = PUI.NewHtmxOptions("/items/1")
+	deleteOptions.Method = "delete"
+	Dim deleteButton1 As MiniHtml = PUI.Button(PUI.NewButtonOptions("Delete"))
+	PUI.Htmx(deleteButton1, deleteOptions)
+	Check("Htmx supports delete", deleteButton1.GetAttributes.ContainsKey("hx-delete"))
+
+	Dim unsafeHtmx As PUIHtmxOptions = PUI.NewHtmxOptions("javascript:alert(1)")
+	Dim unsafeButton1 As MiniHtml = PUI.Button(PUI.NewButtonOptions("Unsafe"))
+	PUI.Htmx(unsafeButton1, unsafeHtmx)
+	Check("Htmx rejects unsafe URL", unsafeButton1.GetAttributes.ContainsKey("hx-get") = False)
+	Check("Htmx unsafe URL is not rendered", unsafeButton1.build.Contains("javascript:") = False)
+
+	Dim emptyHtmx As PUIHtmxOptions = PUI.NewHtmxOptions("")
+	Dim emptyButton1 As MiniHtml = PUI.Button(PUI.NewButtonOptions("Empty"))
+	PUI.Htmx(emptyButton1, emptyHtmx)
+	Check("Htmx empty URL adds no attributes", emptyButton1.GetAttributes.ContainsKey("hx-get") = False)
+	Check("Htmx Null element is safe", PUI.Htmx(Null, htmxOptions) = Null)
+	Check("Htmx Null options leaves the element unchanged", PUI.Htmx(PUI.Button(PUI.NewButtonOptions("Plain")), Null).GetAttributes.ContainsKey("hx-get") = False)
+
+	Dim badMethodOptions As PUIHtmxOptions = PUI.NewHtmxOptions("/x")
+	badMethodOptions.Method = "options"
+	Dim badMethodButton1 As MiniHtml = PUI.Button(PUI.NewButtonOptions("Fallback"))
+	PUI.Htmx(badMethodButton1, badMethodOptions)
+	Check("Htmx unsupported method falls back to get", badMethodButton1.GetAttributes.ContainsKey("hx-get"))
+
+	Dim badSwapOptions As PUIHtmxOptions = PUI.NewHtmxOptions("/x")
+	badSwapOptions.Swap = "replace"
+	Dim badSwapButton1 As MiniHtml = PUI.Button(PUI.NewButtonOptions("Swap"))
+	PUI.Htmx(badSwapButton1, badSwapOptions)
+	Check("Htmx unsupported swap is omitted", badSwapButton1.GetAttributes.ContainsKey("hx-swap") = False)
+
+	Dim aliasesOptions As PUIHtmxOptions = PUI.NewHtmxOptions("/x")
+	aliasesOptions.Swap = "BEFOREEND"
+	Dim aliasButton1 As MiniHtml = PUI.Button(PUI.NewButtonOptions("Alias"))
+	PUI.Htmx(aliasButton1, aliasesOptions)
+	Check("Htmx swap is case-insensitive", aliasButton1.GetAttributes.Get("hx-swap") = "beforeend")
+
+	' =====================================================================
+	' Alpine helper
+	' =====================================================================
+	Dim alpinePanel As MiniHtml = Tag("div")
+	Dim alpineOptions As PUIAlpineOptions = PUI.NewAlpineOptions
+	alpineOptions.Data = "{ open: false, count: 0 }"
+	alpineOptions.Show = "open"
+	alpineOptions.Text = "count"
+	alpineOptions.Model = "name"
+	alpineOptions.Click = "open = !open"
+	alpineOptions.Init = "count = 1"
+	alpineOptions.ClassName = "open ? 'visible' : 'hidden'"
+	Dim alpinePanel1 As MiniHtml = PUI.Alpine(alpinePanel, alpineOptions)
+	Check("Alpine returns the same element", alpinePanel1 = alpinePanel)
+	Check("Alpine x-data", alpinePanel1.GetAttributes.Get("x-data") = "{ open: false, count: 0 }")
+	Check("Alpine x-show", alpinePanel1.GetAttributes.Get("x-show") = "open")
+	Check("Alpine x-text", alpinePanel1.GetAttributes.Get("x-text") = "count")
+	Check("Alpine x-model", alpinePanel1.GetAttributes.Get("x-model") = "name")
+	Check("Alpine click binding", alpinePanel1.GetAttributes.Get("x-on:click") = "open = !open")
+	Check("Alpine init", alpinePanel1.GetAttributes.Get("x-init") = "count = 1")
+	Check("Alpine class binding", alpinePanel1.GetAttributes.Get("x-bind:class") = PUI.EscapeHtml(alpineOptions.ClassName))
+	Check("Alpine does not add x-cloak", alpinePanel1.GetAttributes.ContainsKey("x-cloak") = False)
+
+	Dim emptyAlpine As PUIAlpineOptions = PUI.NewAlpineOptions
+	Dim plainPanel1 As MiniHtml = PUI.Alpine(Tag("div"), emptyAlpine)
+	Check("Alpine empty options add no attributes", plainPanel1.GetAttributes.Size = 0)
+	Check("Alpine Null element is safe", PUI.Alpine(Null, alpineOptions) = Null)
+	Check("Alpine Null options leaves the element unchanged", PUI.Alpine(Tag("div"), Null).GetAttributes.Size = 0)
+
+	Dim quoteAlpine As PUIAlpineOptions = PUI.NewAlpineOptions
+	quoteAlpine.Data = "{ msg: " & QUOTE & hostile & QUOTE & " }"
+	Dim quotedPanel As MiniHtml = Tag("div")
+	PUI.Alpine(quotedPanel, quoteAlpine)
+	Check("Alpine data quotes escaped", quotedPanel.GetAttributes.Get("x-data") = PUI.EscapeHtml(quoteAlpine.Data))
+	Check("Alpine data renders no raw markup", quotedPanel.build.Contains("<img") = False)
+
+	' =====================================================================
+	' Modal
+	' =====================================================================
+	Dim modalOptions As PUIModalOptions = PUI.NewModalOptions(hostile, hostile)
+	modalOptions.Id = "confirm-modal"
+	modalOptions.FooterText = hostile
+	modalOptions.CloseText = hostile
+	modalOptions.Size = "lg"
+	modalOptions.Scrollable = True
+	modalOptions.Centered = True
+	modalOptions.StaticBackdrop = True
+	Dim modal1 As MiniHtml = PUI.Modal(modalOptions)
+	Dim modalDialog1 As MiniHtml = modal1.ChildByClass("modal-dialog")
+	Dim modalContent1 As MiniHtml = modal1.ChildByClass("modal-content")
+	Dim modalHeader1 As MiniHtml = modal1.ChildByClass("modal-header")
+	Dim modalBody1 As MiniHtml = modal1.ChildByClass("modal-body")
+	Dim modalFooter1 As MiniHtml = modal1.ChildByClass("modal-footer")
+	Dim modalHtml As String = modal1.build
+	Check("Modal is a div", modal1.getName = "div")
+	Check("Modal base classes", HasClass(modal1, "modal") And HasClass(modal1, "fade"))
+	Check("Modal id", modal1.GetAttributes.Get("id") = "confirm-modal")
+	Check("Modal tabindex", modal1.GetAttributes.Get("tabindex") = "-1")
+	Check("Modal aria-hidden", modal1.GetAttributes.Get("aria-hidden") = "true")
+	Check("Modal aria-labelledby", modal1.GetAttributes.Get("aria-labelledby") = "confirm-modal-label")
+	Check("Modal static backdrop", modal1.GetAttributes.Get("data-bs-backdrop") = "static")
+	Check("Modal static keyboard", modal1.GetAttributes.Get("data-bs-keyboard") = "false")
+	Check("Modal dialog exists", modalDialog1 <> Null)
+	Check("Modal large size", HasClass(modalDialog1, "modal-lg"))
+	Check("Modal scrollable", HasClass(modalDialog1, "modal-dialog-scrollable"))
+	Check("Modal centered", HasClass(modalDialog1, "modal-dialog-centered"))
+	Check("Modal content exists", modalContent1 <> Null)
+	Check("Modal header exists", modalHeader1 <> Null)
+	Check("Modal title id", modalHeader1.ChildByClass("modal-title").GetAttributes.Get("id") = "confirm-modal-label")
+	Check("Modal title escaped", modalHeader1.ChildByClass("modal-title").build.Contains(PUI.EscapeHtml(hostile)))
+	Check("Modal header close button", modalHeader1.ChildByClass("btn-close") <> Null)
+	Check("Modal close dismiss attribute", modalHeader1.ChildByClass("btn-close").GetAttributes.Get("data-bs-dismiss") = "modal")
+	Check("Modal close aria-label", modalHeader1.ChildByClass("btn-close").GetAttributes.Get("aria-label") = "Close")
+	Check("Modal body escaped", modalBody1.build.Contains(PUI.EscapeHtml(hostile)))
+	Check("Modal footer exists", modalFooter1 <> Null)
+	Check("Modal footer text escaped", modalFooter1.ChildByName("p").build.Contains(PUI.EscapeHtml(hostile)))
+	Check("Modal footer close text escaped", modalFooter1.ChildByClass("btn-secondary").build.Contains(PUI.EscapeHtml(hostile)))
+	Check("Modal footer close dismisses", modalFooter1.ChildByClass("btn-secondary").GetAttributes.Get("data-bs-dismiss") = "modal")
+	Check("Modal renders no raw markup", modalHtml.Contains("<img") = False)
+	Check("Modal has no hidden attribute", modal1.GetAttributes.ContainsKey("hidden") = False)
+
+	Dim bareModalOptions As PUIModalOptions = PUI.NewModalOptions("", "")
+	bareModalOptions.CloseText = ""
+	Dim bareModal1 As MiniHtml = PUI.Modal(bareModalOptions)
+	Check("Modal without title omits header", bareModal1.ChildByClass("modal-header") = Null)
+	Check("Modal without footer text omits footer", bareModal1.ChildByClass("modal-footer") = Null)
+	Dim bareModalId As String = bareModal1.GetAttributes.Get("id")
+	Check("Modal without id gets a generated id", bareModalId.StartsWith("pui-modal-"))
+	Check("Modal Null options are safe", PUI.Modal(Null).ChildByClass("modal-body") <> Null)
+
+	Dim smallModalOptions As PUIModalOptions = PUI.NewModalOptions("Small", "Body")
+	smallModalOptions.Size = "sm"
+	Check("Modal small size", HasClass(PUI.Modal(smallModalOptions).ChildByClass("modal-dialog"), "modal-sm"))
+	smallModalOptions.Size = "giant"
+	Check("Modal unknown size is ignored", HasClass(PUI.Modal(smallModalOptions).ChildByClass("modal-dialog"), "modal-giant") = False)
+
+	' =====================================================================
+	' Modal trigger
+	' =====================================================================
+	Dim triggerOptions As PUIModalTriggerOptions = PUI.NewModalTriggerOptions("Open", "#confirm-modal")
+	triggerOptions.Variant = PUI.VariantDanger
+	triggerOptions.Size = PUI.SizeLarge
+	triggerOptions.Id = "open-confirm"
+	triggerOptions.CssClass = "fw-bold"
+	Dim trigger1 As MiniHtml = PUI.ModalTrigger(triggerOptions)
+	Check("ModalTrigger is a button", trigger1.getName = "button")
+	Check("ModalTrigger default type", trigger1.GetAttributes.Get("type") = "button")
+	Check("ModalTrigger class", HasClass(trigger1, "btn-danger") And HasClass(trigger1, "btn-lg"))
+	Check("ModalTrigger id", trigger1.GetAttributes.Get("id") = "open-confirm")
+	Check("ModalTrigger custom class", HasClass(trigger1, "fw-bold"))
+	Check("ModalTrigger toggle", trigger1.GetAttributes.Get("data-bs-toggle") = "modal")
+	Check("ModalTrigger target normalizes hash", trigger1.GetAttributes.Get("data-bs-target") = "#confirm-modal")
+	Check("ModalTrigger text", trigger1.build.Contains(">Open<"))
+	triggerOptions.Target = "confirm-modal"
+	Check("ModalTrigger accepts id without hash", PUI.ModalTrigger(triggerOptions).GetAttributes.Get("data-bs-target") = "#confirm-modal")
+	triggerOptions.Target = ""
+	Dim inertTrigger1 As MiniHtml = PUI.ModalTrigger(triggerOptions)
+	Check("ModalTrigger without target is inert", inertTrigger1.GetAttributes.ContainsKey("data-bs-toggle") = False)
+	Check("ModalTrigger without target still renders text", inertTrigger1.build.Contains(">Open<"))
+	triggerOptions.Target = "m"
+	triggerOptions.Disabled = True
+	triggerOptions.Hidden = True
+	Dim disabledTrigger1 As MiniHtml = PUI.ModalTrigger(triggerOptions)
+	Check("ModalTrigger disabled", disabledTrigger1.GetAttributes.ContainsKey("disabled"))
+	Check("ModalTrigger hidden", disabledTrigger1.GetAttributes.ContainsKey("hidden"))
+	Check("ModalTrigger Null options are safe", PUI.ModalTrigger(Null).GetAttributes.ContainsKey("data-bs-toggle") = False)
+
+	' =====================================================================
+	' Toast
+	' =====================================================================
+	Dim toastOptions As PUIToastOptions = PUI.NewToastOptions(hostile)
+	toastOptions.Id = "saved-toast"
+	toastOptions.Title = hostile
+	toastOptions.Variant = PUI.VariantSuccess
+	toastOptions.Autohide = True
+	toastOptions.DelayMs = 2500
+	toastOptions.CssClass = "shadow"
+	Dim toast1 As MiniHtml = PUI.Toast(toastOptions)
+	Dim toastHeader1 As MiniHtml = toast1.ChildByClass("toast-header")
+	Dim toastBody1 As MiniHtml = toast1.ChildByClass("toast-body")
+	Dim toastHtml As String = toast1.build
+	Check("Toast base classes", HasClass(toast1, "toast") And HasClass(toast1, "show"))
+	Check("Toast variant", HasClass(toast1, "text-bg-success"))
+	Check("Toast id", toast1.GetAttributes.Get("id") = "saved-toast")
+	Check("Toast role", toast1.GetAttributes.Get("role") = "status")
+	Check("Toast aria-live", toast1.GetAttributes.Get("aria-live") = "polite")
+	Check("Toast aria-atomic", toast1.GetAttributes.Get("aria-atomic") = "true")
+	Check("Toast autohide true", toast1.GetAttributes.Get("data-bs-autohide") = "true")
+	Check("Toast delay", toast1.GetAttributes.Get("data-bs-delay") = "2500")
+	Check("Toast custom class", HasClass(toast1, "shadow"))
+	Check("Toast header exists", toastHeader1 <> Null)
+	Check("Toast title escaped", toastHeader1.ChildByName("strong").build.Contains(PUI.EscapeHtml(hostile)))
+	Check("Toast close button", toastHeader1.ChildByClass("btn-close") <> Null)
+	Check("Toast close dismisses", toastHeader1.ChildByClass("btn-close").GetAttributes.Get("data-bs-dismiss") = "toast")
+	Check("Toast colored close button", HasClass(toastHeader1.ChildByClass("btn-close"), "btn-close-white"))
+
+	Dim lightToastOptions As PUIToastOptions = PUI.NewToastOptions("Light")
+	lightToastOptions.Variant = PUI.VariantLight
+	Check("Toast light variant keeps a dark close button", HasClass(PUI.Toast(lightToastOptions).ChildByClass("btn-close"), "btn-close-white") = False)
+	Check("Toast message escaped", toastBody1.build.Contains(PUI.EscapeHtml(hostile)))
+	Check("Toast renders no raw markup", toastHtml.Contains("<img") = False)
+
+	Dim neutralToastOptions As PUIToastOptions = PUI.NewToastOptions("Neutral")
+	neutralToastOptions.Dismissible = False
+	Dim neutralToast1 As MiniHtml = PUI.Toast(neutralToastOptions)
+	Check("Toast neutral variant has no text-bg", HasClass(neutralToast1, "text-bg-primary") = False)
+	Check("Toast neutral close button is standard", neutralToast1.ChildByClass("btn-close") = Null)
+	Check("Toast default autohide is false", neutralToast1.GetAttributes.Get("data-bs-autohide") = "false")
+	Check("Toast no delay when autohide is false", neutralToast1.GetAttributes.ContainsKey("data-bs-delay") = False)
+
+	Dim delayToastOptions As PUIToastOptions = PUI.NewToastOptions("Delay")
+	delayToastOptions.Autohide = True
+	delayToastOptions.DelayMs = 0
+	Check("Toast zero delay falls back to 5000", PUI.Toast(delayToastOptions).GetAttributes.Get("data-bs-delay") = "5000")
+	delayToastOptions.Variant = PUI.VariantOutlineDanger
+	Check("Toast rejects outline variants", HasClass(PUI.Toast(delayToastOptions), "text-bg-primary") = False)
+	delayToastOptions.Hidden = True
+	Check("Toast hidden attribute", PUI.Toast(delayToastOptions).GetAttributes.ContainsKey("hidden"))
+	Check("Toast Null options are safe", PUI.Toast(Null).ChildByClass("toast-body") <> Null)
+
+	' =====================================================================
+	' Theme switcher
+	' =====================================================================
+	Dim themeOptions As PUIThemeSwitcherOptions = PUI.NewThemeSwitcherOptions(PUI.ThemeDark)
+	Dim theme1 As MiniHtml = PUI.ThemeSwitcher(themeOptions)
+	Check("ThemeSwitcher is a div", theme1.getName = "div")
+	Check("ThemeSwitcher group class", HasClass(theme1, "btn-group"))
+	Check("ThemeSwitcher role", theme1.GetAttributes.Get("role") = "group")
+	Check("ThemeSwitcher default aria-label", theme1.GetAttributes.Get("aria-label") = "Theme")
+	Check("ThemeSwitcher has three buttons", theme1.GetChildren.Size = 3)
+	Check("ThemeSwitcher links are anchors", theme1.ChildByIndex(0).getName = "a" And theme1.ChildByIndex(1).getName = "a" And theme1.ChildByIndex(2).getName = "a")
+	Check("ThemeSwitcher auto href", theme1.ChildByIndex(0).GetAttributes.Get("href") = "?theme=auto")
+	Check("ThemeSwitcher light href", theme1.ChildByIndex(1).GetAttributes.Get("href") = "?theme=light")
+	Check("ThemeSwitcher dark href", theme1.ChildByIndex(2).GetAttributes.Get("href") = "?theme=dark")
+	Check("ThemeSwitcher dark is active", HasClass(theme1.ChildByIndex(2), "active"))
+	Check("ThemeSwitcher aria-current", theme1.ChildByIndex(2).GetAttributes.Get("aria-current") = "page")
+	Check("ThemeSwitcher auto is inactive", theme1.ChildByIndex(0).GetAttributes.ContainsKey("aria-current") = False)
+	themeOptions.Current = PUI.ThemeAuto
+	Check("ThemeSwitcher auto is active", HasClass(PUI.ThemeSwitcher(themeOptions).ChildByIndex(0), "active"))
+	themeOptions.Current = PUI.ThemeLight
+	Check("ThemeSwitcher light is active", HasClass(PUI.ThemeSwitcher(themeOptions).ChildByIndex(1), "active"))
+	themeOptions.Current = "sepia"
+	Check("ThemeSwitcher unknown theme falls back to auto", HasClass(PUI.ThemeSwitcher(themeOptions).ChildByIndex(0), "active"))
+
+	themeOptions.Current = PUI.ThemeDark
+	themeOptions.LightHref = "/?theme=light&from=switcher"
+	themeOptions.Size = PUI.SizeSmall
+	themeOptions.Id = "theme-switch"
+	themeOptions.CssClass = "mt-2"
+	themeOptions.Hidden = True
+	Dim styledTheme1 As MiniHtml = PUI.ThemeSwitcher(themeOptions)
+	Check("ThemeSwitcher href escaped", styledTheme1.ChildByIndex(1).GetAttributes.Get("href") = "/?theme=light&amp;from=switcher")
+	Check("ThemeSwitcher small size", HasClass(styledTheme1.ChildByIndex(0), "btn-sm"))
+	Check("ThemeSwitcher id", styledTheme1.GetAttributes.Get("id") = "theme-switch")
+	Check("ThemeSwitcher custom class", HasClass(styledTheme1, "mt-2"))
+	Check("ThemeSwitcher hidden attribute", styledTheme1.GetAttributes.ContainsKey("hidden"))
+
+	Dim unsafeTheme As PUIThemeSwitcherOptions = PUI.NewThemeSwitcherOptions(PUI.ThemeAuto)
+	unsafeTheme.LightHref = "javascript:alert(1)"
+	unsafeTheme.AutoHref = hostile
+	Dim unsafeTheme1 As MiniHtml = PUI.ThemeSwitcher(unsafeTheme)
+	Check("ThemeSwitcher rejects unsafe href", unsafeTheme1.ChildByIndex(1).GetAttributes.ContainsKey("href") = False)
+	Check("ThemeSwitcher escapes href value", unsafeTheme1.ChildByIndex(0).GetAttributes.Get("href") = PUI.EscapeHtml(hostile))
+	Check("ThemeSwitcher unsafe href not rendered", unsafeTheme1.build.Contains("javascript:") = False)
+	Check("ThemeSwitcher Null options are safe", PUI.ThemeSwitcher(Null).ChildByIndex(0) <> Null)
+
+	' =====================================================================
+	' Sidebar
+	' =====================================================================
+	Dim sidebarOptions As PUISidebarOptions = PUI.NewSidebarOptions("PakaiUI")
+	sidebarOptions.Href = "/dashboard"
+	sidebarOptions.Title = hostile
+	sidebarOptions.Id = "app-sidebar"
+	sidebarOptions.CssClass = "rounded"
+	sidebarOptions.Sticky = True
+	Dim activeSidebarItem As PUINavItemOptions = PUI.NewNavItemOptions("Overview", "/dashboard")
+	activeSidebarItem.Active = True
+	sidebarOptions.Items.Add(activeSidebarItem)
+	Dim disabledSidebarItem As PUINavItemOptions = PUI.NewNavItemOptions("Archive", "/archive")
+	disabledSidebarItem.Disabled = True
+	sidebarOptions.Items.Add(disabledSidebarItem)
+	Dim sidebar1 As MiniHtml = PUI.Sidebar(sidebarOptions)
+	Dim sidebarNav1 As MiniHtml = sidebar1.ChildByName("ul")
+	Dim sidebarHtml As String = sidebar1.build
+	Check("Sidebar is an aside", sidebar1.getName = "aside")
+	Check("Sidebar background and padding", HasClass(sidebar1, "bg-body-tertiary") And HasClass(sidebar1, "p-3"))
+	Check("Sidebar border", HasClass(sidebar1, "border-end"))
+	Check("Sidebar sticky", HasClass(sidebar1, "sticky-top") And HasClass(sidebar1, "align-self-start"))
+	Check("Sidebar id", sidebar1.GetAttributes.Get("id") = "app-sidebar")
+	Check("Sidebar custom class", HasClass(sidebar1, "rounded"))
+	Check("Sidebar brand", sidebar1.ChildByClass("navbar-brand") <> Null)
+	Check("Sidebar brand href", sidebar1.ChildByClass("navbar-brand").GetAttributes.Get("href") = "/dashboard")
+	Check("Sidebar brand text", sidebar1.ChildByClass("navbar-brand").build.Contains("PakaiUI"))
+	Check("Sidebar title escaped", sidebar1.ChildByName("h2").build.Contains(PUI.EscapeHtml(hostile)))
+	Check("Sidebar nav exists", sidebarNav1 <> Null)
+	Check("Sidebar nav vertical", HasClass(sidebarNav1, "nav") And HasClass(sidebarNav1, "flex-column"))
+	Check("Sidebar nav aria-label", sidebarNav1.GetAttributes.Get("aria-label") = "Sidebar")
+	Check("Sidebar item count", sidebarNav1.GetChildren.Size = 2)
+	Check("Sidebar active item", sidebarNav1.ChildByClass("active") <> Null)
+	Check("Sidebar disabled item", sidebarNav1.ChildByClass("disabled") <> Null)
+	Check("Sidebar renders no raw markup", sidebarHtml.Contains("<img") = False)
+	Check("Sidebar Null options are safe", PUI.Sidebar(Null).ChildByName("ul") <> Null)
+
+	Dim plainSidebarOptions As PUISidebarOptions = PUI.NewSidebarOptions("")
+	plainSidebarOptions.Border = False
+	Dim plainSidebar1 As MiniHtml = PUI.Sidebar(plainSidebarOptions)
+	Check("Sidebar without brand omits brand", plainSidebar1.ChildByClass("navbar-brand") = Null)
+	Check("Sidebar without title omits heading", plainSidebar1.ChildByName("h2") = Null)
+	Check("Sidebar border can be removed", HasClass(plainSidebar1, "border-end") = False)
+	plainSidebarOptions.Href = "javascript:alert(1)"
+	plainSidebarOptions.Brand = "Unsafe"
+	Dim unsafeSidebar1 As MiniHtml = PUI.Sidebar(plainSidebarOptions)
+	Check("Sidebar rejects unsafe brand URL", unsafeSidebar1.ChildByClass("navbar-brand").GetAttributes.ContainsKey("href") = False)
+	Check("Sidebar unsafe brand text remains", unsafeSidebar1.build.Contains("Unsafe"))
+	plainSidebarOptions.Hidden = True
+	Check("Sidebar hidden attribute", PUI.Sidebar(plainSidebarOptions).GetAttributes.ContainsKey("hidden"))
+
+	' =====================================================================
+	' Composition sample page
+	' =====================================================================
+	Dim pageOptions As PUIPageOptions = PUI.NewPageOptions("PakaiUI M4 sample")
+	pageOptions.Theme = PUI.ThemeDark
+	Dim page1 As MiniHtml = PUI.Document(pageOptions)
+	Dim head1 As MiniHtml = PUI.Head(page1)
+	PUI.StyleSheet(head1, "/assets/css/bootstrap.min.css?v=5.3.8")
+	Dim body1 As MiniHtml = PUI.Body(page1)
+
+	Dim sampleThemeOptions As PUIThemeSwitcherOptions = PUI.NewThemeSwitcherOptions(PUI.ThemeDark)
+	sampleThemeOptions.Id = "sample-theme"
+	PUI.ThemeSwitcher(sampleThemeOptions).up(body1)
+
+	Dim sampleSidebarOptions As PUISidebarOptions = PUI.NewSidebarOptions("PakaiUI")
+	sampleSidebarOptions.Items.Add(PUI.NewNavItemOptions("Overview", "/"))
+	PUI.Sidebar(sampleSidebarOptions).up(body1)
+
+	Dim sampleModalOptions As PUIModalOptions = PUI.NewModalOptions("Sample", "Body")
+	sampleModalOptions.Id = "sample-modal"
+	Dim sampleTriggerOptions As PUIModalTriggerOptions = PUI.NewModalTriggerOptions("Open", "sample-modal")
+	sampleTriggerOptions.Variant = PUI.VariantDanger
+	PUI.ModalTrigger(sampleTriggerOptions).up(body1)
+	PUI.Modal(sampleModalOptions).up(body1)
+
+	Dim sampleToastOptions As PUIToastOptions = PUI.NewToastOptions("Saved")
+	sampleToastOptions.Id = "sample-toast"
+	PUI.Toast(sampleToastOptions).up(body1)
+
+	Dim sampleHtmxOptions As PUIHtmxOptions = PUI.NewHtmxOptions("/hx/ping")
+	sampleHtmxOptions.Target = "#sample-result"
+	Dim samplePing1 As MiniHtml = PUI.Button(PUI.NewButtonOptions("Ping"))
+	PUI.Htmx(samplePing1, sampleHtmxOptions).up(body1)
+
+	Dim sampleAlpineOptions As PUIAlpineOptions = PUI.NewAlpineOptions
+	sampleAlpineOptions.Data = "{ open: false }"
+	Dim samplePanel1 As MiniHtml = PUI.Alpine(PUI.Card(PUI.NewCardOptions("Local state", "Panel")), sampleAlpineOptions)
+	samplePanel1.up(body1)
+
+	Check("Sample page starts with doctype", page1.build.StartsWith("<!DOCTYPE html>"))
+	Check("Sample page nests the theme switcher", body1.ChildByClass("btn-group") <> Null)
+	Check("Sample page nests the sidebar", body1.ChildByName("aside") <> Null)
+	Check("Sample page nests the modal", body1.ChildByClass("modal") <> Null)
+	Check("Sample page nests the modal trigger", body1.ChildByClass("btn-danger") <> Null)
+	Check("Sample page nests the toast", body1.ChildByClass("toast") <> Null)
+	Check("Sample page nests the HTMX button", body1.ChildByClass("btn-primary").GetAttributes.ContainsKey("hx-get"))
+	Check("Sample page nests the Alpine card", body1.ChildByClass("card").GetAttributes.ContainsKey("x-data"))
+
+	File.WriteString(File.DirApp, "m4-output.html", page1.build)
+	Log("")
+	Log($"M4 tests: ${mPassed} passed, ${mFailed} failed"$)
+	Log("Sample page written to: " & File.Combine(File.DirApp, "m4-output.html"))
+
+	Dim system As JavaObject
+	system.InitializeStatic("java.lang.System")
+	If mFailed > 0 Then
+		system.RunMethod("exit", Array(1))
+	Else
+		system.RunMethod("exit", Array(0))
+	End If
+End Sub
+
+Private Sub Check (Name As String, Condition As Boolean)
+	If Condition Then
+		mPassed = mPassed + 1
+		Log("PASS " & Name)
+	Else
+		mFailed = mFailed + 1
+		Log("FAIL " & Name)
+	End If
+End Sub
+
+' Returns the class attribute value, or an empty string when there is none.
+Private Sub Classes (Element As MiniHtml) As String
+	If Element = Null Then Return ""
+	If Element.GetAttributes.ContainsKey("class") Then Return Element.GetAttributes.Get("class")
+	Return ""
+End Sub
+
+' Exact class token test, so "primary" does not match "text-bg-primary".
+Private Sub HasClass (Element As MiniHtml, Name As String) As Boolean
+	If Element = Null Then Return False
+	Dim value As String = Classes(Element)
+	Return (" " & value & " ").Contains(" " & Name & " ")
+End Sub
+
+Private Sub Tag (Name As String) As MiniHtml
+	Dim tag1 As MiniHtml
+	tag1.Initialize(Name)
+	Return tag1
+End Sub
