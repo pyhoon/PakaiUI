@@ -10,8 +10,8 @@ works without Pakai Server. HTMX 2.x and Alpine.js are optional enhancements onl
 
 | Item | Value |
 | --- | --- |
-| Library version | `0.10` (experimental; public API may change) |
-| Current milestone | **M0 complete** — reconnaissance + compiled proof of concept |
+| Library version | `0.12` (experimental; public API may change) |
+| Current milestone | **M2 complete** - core components (badge, alert, card extensions, breadcrumb, page header, navigation, empty/loading states) |
 | B4J | 10.7 (`C:\Program Files\B4X\B4J`) |
 | JDK used for builds/runs | 19 (`C:\Java\jdk-19.0.2`) |
 | HTML foundation | MiniHTML 4.02 (`C:\B4X\Additional\B4X\MiniHTML.b4xlib`) |
@@ -29,6 +29,7 @@ AGENT.md                     This file (agent/contributor instructions)
 README.md                    Project overview and quick start
 CHANGELOG.md                 Release history (0.x, breaking changes documented)
 docs/M0-RECONNAISSANCE.md    Verified findings, API inventory, M0 evidence
+docs/M2-COMPONENTS.md        M2 component reference: options, markup, accessibility, dependencies
 docs/PakaiUI-*.md            Design inputs: specification, API proposal, considerations (read-only)
 assets/                      Tracked frontend assets (Bootstrap 5.3.8, icons, HTMX 2.0.8, pakaiui.css)
   README.md                  Versions, SHA-256 hashes, serving and upgrade notes
@@ -42,6 +43,7 @@ source/                      PakaiUI library B4J project
   build_b4xlib.bat           Packages Objects\PakaiUI.b4xlib with jar.exe
 tests/m0-poc/                Console proof of concept (consumes the installed b4xlib)
 tests/m1-foundation/         M1 foundation API tests (35 assertions)
+tests/m2-components/         M2 core component tests (135 assertions)
 gallery/                     Standalone jServer demo (plain jServer, no Pakai Server) + HTMX baseline
 demo/                        Pakai Server Web 6.99 starter (reference; not a PakaiUI demo)
 ```
@@ -136,6 +138,18 @@ cd C:\Projects\PakaiUI\tests\m1-foundation
 Expected: 35 `PASS` lines, `M1 tests: 35 passed, 0 failed`, exit code 0. The sample page is written to
 `File.DirApp\m1-output.html`.
 
+### Build and run the M2 component tests
+
+```powershell
+cd C:\Projects\PakaiUI\tests\m2-components
+& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="M2Components.b4j" -NoClean=True -ShowWarnings=True
+& "C:\Java\jdk-19.0.2\bin\java.exe" -jar Objects\M2Components.jar
+```
+
+Expected: 135 `PASS` lines, `M2 tests: 135 passed, 0 failed`, exit code 0. The sample page is written to
+`File.DirApp\m2-output.html`. The `PakaiUI: rejected unsafe ...` and `unknown ... variant` lines are
+expected stderr messages from the negative tests.
+
 ### Build and run the standalone gallery (HTMX baseline host)
 
 ```powershell
@@ -147,7 +161,9 @@ cd Objects
 ```
 
 The server listens on `http://localhost:51010/`. The gallery exercises the HTMX 2.x baseline
-fixture defined in `docs/M0-RECONNAISSANCE.md` section 9; the verified result is recorded there.
+fixture defined in `docs/M0-RECONNAISSANCE.md` section 9 plus the M2 component set (badges, alerts,
+breadcrumb, page header, nav, navbar, empty and loading states); the verified results are recorded there
+and in `docs/M2-COMPONENTS.md`.
 
 **Always rebuild the `.b4xlib` and reinstall it before testing a consumer project.** The PoC compiles
 `PUI.bas` from the installed library, not from `source/` directly.

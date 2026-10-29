@@ -8,14 +8,16 @@ Alpine.js are optional enhancements, never requirements.
 
 ## Status
 
-**v0.11 — M1 in progress (experimental API).**
+**v0.12 — M2 complete (experimental API).**
 
-M0 delivered the verified MiniHTML4 reconnaissance, the escaping/composition contract, and a compiled
-proof of concept. M1 adds theme tokens (light/dark via `data-bs-theme`), a document skeleton
-(`PUI.Document` / `Head` / `Body`) and page-layout primitives (`PUI.Container`, `PUI.Row`,
-`PUI.Col`), plus a tracked `assets/` folder and a standalone gallery demo. The component catalogue
-is still `Button` and `Card`; further components belong to later milestones. See
-[`docs/M0-RECONNAISSANCE.md`](docs/M0-RECONNAISSANCE.md).
+M0 delivered the verified MiniHTML4 reconnaissance, the escaping/composition contract and a compiled
+proof of concept. M1 added theme tokens (light/dark via `data-bs-theme`), the document skeleton
+(`PUI.Document` / `Head` / `Body`), page-layout primitives (`PUI.Container`, `PUI.Row`, `PUI.Col`), the
+tracked `assets/` folder, the asset sync script and the standalone gallery. M2 adds the core component
+set: `Badge`, `Alert`, `Breadcrumb`, `PageHeader`, `Nav` / `NavItem` / `Navbar`, `EmptyState`,
+`LoadingState` and card extensions (header, image, hidden). See
+[`docs/M2-COMPONENTS.md`](docs/M2-COMPONENTS.md) for the component reference and
+[`docs/M0-RECONNAISSANCE.md`](docs/M0-RECONNAISSANCE.md) for the verified MiniHTML behaviour.
 
 ## Requirements
 
@@ -33,40 +35,45 @@ PakaiUI core does not depend on Pakai Server, MiniJS, MiniCSS, HTMX or Alpine.js
 ## Usage
 
 ```b4j
-' Button
-Dim buttonOptions As PUIButtonOptions = PUI.NewButtonOptions("Save")
-buttonOptions.Variant = PUI.VariantPrimary
-buttonOptions.ButtonType = "submit"
-body1.down(PUI.Button(buttonOptions))
-
-' Link-style button
-Dim linkOptions As PUIButtonOptions = PUI.NewButtonOptions("Documentation")
-linkOptions.Href = "https://example.com/docs"
-linkOptions.Variant = PUI.VariantOutlineSecondary
-body1.down(PUI.Button(linkOptions))
-
-' Card with escaped text, then compose content into its body slot
-Dim cardOptions As PUICardOptions = PUI.NewCardOptions("Welcome", "Body text")
-Dim card1 As MiniHtml = PUI.Card(cardOptions)
-card1.ChildByClass("card-body").down(PUI.Button(buttonOptions))
-body1.down(card1)
-```
-
-' Page skeleton with a dark theme and a container/row/column grid
+' Page skeleton with a dark theme
 Dim pageOptions As PUIPageOptions = PUI.NewPageOptions("My app")
 pageOptions.Theme = PUI.ThemeDark
 Dim page As MiniHtml = PUI.Document(pageOptions)
 Dim head1 As MiniHtml = PUI.Head(page)
 PUI.StyleSheet(head1, "/assets/css/bootstrap.min.css?v=5.3.8")
 Dim body1 As MiniHtml = PUI.Body(page)
-Dim container1 As MiniHtml = PUI.Container(Null)
-container1.up(body1)
-Dim grid1 As MiniHtml = PUI.Row(Null)
-grid1.up(container1)
-Dim col1 As PUIColOptions = PUI.NewColOptions
-col1.Breakpoint = "md"
-col1.Width = 6
-PUI.Col(col1).up(grid1).down(PUI.Card(PUI.NewCardOptions("Left", "Content")))
+
+' Page header and breadcrumb
+body1.down(PUI.PageHeader(PUI.NewPageHeaderOptions("Dashboard")))
+Dim crumbOptions As PUIBreadcrumbOptions = PUI.NewBreadcrumbOptions
+crumbOptions.Items.Add(PUI.NewBreadcrumbItem("Home", "/"))
+Dim currentCrumb As PUIBreadcrumbItem = PUI.NewBreadcrumbItem("Dashboard", "")
+currentCrumb.Active = True
+crumbOptions.Items.Add(currentCrumb)
+body1.down(PUI.Breadcrumb(crumbOptions))
+
+' Badge and alert
+Dim badgeOptions As PUIBadgeOptions = PUI.NewBadgeOptions("New")
+badgeOptions.Variant = PUI.VariantSuccess
+body1.down(PUI.Badge(badgeOptions))
+
+Dim alertOptions As PUIAlertOptions = PUI.NewAlertOptions("Changes saved.")
+alertOptions.Title = "Saved"
+alertOptions.Variant = PUI.VariantSuccess
+alertOptions.Dismissible = True
+body1.down(PUI.Alert(alertOptions))
+
+' Button, then a card with escaped text and composed content
+Dim buttonOptions As PUIButtonOptions = PUI.NewButtonOptions("Save")
+buttonOptions.ButtonType = "submit"
+Dim cardOptions As PUICardOptions = PUI.NewCardOptions("Welcome", "Body text")
+Dim card1 As MiniHtml = PUI.Card(cardOptions)
+card1.ChildByClass("card-body").down(PUI.Button(buttonOptions))
+body1.down(card1)
+
+' Empty and loading states
+body1.down(PUI.EmptyState(PUI.NewEmptyStateOptions("No records", "Create one to get started.")))
+body1.down(PUI.LoadingState(PUI.NewLoadingStateOptions("Loading...")))
 ```
 
 Text and attribute values are escaped by default. Raw HTML must be explicit:
@@ -84,8 +91,9 @@ assets/                      Tracked frontend assets (Bootstrap 5.3.8, icons, HT
 sync-assets.bat              Copies assets/ into <project>\Objects\www\assets (additive)
 tests/m0-poc/                Console proof of concept consuming the installed b4xlib
 tests/m1-foundation/         M1 foundation API tests (35 assertions)
+tests/m2-components/         M2 core component tests (135 assertions)
 gallery/                     Standalone jServer demo and HTMX 2.x baseline host
-docs/                        M0 findings, technical specification, API proposal, design considerations
+docs/                        M0 findings, M2 component reference, specification and API inputs
 demo/                        Pakai Server Web starter kept for reference
 AGENT.md                     Build/test commands and contribution rules
 CHANGELOG.md                 Version history and breaking changes
@@ -115,7 +123,12 @@ cd ..\m1-foundation
 & "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="M1Foundation.b4j" -NoClean=True -ShowWarnings=True
 & "C:\Java\jdk-19.0.2\bin\java.exe" -jar Objects\M1Foundation.jar
 
-# Standalone gallery (HTMX baseline host) on http://localhost:51010/
+# M2 component tests (expects 135/135 PASS and exit code 0)
+cd ..\m2-components
+& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="M2Components.b4j" -NoClean=True -ShowWarnings=True
+& "C:\Java\jdk-19.0.2\bin\java.exe" -jar Objects\M2Components.jar
+
+# Standalone gallery (HTMX baseline + M2 components) on http://localhost:51010/
 cd ..\..\gallery
 cmd /c ..\sync-assets.bat .
 & "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="Gallery.b4j" -NoClean=True -ShowWarnings=True
@@ -123,7 +136,7 @@ cd Objects
 & "C:\Java\jdk-19.0.2\bin\java.exe" -jar Gallery.jar
 ```
 
-See [`AGENT.md`](AGENT.md) for the full command reference and the B4J/ MiniHTML pitfalls that must be
+See [`AGENT.md`](AGENT.md) for the full command reference and the B4J/MiniHTML pitfalls that must be
 respected.
 
 ## License

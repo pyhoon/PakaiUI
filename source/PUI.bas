@@ -5,7 +5,8 @@ Type=StaticCode
 Version=10.7
 @EndOfDesignText@
 ' PakaiUI - server-rendered UI components for B4J web applications.
-' Version: 0.11 (M1 foundation: theme, document and page-layout primitives)
+' Version: 0.12 (M2 core components: badge, alert, breadcrumb, header, nav,
+'          empty and loading states, plus card extensions)
 ' HTML foundation: MiniHTML 4.02 (https://github.com/pyhoon/MiniHTML4)
 '
 ' Safety contract:
@@ -17,7 +18,7 @@ Version=10.7
 '   - Public option types are prefixed with PUI because B4X types share a global namespace.
 '   - No dependency on Pakai Server, MiniJS or MiniCSS.
 Sub Process_Globals
-	Public Const VERSION As String = "0.11"
+	Public Const VERSION As String = "0.12"
 
 	' Bootstrap 5.3 semantic variants
 	Public Const VariantPrimary As String = "primary"
@@ -54,13 +55,25 @@ Sub Process_Globals
 	' ButtonType is named ButtonType because "Type" is a B4X reserved word.
 	' Hidden is used instead of Visible so that a default False value means "shown".
 	Type PUIButtonOptions (Text As String, Variant As String, Size As String, ButtonType As String, Href As String, Id As String, CssClass As String, Disabled As Boolean, Hidden As Boolean)
-	Type PUICardOptions (Title As String, Subtitle As String, BodyText As String, FooterText As String, Id As String, CssClass As String)
+	Type PUICardOptions (Title As String, Subtitle As String, BodyText As String, FooterText As String, Id As String, CssClass As String, HeaderText As String, ImageSrc As String, ImageAlt As String, Hidden As Boolean)
 
 	' Page and layout options (M1 foundation).
 	Type PUIPageOptions (Title As String, Description As String, Lang As String, Theme As String, BodyCssClass As String)
 	Type PUIContainerOptions (Id As String, CssClass As String, Breakpoint As String, Fluid As Boolean, Hidden As Boolean)
 	Type PUIRowOptions (Id As String, CssClass As String, Hidden As Boolean)
 	Type PUIColOptions (Id As String, CssClass As String, Breakpoint As String, Width As Int, Auto As Boolean, Hidden As Boolean)
+
+	' Core component options (M2).
+	Type PUIBadgeOptions (Text As String, Variant As String, Pill As Boolean, Id As String, CssClass As String, Hidden As Boolean)
+	Type PUIAlertOptions (Title As String, Message As String, Variant As String, Dismissible As Boolean, Id As String, CssClass As String, Hidden As Boolean)
+	Type PUIBreadcrumbItem (Text As String, Href As String, Active As Boolean)
+	Type PUIBreadcrumbOptions (Items As List, AriaLabel As String, Id As String, CssClass As String, Hidden As Boolean)
+	Type PUIPageHeaderOptions (Title As String, Subtitle As String, Id As String, CssClass As String, Hidden As Boolean)
+	Type PUINavItemOptions (Text As String, Href As String, Active As Boolean, Disabled As Boolean, Id As String, CssClass As String, Hidden As Boolean)
+	Type PUINavOptions (Items As List, Pills As Boolean, Tabs As Boolean, Vertical As Boolean, AriaLabel As String, Id As String, CssClass As String, Hidden As Boolean)
+	Type PUINavbarOptions (Brand As String, Href As String, Items As List, Breakpoint As String, AriaLabel As String, Id As String, CssClass As String, Hidden As Boolean)
+	Type PUIEmptyStateOptions (Title As String, Message As String, IconClass As String, ActionText As String, ActionHref As String, Id As String, CssClass As String, Hidden As Boolean)
+	Type PUILoadingStateOptions (Text As String, Size As String, Variant As String, Centered As Boolean, Id As String, CssClass As String, Hidden As Boolean)
 End Sub
 
 ' Reserved for future library-wide configuration.
@@ -159,6 +172,89 @@ End Sub
 Public Sub NewColOptions As PUIColOptions
 	Dim options As PUIColOptions
 	options.Initialize
+	Return options
+End Sub
+
+Public Sub NewBadgeOptions (Text As String) As PUIBadgeOptions
+	Dim options As PUIBadgeOptions
+	options.Initialize
+	options.Text = Text
+	Return options
+End Sub
+
+Public Sub NewAlertOptions (Message As String) As PUIAlertOptions
+	Dim options As PUIAlertOptions
+	options.Initialize
+	options.Message = Message
+	Return options
+End Sub
+
+Public Sub NewBreadcrumbItem (Text As String, Href As String) As PUIBreadcrumbItem
+	Dim item As PUIBreadcrumbItem
+	item.Initialize
+	item.Text = Text
+	item.Href = Href
+	Return item
+End Sub
+
+Public Sub NewBreadcrumbOptions As PUIBreadcrumbOptions
+	Dim options As PUIBreadcrumbOptions
+	options.Initialize
+	Dim items1 As List
+	items1.Initialize
+	options.Items = items1
+	options.AriaLabel = "breadcrumb"
+	Return options
+End Sub
+
+Public Sub NewPageHeaderOptions (Title As String) As PUIPageHeaderOptions
+	Dim options As PUIPageHeaderOptions
+	options.Initialize
+	options.Title = Title
+	Return options
+End Sub
+
+Public Sub NewNavItemOptions (Text As String, Href As String) As PUINavItemOptions
+	Dim options As PUINavItemOptions
+	options.Initialize
+	options.Text = Text
+	options.Href = Href
+	Return options
+End Sub
+
+Public Sub NewNavOptions As PUINavOptions
+	Dim options As PUINavOptions
+	options.Initialize
+	Dim items1 As List
+	items1.Initialize
+	options.Items = items1
+	Return options
+End Sub
+
+Public Sub NewNavbarOptions (Brand As String) As PUINavbarOptions
+	Dim options As PUINavbarOptions
+	options.Initialize
+	Dim items1 As List
+	items1.Initialize
+	options.Brand = Brand
+	options.Items = items1
+	options.Breakpoint = "md"
+	options.AriaLabel = "Main navigation"
+	Return options
+End Sub
+
+Public Sub NewEmptyStateOptions (Title As String, Message As String) As PUIEmptyStateOptions
+	Dim options As PUIEmptyStateOptions
+	options.Initialize
+	options.Title = Title
+	options.Message = Message
+	Return options
+End Sub
+
+Public Sub NewLoadingStateOptions (Text As String) As PUILoadingStateOptions
+	Dim options As PUILoadingStateOptions
+	options.Initialize
+	options.Text = Text
 	Return options
 End Sub
 
@@ -362,6 +458,8 @@ Public Sub Button (Options As PUIButtonOptions) As MiniHtml
 End Sub
 
 ' Renders a complete card from text-only options.
+' Optional image (top), header, body and footer are emitted in that order.
+' Unsafe image URLs are rejected and logged; the image is then omitted.
 ' To compose arbitrary content inside a card use the CardHeader, CardBody,
 ' CardFooter, CardTitle and CardText part factories, or append to the
 ' element returned by ChildByClass("card-body").
@@ -378,6 +476,23 @@ Public Sub Card (Options As PUICardOptions) As MiniHtml
 	card1.cls("card")
 	If options1.CssClass <> "" Then card1.cls(EscapeHtml(options1.CssClass))
 	If options1.Id <> "" Then card1.attr("id", EscapeHtml(options1.Id))
+
+	If options1.ImageSrc <> "" Then
+		If IsSafeUrl(options1.ImageSrc) Then
+			Dim image1 As MiniHtml = Tag("img")
+			image1.cls("card-img-top")
+			image1.attr("src", EscapeHtml(options1.ImageSrc))
+			image1.attr("alt", EscapeHtml(options1.ImageAlt))
+			image1.up(card1)
+		Else
+			LogError("PakaiUI: rejected unsafe card image URL: " & options1.ImageSrc)
+		End If
+	End If
+
+	If options1.HeaderText <> "" Then
+		Dim header1 As MiniHtml = CardHeader
+		header1.up(card1).text(EscapeHtml(options1.HeaderText))
+	End If
 
 	If options1.Title <> "" Or options1.Subtitle <> "" Or options1.BodyText <> "" Then
 		Dim body1 As MiniHtml = CardBody
@@ -402,6 +517,7 @@ Public Sub Card (Options As PUICardOptions) As MiniHtml
 		Dim footer1 As MiniHtml = CardFooter
 		footer1.up(card1).text(EscapeHtml(options1.FooterText))
 	End If
+	If options1.Hidden Then card1.hidden
 	Return card1
 End Sub
 
@@ -423,6 +539,318 @@ End Sub
 
 Public Sub CardText As MiniHtml
 	Return Tag("p").cls("card-text")
+End Sub
+
+' Short status, count or category label: span.badge with text-bg-* variant.
+' Pill adds rounded-pill. Only base variants are valid (no outline/link).
+Public Sub Badge (Options As PUIBadgeOptions) As MiniHtml
+	Dim options1 As PUIBadgeOptions = Options
+	If options1 = Null Then
+		Dim emptyOptions As PUIBadgeOptions
+		emptyOptions.Initialize
+		options1 = emptyOptions
+	End If
+
+	Dim badge1 As MiniHtml = Tag("span")
+	badge1.cls("badge text-bg-" & NormalizeBaseVariant(options1.Variant, "badge"))
+	If options1.Pill Then badge1.cls("rounded-pill")
+	If options1.CssClass <> "" Then badge1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then badge1.attr("id", EscapeHtml(options1.Id))
+	If options1.Hidden Then badge1.hidden
+	badge1.text(EscapeHtml(options1.Text))
+	Return badge1
+End Sub
+
+' Contextual alert: div.alert.alert-{variant} with role="alert".
+' Dismissible adds alert-dismissible fade show and a Bootstrap close button.
+' The close button needs Bootstrap's JavaScript; without it the button is inert
+' but the alert content remains fully readable.
+Public Sub Alert (Options As PUIAlertOptions) As MiniHtml
+	Dim options1 As PUIAlertOptions = Options
+	If options1 = Null Then
+		Dim emptyOptions As PUIAlertOptions
+		emptyOptions.Initialize
+		options1 = emptyOptions
+	End If
+
+	Dim alert1 As MiniHtml = Tag("div")
+	alert1.cls("alert alert-" & NormalizeBaseVariant(options1.Variant, "alert"))
+	alert1.attr("role", "alert")
+	If options1.Dismissible Then
+		alert1.cls("alert-dismissible")
+		alert1.cls("fade")
+		alert1.cls("show")
+	End If
+	If options1.CssClass <> "" Then alert1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then alert1.attr("id", EscapeHtml(options1.Id))
+	If options1.Hidden Then alert1.hidden
+
+	If options1.Title <> "" Then
+		Dim title1 As MiniHtml = Tag("h4").cls("alert-heading")
+		title1.text(EscapeHtml(options1.Title))
+		title1.up(alert1)
+	End If
+	If options1.Message <> "" Then
+		Dim message1 As MiniHtml = Tag("p").cls("mb-0")
+		message1.text(EscapeHtml(options1.Message))
+		message1.up(alert1)
+	End If
+	If options1.Dismissible Then
+		Dim close1 As MiniHtml = Tag("button")
+		close1.attr("type", "button")
+		close1.cls("btn-close")
+		close1.attr("data-bs-dismiss", "alert")
+		close1.attr("aria-label", "Close")
+		close1.up(alert1)
+	End If
+	Return alert1
+End Sub
+
+' Breadcrumb navigation: nav[aria-label] > ol.breadcrumb > li.breadcrumb-item.
+' The active item is rendered as text with class active and aria-current="page";
+' it never emits a link even when Href is set.
+Public Sub Breadcrumb (Options As PUIBreadcrumbOptions) As MiniHtml
+	Dim options1 As PUIBreadcrumbOptions = Options
+	If options1 = Null Then options1 = NewBreadcrumbOptions
+
+	Dim nav1 As MiniHtml = Tag("nav")
+	Dim label As String = options1.AriaLabel.Trim
+	If label = "" Then label = "breadcrumb"
+	nav1.attr("aria-label", EscapeHtml(label))
+	If options1.CssClass <> "" Then nav1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then nav1.attr("id", EscapeHtml(options1.Id))
+	If options1.Hidden Then nav1.hidden
+
+	Dim list1 As MiniHtml = Tag("ol").cls("breadcrumb")
+	list1.up(nav1)
+	If options1.Items <> Null Then
+		For i = 0 To options1.Items.Size - 1
+			Dim item As PUIBreadcrumbItem = options1.Items.Get(i)
+			Dim listItem As MiniHtml = Tag("li").cls("breadcrumb-item")
+			If item.Active Then
+				listItem.cls("active")
+				listItem.attr("aria-current", "page")
+			End If
+			If item.Active Or item.Href = "" Then
+				listItem.text(EscapeHtml(item.Text))
+			Else If IsSafeUrl(item.Href) Then
+				Dim link1 As MiniHtml = Tag("a")
+				link1.attr("href", EscapeHtml(item.Href))
+				link1.text(EscapeHtml(item.Text))
+				link1.up(listItem)
+			Else
+				LogError("PakaiUI: rejected unsafe breadcrumb URL: " & item.Href)
+				listItem.text(EscapeHtml(item.Text))
+			End If
+			listItem.up(list1)
+		Next
+	End If
+	Return nav1
+End Sub
+
+' Page title block: header.border-bottom > h1.h3 + optional subtitle.
+Public Sub PageHeader (Options As PUIPageHeaderOptions) As MiniHtml
+	Dim options1 As PUIPageHeaderOptions = Options
+	If options1 = Null Then options1 = NewPageHeaderOptions("")
+
+	Dim header1 As MiniHtml = Tag("header").cls("pb-2 mb-4 border-bottom")
+	If options1.CssClass <> "" Then header1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then header1.attr("id", EscapeHtml(options1.Id))
+	If options1.Hidden Then header1.hidden
+
+	Dim title1 As MiniHtml = Tag("h1").cls("h3")
+	title1.text(EscapeHtml(options1.Title))
+	title1.up(header1)
+	If options1.Subtitle <> "" Then
+		Dim subtitle1 As MiniHtml = Tag("p").cls("text-body-secondary mb-0")
+		subtitle1.text(EscapeHtml(options1.Subtitle))
+		subtitle1.up(header1)
+	End If
+	Return header1
+End Sub
+
+' Navigation list: ul.nav with optional nav-pills, nav-tabs or flex-column.
+' Tabs win over Pills when both are set. Items are appended as NavItem.
+Public Sub Nav (Options As PUINavOptions) As MiniHtml
+	Dim options1 As PUINavOptions = Options
+	If options1 = Null Then options1 = NewNavOptions
+
+	Dim nav1 As MiniHtml = Tag("ul").cls("nav")
+	If options1.Tabs Then
+		nav1.cls("nav-tabs")
+	Else If options1.Pills Then
+		nav1.cls("nav-pills")
+	End If
+	If options1.Vertical Then nav1.cls("flex-column")
+	If options1.CssClass <> "" Then nav1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then nav1.attr("id", EscapeHtml(options1.Id))
+	If options1.AriaLabel <> "" Then nav1.attr("aria-label", EscapeHtml(options1.AriaLabel))
+	If options1.Hidden Then nav1.hidden
+
+	If options1.Items <> Null Then
+		For i = 0 To options1.Items.Size - 1
+			Dim item As PUINavItemOptions = options1.Items.Get(i)
+			NavItem(item).up(nav1)
+		Next
+	End If
+	Return nav1
+End Sub
+
+' One navigation entry: li.nav-item > a.nav-link (or span.nav-link when no
+' safe href is available). Id and CssClass apply to the link; Hidden hides
+' the list item. Active items keep their link and add aria-current="page".
+Public Sub NavItem (Options As PUINavItemOptions) As MiniHtml
+	Dim options1 As PUINavItemOptions = Options
+	If options1 = Null Then options1 = NewNavItemOptions("", "")
+
+	Dim listItem As MiniHtml = Tag("li").cls("nav-item")
+	If options1.Hidden Then listItem.hidden
+
+	Dim linkClass As String = "nav-link"
+	If options1.Active Then linkClass = linkClass & " active"
+	If options1.Disabled Then linkClass = linkClass & " disabled"
+
+	Dim useLink As Boolean = options1.Href <> "" And IsSafeUrl(options1.Href)
+	If options1.Href <> "" And Not(useLink) Then
+		LogError("PakaiUI: rejected unsafe navigation URL: " & options1.Href)
+	End If
+	Dim link1 As MiniHtml
+	If useLink Then
+		link1 = Tag("a")
+		link1.attr("href", EscapeHtml(options1.Href))
+	Else
+		link1 = Tag("span")
+	End If
+	link1.cls(linkClass)
+	If options1.CssClass <> "" Then link1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then link1.attr("id", EscapeHtml(options1.Id))
+	If options1.Active Then link1.attr("aria-current", "page")
+	If options1.Disabled Then
+		link1.attr("aria-disabled", "true")
+		link1.attr("tabindex", "-1")
+	End If
+	link1.text(EscapeHtml(options1.Text))
+	link1.up(listItem)
+	Return listItem
+End Sub
+
+' Top-level navigation bar: nav.navbar > div.container-fluid with an optional
+' brand link and a ul.navbar-nav built from Items. There is no collapse
+' toggler, so items stay visible and wrap on small screens without JavaScript.
+Public Sub Navbar (Options As PUINavbarOptions) As MiniHtml
+	Dim options1 As PUINavbarOptions = Options
+	If options1 = Null Then options1 = NewNavbarOptions("")
+
+	Dim nav1 As MiniHtml = Tag("nav").cls("navbar")
+	Dim breakpoint1 As String = options1.Breakpoint.Trim
+	If breakpoint1 = "" Then
+		nav1.cls("navbar-expand")
+	Else
+		nav1.cls("navbar-expand-" & NormalizeBreakpoint(breakpoint1))
+	End If
+	nav1.cls("bg-body-tertiary")
+	nav1.cls("flex-wrap")
+	If options1.CssClass <> "" Then nav1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then nav1.attr("id", EscapeHtml(options1.Id))
+	Dim label As String = options1.AriaLabel.Trim
+	If label = "" Then label = "Main navigation"
+	nav1.attr("aria-label", EscapeHtml(label))
+	If options1.Hidden Then nav1.hidden
+
+	Dim inner1 As MiniHtml = Tag("div").cls("container-fluid")
+	inner1.up(nav1)
+	If options1.Brand <> "" Then
+		Dim brand1 As MiniHtml = Tag("a").cls("navbar-brand")
+		If options1.Href <> "" Then
+			If IsSafeUrl(options1.Href) Then
+				brand1.attr("href", EscapeHtml(options1.Href))
+			Else
+				LogError("PakaiUI: rejected unsafe navbar brand URL: " & options1.Href)
+			End If
+		End If
+		brand1.text(EscapeHtml(options1.Brand))
+		brand1.up(inner1)
+	End If
+
+	Dim list1 As MiniHtml = Tag("ul").cls("navbar-nav")
+	list1.up(inner1)
+	If options1.Items <> Null Then
+		For i = 0 To options1.Items.Size - 1
+			Dim item As PUINavItemOptions = options1.Items.Get(i)
+			NavItem(item).up(list1)
+		Next
+	End If
+	Return nav1
+End Sub
+
+' Empty-state panel: optional icon, title, message and action button.
+' The action is rendered only when ActionText is set. Attach HTMX attributes
+' to the returned button by locating it with ChildByClass("btn") if needed.
+Public Sub EmptyState (Options As PUIEmptyStateOptions) As MiniHtml
+	Dim options1 As PUIEmptyStateOptions = Options
+	If options1 = Null Then options1 = NewEmptyStateOptions("", "")
+
+	Dim box1 As MiniHtml = Tag("div").cls("text-center py-5")
+	If options1.CssClass <> "" Then box1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then box1.attr("id", EscapeHtml(options1.Id))
+	If options1.Hidden Then box1.hidden
+
+	If options1.IconClass <> "" Then
+		Dim icon1 As MiniHtml = Tag("i")
+		icon1.cls("bi " & EscapeHtml(options1.IconClass))
+		icon1.cls("fs-1 text-body-secondary")
+		icon1.attr("aria-hidden", "true")
+		icon1.up(box1)
+	End If
+	If options1.Title <> "" Then
+		Dim title1 As MiniHtml = Tag("h2").cls("h4")
+		title1.text(EscapeHtml(options1.Title))
+		title1.up(box1)
+	End If
+	If options1.Message <> "" Then
+		Dim message1 As MiniHtml = Tag("p").cls("text-body-secondary mb-0")
+		message1.text(EscapeHtml(options1.Message))
+		message1.up(box1)
+	End If
+	If options1.ActionText <> "" Then
+		Dim actionOptions As PUIButtonOptions = NewButtonOptions(options1.ActionText)
+		actionOptions.Href = options1.ActionHref
+		actionOptions.CssClass = "mt-3"
+		Button(actionOptions).up(box1)
+	End If
+	Return box1
+End Sub
+
+' Loading indicator: div[role=status] > spinner-border + label.
+' Only the small size is meaningful in Bootstrap 5.3; other sizes are logged
+' and ignored. An empty Text still produces screen-reader text.
+Public Sub LoadingState (Options As PUILoadingStateOptions) As MiniHtml
+	Dim options1 As PUILoadingStateOptions = Options
+	If options1 = Null Then options1 = NewLoadingStateOptions("")
+
+	Dim box1 As MiniHtml = Tag("div").cls("d-flex align-items-center gap-2")
+	If options1.Centered Then box1.cls("justify-content-center")
+	If options1.CssClass <> "" Then box1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then box1.attr("id", EscapeHtml(options1.Id))
+	box1.attr("role", "status")
+	If options1.Hidden Then box1.hidden
+
+	Dim spinner1 As MiniHtml = Tag("div").cls("spinner-border")
+	Dim sizeClass As String = NormalizeSpinnerSize(options1.Size)
+	If sizeClass <> "" Then spinner1.cls(sizeClass)
+	spinner1.cls("text-" & NormalizeBaseVariant(options1.Variant, "loading state"))
+	spinner1.attr("aria-hidden", "true")
+	spinner1.up(box1)
+
+	Dim label1 As MiniHtml = Tag("span")
+	If options1.Text = "" Then
+		label1.cls("visually-hidden")
+		label1.text("Loading...")
+	Else
+		label1.text(EscapeHtml(options1.Text))
+	End If
+	label1.up(box1)
+	Return box1
 End Sub
 
 ' Returns True for relative URLs and for the http, https, mailto and tel schemes.
@@ -457,6 +885,35 @@ Private Sub NormalizeVariant (Variant As String) As String
 	If allowed.As(List).IndexOf(value) > -1 Then Return value
 	Log("PakaiUI: unknown button variant '" & value & "'; using primary")
 	Return VariantPrimary
+End Sub
+
+' Base variants are the ones Bootstrap uses for badge (text-bg-*), alert
+' (alert-*) and text-* utilities. Outline and link variants are button-only.
+Private Sub NormalizeBaseVariant (Variant As String, Component As String) As String
+	Dim value As String = Variant.Trim.ToLowerCase
+	Select value
+		Case VariantPrimary, VariantSecondary, VariantSuccess, VariantDanger, _
+			VariantWarning, VariantInfo, VariantLight, VariantDark
+			Return value
+		Case ""
+			Return VariantPrimary
+		Case Else
+			Log("PakaiUI: unknown " & Component & " variant '" & value & "'; using primary")
+			Return VariantPrimary
+	End Select
+End Sub
+
+Private Sub NormalizeSpinnerSize (Size As String) As String
+	Dim value As String = Size.Trim.ToLowerCase
+	Select value
+		Case SizeSmall
+			Return "spinner-border-sm"
+		Case ""
+			Return ""
+		Case Else
+			Log("PakaiUI: loading state supports only the sm size; ignoring '" & value & "'")
+			Return ""
+	End Select
 End Sub
 
 Private Sub NormalizeSize (Size As String) As String

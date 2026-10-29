@@ -13,7 +13,7 @@ Sub Class_Globals
 	Private Const BootstrapVersion As String = "5.3.8"
 	Private Const IconsVersion As String = "1.13.1"
 	Private Const HtmxVersion As String = "2.0.8"
-	Private Const PakaiUIVersion As String = "0.11"
+	Private Const PakaiUIVersion As String = "0.12"
 	Private Const UrlPing As String = "/hx/ping"
 	Private Const UrlEcho As String = "/hx/echo"
 	Private Const UrlSpin As String = "/hx/spin"
@@ -88,6 +88,32 @@ Private Sub BuildPage (Theme As String) As String
 	narrow1.up(grid1)
 	narrow1.down(HtmxFixtureCard)
 
+	' Core components (M2) ------------------------------------------------
+	Dim coreHeaderOptions As PUIPageHeaderOptions = PUI.NewPageHeaderOptions("Core components")
+	coreHeaderOptions.Subtitle = "Badges, alerts, breadcrumbs, navigation and explicit empty/loading states."
+	coreHeaderOptions.CssClass = "mt-5"
+	PUI.PageHeader(coreHeaderOptions).up(container1)
+
+	Dim coreGrid As MiniHtml = PUI.Row(Null)
+	coreGrid.cls("g-3")
+	coreGrid.up(container1)
+	Dim coreColOptions As PUIColOptions
+	coreColOptions.Initialize
+	coreColOptions.Breakpoint = "md"
+	coreColOptions.Width = 4
+
+	Dim coreCol1 As MiniHtml = PUI.Col(coreColOptions)
+	coreCol1.up(coreGrid)
+	coreCol1.down(BadgesAndAlertsCard)
+
+	Dim coreCol2 As MiniHtml = PUI.Col(coreColOptions)
+	coreCol2.up(coreGrid)
+	coreCol2.down(NavigationCard)
+
+	Dim coreCol3 As MiniHtml = PUI.Col(coreColOptions)
+	coreCol3.up(coreGrid)
+	coreCol3.down(StatesCard)
+
 	' Scripts at the end of the body --------------------------------------
 	PUI.Script(body1, AssetBase & "/assets/js/bootstrap.min.js?v=" & BootstrapVersion, True)
 	PUI.Script(body1, AssetBase & "/assets/js/htmx.min.js?v=" & HtmxVersion, True)
@@ -111,7 +137,7 @@ Private Sub ThemeNav (Current As String) As MiniHtml
 	Dim lightOptions As PUIButtonOptions
 	lightOptions.Initialize
 	lightOptions.Text = "Light theme"
-	lightOptions.Variant = PUI.VariantOutlinePrimary
+	lightOptions.Variant = PUI.VariantOutlineSecondary
 	lightOptions.Href = "/?theme=light"
 	Dim light1 As MiniHtml = PUI.Button(lightOptions)
 	If Current = PUI.ThemeLight Then light1.attr("aria-current", "page")
@@ -119,7 +145,7 @@ Private Sub ThemeNav (Current As String) As MiniHtml
 	Dim darkOptions As PUIButtonOptions
 	darkOptions.Initialize
 	darkOptions.Text = "Dark theme"
-	darkOptions.Variant = PUI.VariantOutlineLight
+	darkOptions.Variant = PUI.VariantOutlineSecondary
 	darkOptions.Href = "/?theme=dark"
 	Dim dark1 As MiniHtml = PUI.Button(darkOptions)
 	If Current = PUI.ThemeDark Then dark1.attr("aria-current", "page")
@@ -241,6 +267,95 @@ Private Sub HtmxFixtureCard As MiniHtml
 	Dim emptyButton As MiniHtml = PUI.Button(MakeButton("Empty response", PUI.VariantOutlineSecondary, PUI.SizeSmall))
 	emptyButton.attr("hx-get", UrlEmpty)
 	emptyButton.up(body1)
+	Return card1
+End Sub
+
+Private Sub BadgesAndAlertsCard As MiniHtml
+	Dim options As PUICardOptions = PUI.NewCardOptions("Badges and alerts", "")
+	Dim card1 As MiniHtml = PUI.Card(options)
+	Dim body1 As MiniHtml = card1.ChildByClass("card-body")
+
+	Dim badges1 As MiniHtml
+	badges1.Initialize("div")
+	badges1.cls("d-flex flex-wrap gap-2 mb-3")
+	badges1.up(body1)
+	badges1.down(PUI.Badge(PUI.NewBadgeOptions("New")))
+	Dim stableOptions As PUIBadgeOptions = PUI.NewBadgeOptions("Stable")
+	stableOptions.Variant = PUI.VariantSuccess
+	stableOptions.Pill = True
+	badges1.down(PUI.Badge(stableOptions))
+	Dim deprecatedOptions As PUIBadgeOptions = PUI.NewBadgeOptions("Deprecated")
+	deprecatedOptions.Variant = PUI.VariantDanger
+	badges1.down(PUI.Badge(deprecatedOptions))
+
+	Dim infoOptions As PUIAlertOptions = PUI.NewAlertOptions("Bootstrap and HTMX are served from the local assets folder.")
+	infoOptions.Title = "Self-hosted assets"
+	infoOptions.Variant = PUI.VariantInfo
+	infoOptions.CssClass = "mb-2"
+	PUI.Alert(infoOptions).up(body1)
+
+	Dim savedOptions As PUIAlertOptions = PUI.NewAlertOptions("The close button uses Bootstrap's JavaScript; without it the alert stays visible.")
+	savedOptions.Title = "Dismissible"
+	savedOptions.Variant = PUI.VariantSuccess
+	savedOptions.Dismissible = True
+	savedOptions.CssClass = "mb-0"
+	PUI.Alert(savedOptions).up(body1)
+	Return card1
+End Sub
+
+Private Sub NavigationCard As MiniHtml
+	Dim options As PUICardOptions = PUI.NewCardOptions("Navigation and breadcrumb", "")
+	Dim card1 As MiniHtml = PUI.Card(options)
+	Dim body1 As MiniHtml = card1.ChildByClass("card-body")
+
+	Dim crumbOptions As PUIBreadcrumbOptions = PUI.NewBreadcrumbOptions
+	crumbOptions.Items.Add(PUI.NewBreadcrumbItem("Home", "/"))
+	crumbOptions.Items.Add(PUI.NewBreadcrumbItem("Components", ""))
+	Dim currentCrumb As PUIBreadcrumbItem = PUI.NewBreadcrumbItem("Navigation", "")
+	currentCrumb.Active = True
+	crumbOptions.Items.Add(currentCrumb)
+	PUI.Breadcrumb(crumbOptions).up(body1)
+
+	Dim navOptions As PUINavOptions = PUI.NewNavOptions
+	navOptions.Pills = True
+	navOptions.AriaLabel = "Component sections"
+	Dim overviewItem As PUINavItemOptions = PUI.NewNavItemOptions("Overview", "/")
+	overviewItem.Active = True
+	navOptions.Items.Add(overviewItem)
+	navOptions.Items.Add(PUI.NewNavItemOptions("HTMX baseline", "#m0-htmx"))
+	navOptions.Items.Add(PUI.NewNavItemOptions("States", "#core-states"))
+	Dim nav1 As MiniHtml = PUI.Nav(navOptions)
+	nav1.cls("mb-3")
+	nav1.up(body1)
+
+	Dim navbarOptions As PUINavbarOptions = PUI.NewNavbarOptions("PakaiUI")
+	navbarOptions.Href = "/"
+	navbarOptions.Breakpoint = "sm"
+	navbarOptions.Items.Add(PUI.NewNavItemOptions("Home", "/"))
+	navbarOptions.Items.Add(PUI.NewNavItemOptions("Baseline", "#m0-htmx"))
+	PUI.Navbar(navbarOptions).up(body1)
+	Return card1
+End Sub
+
+Private Sub StatesCard As MiniHtml
+	Dim options As PUICardOptions = PUI.NewCardOptions("Empty and loading states", "")
+	Dim card1 As MiniHtml = PUI.Card(options)
+	Dim body1 As MiniHtml = card1.ChildByClass("card-body")
+
+	Dim emptyOptions As PUIEmptyStateOptions = PUI.NewEmptyStateOptions("No records yet", "Create the first record, or adjust the filters.")
+	emptyOptions.IconClass = "bi-inbox"
+	emptyOptions.ActionText = "Create record"
+	emptyOptions.ActionHref = "#core-states"
+	emptyOptions.CssClass = "py-4"
+	Dim empty1 As MiniHtml = PUI.EmptyState(emptyOptions)
+	empty1.attr("id", "core-states")
+	empty1.up(body1)
+
+	Dim loadingOptions As PUILoadingStateOptions = PUI.NewLoadingStateOptions("Loading records...")
+	loadingOptions.Variant = PUI.VariantPrimary
+	loadingOptions.Centered = True
+	loadingOptions.CssClass = "border-top pt-3"
+	PUI.LoadingState(loadingOptions).up(body1)
 	Return card1
 End Sub
 

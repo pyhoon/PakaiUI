@@ -3,6 +3,54 @@
 All notable changes to PakaiUI are recorded here. The project follows a `0.x` versioning policy: public
 APIs may change, and breaking changes are documented explicitly.
 
+## 0.12.0 (unreleased) — M2: core components
+
+### Added
+
+- `PUI.Badge` (`PUIBadgeOptions`): `text-bg-*` variants, optional pill, escaped text, id/class/hidden.
+- `PUI.Alert` (`PUIAlertOptions`): contextual `alert-*` variants, optional title and message,
+  `role="alert"`, and an optional Bootstrap dismissible close button.
+- `PUI.Breadcrumb` (`PUIBreadcrumbOptions` + `PUIBreadcrumbItem`): ordered breadcrumb list, escaped
+  links, and a non-navigable active item with `aria-current="page"`.
+- `PUI.PageHeader` (`PUIPageHeaderOptions`): bordered page title block with an optional subtitle.
+- `PUI.Nav` (`PUINavOptions`), `PUI.NavItem` (`PUINavItemOptions`) and `PUI.Navbar`
+  (`PUINavbarOptions`): pills/tabs/vertical lists, active and disabled states, safe URLs, and a
+  JavaScript-free navbar that wraps instead of collapsing.
+- `PUI.EmptyState` (`PUIEmptyStateOptions`): icon, title, message and optional action button.
+- `PUI.LoadingState` (`PUILoadingStateOptions`): accessible `role="status"` spinner with optional
+  visible text and centered layout.
+- Card extensions: `HeaderText`, `ImageSrc`, `ImageAlt` and `Hidden`. Image URLs are validated and
+  unsafe values are omitted with a log message.
+- Option factories: `NewBadgeOptions`, `NewAlertOptions`, `NewBreadcrumbItem`, `NewBreadcrumbOptions`,
+  `NewPageHeaderOptions`, `NewNavItemOptions`, `NewNavOptions`, `NewNavbarOptions`,
+  `NewEmptyStateOptions` and `NewLoadingStateOptions`.
+- `tests/m2-components` console test project: 135 assertions covering markup, escaping, defaults,
+  invalid input, accessibility attributes and composition.
+- `docs/M2-COMPONENTS.md` component reference (options, markup, accessibility, dependencies).
+- The gallery now demonstrates badges, alerts, breadcrumbs, page headers, navigation and the
+  empty/loading states.
+
+### Changed
+
+- `PUI.VERSION` and `manifest.txt` version bumped to 0.12.
+- `PUICardOptions` gained fields at the end; existing field assignments remain compatible and the new
+  fields default to empty or `False`.
+
+### Verified
+
+- M2 component tests: 135 passed, 0 failed, exit code 0.
+- M1 foundation tests still pass: 35 passed, 0 failed, exit code 0.
+- M0 proof of concept still passes: 28 passed, 0 failed, exit code 0.
+- Gallery: all M2 components render, assets load, the browser console is clean, and the dismissible
+  alert is removed by Bootstrap's JavaScript.
+- Navbar items wrap on narrow containers instead of overflowing, with no JavaScript dependency.
+
+### Not included (later milestones)
+
+- Forms, validation, tables, pagination, filter controls (M3).
+- HTMX/Alpine helpers, dialogs, toasts, theme switcher, sidebar interactions (M4).
+- Pakai Server adapter, compatibility matrix, release (M5).
+
 ## 0.11.0 (unreleased) — M1: foundation and demo
 
 ### Added

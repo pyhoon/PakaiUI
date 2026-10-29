@@ -12,7 +12,7 @@ NumberOfModules=1
 Version=10.7
 @EndOfDesignText@
 ' PakaiUI library project
-' Version: 0.10 (M0 proof of concept)
+' Version: 0.12 (M2 core components)
 ' License: MIT
 ' HTML foundation: MiniHTML 4.02
 #Region Project Attributes
@@ -31,4 +31,12 @@ Sub AppStart (Args() As String)
 	options.Variant = PUI.VariantPrimary
 	Log("PakaiUI v" & PUI.VERSION & " smoke test:")
 	Log(PUI.Button(options).build)
+
+	Dim badgeOptions As PUIBadgeOptions = PUI.NewBadgeOptions("New")
+	badgeOptions.Variant = PUI.VariantSuccess
+	Log(PUI.Badge(badgeOptions).build)
+
+	Dim alertOptions As PUIAlertOptions = PUI.NewAlertOptions("Saved.")
+	alertOptions.Variant = PUI.VariantSuccess
+	Log(PUI.Alert(alertOptions).build)
 End Sub

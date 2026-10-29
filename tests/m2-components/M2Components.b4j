@@ -1,0 +1,418 @@
+﻿AppType=StandardJava
+Build1=Default,b4j.pakaiui.m2
+Group=PakaiUI
+Library1=b4xcollections
+Library2=javaobject
+Library3=jcore
+Library4=json
+Library5=minihtml
+Library6=pakaiui
+NumberOfFiles=0
+NumberOfLibraries=6
+NumberOfModules=0
+Version=10.7
+@EndOfDesignText@
+' PakaiUI M2 core component tests
+' Version: 0.12
+' Verifies Badge, Alert, Card extensions, Breadcrumb, PageHeader, Nav, NavItem,
+' Navbar, EmptyState and LoadingState: markup, escaping, defaults, invalid
+' input handling, accessibility attributes and composition. Console app.
+#Region Project Attributes
+	#CommandLineArgs:
+	#MergeLibraries: True
+#End Region
+
+Sub Process_Globals
+	Private mPassed As Int
+	Private mFailed As Int
+End Sub
+
+Sub AppStart (Args() As String)
+	Dim hostile As String = "<img src=x onerror=alert(1)> & 'x'"
+
+	' =====================================================================
+	' Badge
+	' =====================================================================
+	Dim badge1 As MiniHtml = PUI.Badge(PUI.NewBadgeOptions(hostile))
+	Dim badgeHtml As String = badge1.build
+	Check("Badge is a span", badge1.getName = "span")
+	Check("Badge base class", HasClass(badge1, "badge"))
+	Check("Badge default variant", HasClass(badge1, "text-bg-primary"))
+	Check("Badge text escaped", badgeHtml.Contains(PUI.EscapeHtml(hostile)))
+	Check("Badge renders no raw markup", badgeHtml.Contains("<img") = False)
+
+	Dim badgeOptions As PUIBadgeOptions = PUI.NewBadgeOptions("OK")
+	badgeOptions.Variant = PUI.VariantSuccess
+	Check("Badge success variant", HasClass(PUI.Badge(badgeOptions), "text-bg-success"))
+	badgeOptions.Pill = True
+	Check("Badge pill class", HasClass(PUI.Badge(badgeOptions), "rounded-pill"))
+	badgeOptions.Variant = PUI.VariantOutlineDanger
+	Check("Badge rejects outline variants", HasClass(PUI.Badge(badgeOptions), "text-bg-primary"))
+	badgeOptions.Variant = PUI.VariantDanger
+	badgeOptions.Id = hostile
+	badgeOptions.CssClass = "extra-badge"
+	badgeOptions.Hidden = True
+	Dim styledBadge As MiniHtml = PUI.Badge(badgeOptions)
+	Check("Badge id escaped", styledBadge.build.Contains("id=" & QUOTE & PUI.EscapeHtml(hostile) & QUOTE))
+	Check("Badge custom class", HasClass(styledBadge, "extra-badge"))
+	Check("Badge hidden attribute", styledBadge.GetAttributes.ContainsKey("hidden"))
+
+	' =====================================================================
+	' Alert
+	' =====================================================================
+	Dim alertOptions As PUIAlertOptions = PUI.NewAlertOptions(hostile)
+	alertOptions.Title = hostile
+	alertOptions.Variant = PUI.VariantWarning
+	Dim alert1 As MiniHtml = PUI.Alert(alertOptions)
+	Dim alertHtml As String = alert1.build
+	Check("Alert is a div", alert1.getName = "div")
+	Check("Alert has role=alert", alert1.GetAttributes.Get("role") = "alert")
+	Check("Alert variant class", HasClass(alert1, "alert-warning"))
+	Check("Alert title uses alert-heading", alert1.ChildByClass("alert-heading") <> Null)
+	Check("Alert title escaped", alertHtml.Contains(PUI.EscapeHtml(hostile)))
+	Check("Alert message escaped", CountOf(alertHtml, PUI.EscapeHtml(hostile)) >= 2)
+	Check("Alert is not dismissible by default", alertHtml.Contains("btn-close") = False)
+	Check("Alert renders no raw markup", alertHtml.Contains("<img") = False)
+
+	Dim dismissibleOptions As PUIAlertOptions = PUI.NewAlertOptions("Saved.")
+	dismissibleOptions.Dismissible = True
+	dismissibleOptions.Id = "save-alert"
+	dismissibleOptions.CssClass = "shadow-sm"
+	Dim dismissible1 As MiniHtml = PUI.Alert(dismissibleOptions)
+	Dim dismissibleHtml As String = dismissible1.build
+	Check("Dismissible alert classes", HasClass(dismissible1, "alert-dismissible") And HasClass(dismissible1, "fade") And HasClass(dismissible1, "show"))
+	Check("Dismissible alert close button", dismissible1.ChildByClass("btn-close") <> Null)
+	Check("Dismissible alert data attribute", dismissibleHtml.Contains("data-bs-dismiss=" & QUOTE & "alert" & QUOTE))
+	Check("Dismissible alert close label", dismissibleHtml.Contains("aria-label=" & QUOTE & "Close" & QUOTE))
+	Check("Alert id attribute", dismissible1.GetAttributes.Get("id") = "save-alert")
+	Check("Alert custom class", HasClass(dismissible1, "shadow-sm"))
+
+	Dim simpleAlert As PUIAlertOptions = PUI.NewAlertOptions("Only a message.")
+	Check("Alert without title omits heading", PUI.Alert(simpleAlert).build.Contains("alert-heading") = False)
+	simpleAlert.Variant = PUI.VariantOutlineInfo
+	Check("Alert rejects outline variants", HasClass(PUI.Alert(simpleAlert), "alert-primary"))
+	simpleAlert.Hidden = True
+	Check("Alert hidden attribute", PUI.Alert(simpleAlert).GetAttributes.ContainsKey("hidden"))
+
+	' =====================================================================
+	' Breadcrumb
+	' =====================================================================
+	Dim crumbItems As List
+	crumbItems.Initialize
+	crumbItems.Add(PUI.NewBreadcrumbItem("Home", "/"))
+	crumbItems.Add(PUI.NewBreadcrumbItem("Docs", "/docs?x=1&y=2"))
+	Dim activeCrumb As PUIBreadcrumbItem = PUI.NewBreadcrumbItem(hostile, "/ignored")
+	activeCrumb.Active = True
+	crumbItems.Add(activeCrumb)
+
+	Dim crumbOptions As PUIBreadcrumbOptions = PUI.NewBreadcrumbOptions
+	crumbOptions.Items = crumbItems
+	Dim crumb1 As MiniHtml = PUI.Breadcrumb(crumbOptions)
+	Dim crumbHtml As String = crumb1.build
+	Check("Breadcrumb is a nav", crumb1.getName = "nav")
+	Check("Breadcrumb default aria-label", crumb1.GetAttributes.Get("aria-label") = "breadcrumb")
+	Check("Breadcrumb ordered list", crumb1.ChildByName("ol") <> Null)
+	Check("Breadcrumb item count", CountOf(crumbHtml, "breadcrumb-item") = 3)
+	Check("Breadcrumb href escaped", crumbHtml.Contains("href=" & QUOTE & "/docs?x=1&amp;y=2" & QUOTE))
+	Check("Breadcrumb active class", crumb1.ChildByClass("active") <> Null)
+	Check("Breadcrumb active aria-current", crumb1.ChildByClass("active").GetAttributes.Get("aria-current") = "page")
+	Check("Breadcrumb active item is not a link", crumb1.ChildByClass("active").build.Contains("<a") = False)
+	Check("Breadcrumb active text escaped", crumb1.ChildByClass("active").build.Contains(PUI.EscapeHtml(hostile)))
+	Check("Breadcrumb renders no raw markup", crumbHtml.Contains("<img") = False)
+
+	Dim unsafeCrumbs As PUIBreadcrumbOptions = PUI.NewBreadcrumbOptions
+	unsafeCrumbs.Items.Add(PUI.NewBreadcrumbItem("Unsafe", "javascript:alert(1)"))
+	Dim unsafeCrumbHtml As String = PUI.Breadcrumb(unsafeCrumbs).build
+	Check("Breadcrumb rejects unsafe URL", unsafeCrumbHtml.Contains("javascript:") = False)
+	Check("Breadcrumb unsafe item keeps text", unsafeCrumbHtml.Contains("Unsafe"))
+
+	Dim customCrumbs As PUIBreadcrumbOptions = PUI.NewBreadcrumbOptions
+	customCrumbs.AriaLabel = "You are here"
+	customCrumbs.Id = "crumbs"
+	customCrumbs.CssClass = "small"
+	customCrumbs.Hidden = True
+	Dim customCrumb1 As MiniHtml = PUI.Breadcrumb(customCrumbs)
+	Check("Breadcrumb custom aria-label", customCrumb1.GetAttributes.Get("aria-label") = "You are here")
+	Check("Breadcrumb id attribute", customCrumb1.GetAttributes.Get("id") = "crumbs")
+	Check("Breadcrumb custom class", HasClass(customCrumb1, "small"))
+	Check("Breadcrumb hidden attribute", customCrumb1.GetAttributes.ContainsKey("hidden"))
+	Check("Breadcrumb empty list renders", PUI.Breadcrumb(PUI.NewBreadcrumbOptions).ChildByName("ol") <> Null)
+
+	' =====================================================================
+	' Page header
+	' =====================================================================
+	Dim headerOptions As PUIPageHeaderOptions = PUI.NewPageHeaderOptions(hostile)
+	headerOptions.Subtitle = hostile
+	headerOptions.Id = "page-title"
+	headerOptions.CssClass = "mb-5"
+	Dim header1 As MiniHtml = PUI.PageHeader(headerOptions)
+	Check("PageHeader is a header", header1.getName = "header")
+	Check("PageHeader border class", HasClass(header1, "border-bottom"))
+	Check("PageHeader heading", header1.ChildByName("h1") <> Null And HasClass(header1.ChildByName("h1"), "h3"))
+	Check("PageHeader title escaped", header1.ChildByName("h1").build.Contains(PUI.EscapeHtml(hostile)))
+	Check("PageHeader subtitle", header1.ChildByName("p") <> Null And HasClass(header1.ChildByName("p"), "text-body-secondary"))
+	Check("PageHeader subtitle escaped", header1.ChildByName("p").build.Contains(PUI.EscapeHtml(hostile)))
+	Check("PageHeader id attribute", header1.GetAttributes.Get("id") = "page-title")
+	Check("PageHeader custom class", HasClass(header1, "mb-5"))
+	Check("PageHeader without subtitle omits paragraph", PUI.PageHeader(PUI.NewPageHeaderOptions("Title")).ChildByName("p") = Null)
+	headerOptions.Hidden = True
+	Check("PageHeader hidden attribute", PUI.PageHeader(headerOptions).GetAttributes.ContainsKey("hidden"))
+
+	' =====================================================================
+	' Nav and NavItem
+	' =====================================================================
+	Dim navOptions As PUINavOptions = PUI.NewNavOptions
+	navOptions.AriaLabel = "Sections"
+	Dim homeItem As PUINavItemOptions = PUI.NewNavItemOptions("Home", "/")
+	homeItem.Active = True
+	navOptions.Items.Add(homeItem)
+	Dim disabledItem As PUINavItemOptions = PUI.NewNavItemOptions("Archived", "/archived")
+	disabledItem.Disabled = True
+	navOptions.Items.Add(disabledItem)
+	Dim nav1 As MiniHtml = PUI.Nav(navOptions)
+	Dim navHtml As String = nav1.build
+	Check("Nav is a ul", nav1.getName = "ul")
+	Check("Nav base class", HasClass(nav1, "nav"))
+	Check("Nav aria-label", nav1.GetAttributes.Get("aria-label") = "Sections")
+	Check("Nav item count", CountOf(navHtml, "nav-item") = 2)
+	Check("Nav link class", nav1.ChildByClass("nav-link") <> Null)
+	Check("Nav active link", nav1.ChildByClass("active") <> Null And nav1.ChildByClass("active").getName = "a")
+	Check("Nav active aria-current", nav1.ChildByClass("active").GetAttributes.Get("aria-current") = "page")
+	Check("Nav disabled class", nav1.ChildByClass("disabled") <> Null)
+	Check("Nav disabled aria-disabled", nav1.ChildByClass("disabled").GetAttributes.Get("aria-disabled") = "true")
+	Check("Nav disabled tabindex", nav1.ChildByClass("disabled").GetAttributes.Get("tabindex") = "-1")
+
+	Dim plainNavItem As MiniHtml = PUI.NavItem(PUI.NewNavItemOptions("Plain", ""))
+	Check("NavItem is a list item", plainNavItem.getName = "li")
+	Check("NavItem without href renders span", plainNavItem.ChildByClass("nav-link") <> Null And plainNavItem.ChildByClass("nav-link").getName = "span")
+
+	Dim unsafeNav As PUINavOptions = PUI.NewNavOptions
+	unsafeNav.Items.Add(PUI.NewNavItemOptions("Unsafe", "javascript:alert(1)"))
+	Dim unsafeNavHtml As String = PUI.Nav(unsafeNav).build
+	Check("Nav rejects unsafe href", unsafeNavHtml.Contains("javascript:") = False)
+	Check("Nav unsafe item keeps text", unsafeNavHtml.Contains("Unsafe"))
+
+	Dim styledItem As PUINavItemOptions = PUI.NewNavItemOptions("Styled", "/styled")
+	styledItem.Id = "styled-link"
+	styledItem.CssClass = "fw-bold"
+	Dim styledItem1 As MiniHtml = PUI.NavItem(styledItem)
+	Check("NavItem link id", styledItem1.ChildByClass("nav-link").GetAttributes.Get("id") = "styled-link")
+	Check("NavItem custom link class", HasClass(styledItem1.ChildByClass("nav-link"), "fw-bold"))
+	styledItem.Hidden = True
+	Check("NavItem hidden list item", PUI.NavItem(styledItem).GetAttributes.ContainsKey("hidden"))
+
+	Dim pillsNav As PUINavOptions = PUI.NewNavOptions
+	pillsNav.Pills = True
+	Check("Nav pills class", HasClass(PUI.Nav(pillsNav), "nav-pills"))
+	pillsNav.Tabs = True
+	Check("Nav tabs take precedence over pills", HasClass(PUI.Nav(pillsNav), "nav-tabs") And HasClass(PUI.Nav(pillsNav), "nav-pills") = False)
+
+	Dim verticalNav As PUINavOptions = PUI.NewNavOptions
+	verticalNav.Vertical = True
+	Check("Nav vertical class", HasClass(PUI.Nav(verticalNav), "flex-column"))
+
+	Dim styledNav As PUINavOptions = PUI.NewNavOptions
+	styledNav.Id = "nav-id"
+	styledNav.CssClass = "gap-2"
+	styledNav.Hidden = True
+	Dim styledNav1 As MiniHtml = PUI.Nav(styledNav)
+	Check("Nav id attribute", styledNav1.GetAttributes.Get("id") = "nav-id")
+	Check("Nav custom class", HasClass(styledNav1, "gap-2"))
+	Check("Nav hidden attribute", styledNav1.GetAttributes.ContainsKey("hidden"))
+
+	' =====================================================================
+	' Navbar
+	' =====================================================================
+	Dim navbarOptions As PUINavbarOptions = PUI.NewNavbarOptions("PakaiUI")
+	navbarOptions.Href = "/"
+	navbarOptions.Items.Add(PUI.NewNavItemOptions("Docs", "/docs"))
+	Dim navbar1 As MiniHtml = PUI.Navbar(navbarOptions)
+	Dim navbarHtml As String = navbar1.build
+	Check("Navbar is a nav", navbar1.getName = "nav")
+	Check("Navbar base class", HasClass(navbar1, "navbar"))
+	Check("Navbar expands at md", HasClass(navbar1, "navbar-expand-md"))
+	Check("Navbar wraps without JavaScript", HasClass(navbar1, "flex-wrap"))
+	Check("Navbar default aria-label", navbar1.GetAttributes.Get("aria-label") = "Main navigation")
+	Check("Navbar brand link", navbar1.ChildByClass("navbar-brand") <> Null)
+	Check("Navbar brand href", navbar1.ChildByClass("navbar-brand").GetAttributes.Get("href") = "/")
+	Check("Navbar brand text", navbar1.ChildByClass("navbar-brand").build.Contains("PakaiUI"))
+	Check("Navbar list", navbar1.ChildByClass("navbar-nav") <> Null)
+	Check("Navbar item count", CountOf(navbarHtml, "nav-item") = 1)
+	Check("Navbar renders no raw markup", navbarHtml.Contains("<img") = False)
+
+	Dim unsafeBrand As PUINavbarOptions = PUI.NewNavbarOptions("Unsafe")
+	unsafeBrand.Href = "javascript:alert(1)"
+	Check("Navbar rejects unsafe brand URL", PUI.Navbar(unsafeBrand).build.Contains("javascript:") = False)
+
+	Dim bareNavbar As PUINavbarOptions = PUI.NewNavbarOptions("")
+	Check("Navbar without brand omits brand link", PUI.Navbar(bareNavbar).ChildByClass("navbar-brand") = Null)
+	bareNavbar.Breakpoint = ""
+	Check("Navbar empty breakpoint uses navbar-expand", HasClass(PUI.Navbar(bareNavbar), "navbar-expand"))
+
+	navbarOptions.Hidden = True
+	Check("Navbar hidden attribute", PUI.Navbar(navbarOptions).GetAttributes.ContainsKey("hidden"))
+
+	' =====================================================================
+	' Card extensions
+	' =====================================================================
+	Dim cardOptions As PUICardOptions = PUI.NewCardOptions("Card title", "Card body")
+	cardOptions.HeaderText = "Card header"
+	cardOptions.ImageSrc = "/img/a.png?x=1&y=2"
+	cardOptions.ImageAlt = hostile
+	Dim card1 As MiniHtml = PUI.Card(cardOptions)
+	Check("Card header rendered", card1.ChildByClass("card-header") <> Null)
+	Check("Card header text", card1.ChildByClass("card-header").build.Contains("Card header"))
+	Check("Card image rendered", card1.ChildByClass("card-img-top") <> Null)
+	Check("Card image src escaped", card1.ChildByClass("card-img-top").GetAttributes.Get("src") = PUI.EscapeHtml("/img/a.png?x=1&y=2"))
+	Check("Card image alt escaped", card1.ChildByClass("card-img-top").GetAttributes.Get("alt") = PUI.EscapeHtml(hostile))
+	Dim cardHtml As String = card1.build
+	Check("Card image precedes header", cardHtml.IndexOf("card-img-top") < cardHtml.IndexOf("card-header"))
+
+	Dim unsafeCard As PUICardOptions = PUI.NewCardOptions("Unsafe image", "")
+	unsafeCard.ImageSrc = "javascript:alert(1)"
+	Dim unsafeCard1 As MiniHtml = PUI.Card(unsafeCard)
+	Check("Card unsafe image omitted", unsafeCard1.build.Contains("<img") = False And unsafeCard1.build.Contains("javascript:") = False)
+	unsafeCard.Hidden = True
+	Check("Card hidden attribute", PUI.Card(unsafeCard).GetAttributes.ContainsKey("hidden"))
+
+	' =====================================================================
+	' Empty state
+	' =====================================================================
+	Dim emptyOptions As PUIEmptyStateOptions = PUI.NewEmptyStateOptions(hostile, hostile)
+	emptyOptions.IconClass = "bi-inbox"
+	emptyOptions.ActionText = "Create item"
+	emptyOptions.ActionHref = "/new"
+	emptyOptions.Id = "empty-panel"
+	emptyOptions.CssClass = "bg-body-tertiary"
+	Dim empty1 As MiniHtml = PUI.EmptyState(emptyOptions)
+	Check("EmptyState centered panel", HasClass(empty1, "text-center"))
+	Check("EmptyState icon", empty1.ChildByClass("bi-inbox") <> Null)
+	Check("EmptyState icon aria-hidden", empty1.ChildByClass("bi-inbox").GetAttributes.Get("aria-hidden") = "true")
+	Check("EmptyState title escaped", empty1.ChildByName("h2").build.Contains(PUI.EscapeHtml(hostile)))
+	Check("EmptyState message escaped", empty1.ChildByName("p").build.Contains(PUI.EscapeHtml(hostile)))
+	Check("EmptyState action button", empty1.ChildByClass("btn") <> Null)
+	Check("EmptyState action href", empty1.ChildByClass("btn").GetAttributes.Get("href") = "/new")
+	Check("EmptyState id attribute", empty1.GetAttributes.Get("id") = "empty-panel")
+	Check("EmptyState custom class", HasClass(empty1, "bg-body-tertiary"))
+	Check("EmptyState renders no raw markup", empty1.build.Contains("<img") = False)
+
+	Dim minimalEmpty As PUIEmptyStateOptions = PUI.NewEmptyStateOptions("", "")
+	Dim minimalEmpty1 As MiniHtml = PUI.EmptyState(minimalEmpty)
+	Check("EmptyState minimal container", minimalEmpty1.getName = "div" And minimalEmpty1.ChildByName("h2") = Null)
+	Check("EmptyState minimal has no action", minimalEmpty1.ChildByClass("btn") = Null)
+	emptyOptions.Hidden = True
+	Check("EmptyState hidden attribute", PUI.EmptyState(emptyOptions).GetAttributes.ContainsKey("hidden"))
+
+	' =====================================================================
+	' Loading state
+	' =====================================================================
+	Dim loadingOptions As PUILoadingStateOptions = PUI.NewLoadingStateOptions(hostile)
+	loadingOptions.Variant = PUI.VariantSuccess
+	loadingOptions.Size = PUI.SizeSmall
+	loadingOptions.Centered = True
+	Dim loading1 As MiniHtml = PUI.LoadingState(loadingOptions)
+	Check("LoadingState role=status", loading1.GetAttributes.Get("role") = "status")
+	Check("LoadingState centered", HasClass(loading1, "justify-content-center"))
+	Check("LoadingState spinner", loading1.ChildByClass("spinner-border") <> Null)
+	Check("LoadingState small size", HasClass(loading1.ChildByClass("spinner-border"), "spinner-border-sm"))
+	Check("LoadingState success variant", HasClass(loading1.ChildByClass("spinner-border"), "text-success"))
+	Check("LoadingState text escaped", loading1.ChildByName("span").build.Contains(PUI.EscapeHtml(hostile)))
+	Check("LoadingState renders no raw markup", loading1.build.Contains("<img") = False)
+
+	Dim bareLoading As PUILoadingStateOptions = PUI.NewLoadingStateOptions("")
+	Dim bareLoading1 As MiniHtml = PUI.LoadingState(bareLoading)
+	Check("LoadingState empty text is hidden label", HasClass(bareLoading1.ChildByName("span"), "visually-hidden"))
+	Check("LoadingState empty text has Loading label", bareLoading1.ChildByName("span").build.Contains("Loading..."))
+	bareLoading.Size = PUI.SizeLarge
+	Check("LoadingState ignores unsupported size", HasClass(PUI.LoadingState(bareLoading).ChildByClass("spinner-border"), "spinner-border-sm") = False)
+	bareLoading.Variant = PUI.VariantOutlineDanger
+	Check("LoadingState rejects outline variants", HasClass(PUI.LoadingState(bareLoading).ChildByClass("spinner-border"), "text-primary"))
+
+	Dim styledLoading As PUILoadingStateOptions = PUI.NewLoadingStateOptions("Working")
+	styledLoading.Id = "busy"
+	styledLoading.CssClass = "p-3"
+	styledLoading.Hidden = True
+	Dim styledLoading1 As MiniHtml = PUI.LoadingState(styledLoading)
+	Check("LoadingState id attribute", styledLoading1.GetAttributes.Get("id") = "busy")
+	Check("LoadingState custom class", HasClass(styledLoading1, "p-3"))
+	Check("LoadingState hidden attribute", styledLoading1.GetAttributes.ContainsKey("hidden"))
+
+	' =====================================================================
+	' Composition sample page
+	' =====================================================================
+	headerOptions.Hidden = False
+	emptyOptions.Hidden = False
+	navbarOptions.Hidden = False
+	Dim pageOptions As PUIPageOptions = PUI.NewPageOptions("PakaiUI M2 sample")
+	pageOptions.Theme = PUI.ThemeDark
+	pageOptions.Description = "M2 component composition sample"
+	Dim page As MiniHtml = PUI.Document(pageOptions)
+	Dim head1 As MiniHtml = PUI.Head(page)
+	PUI.StyleSheet(head1, "/assets/css/bootstrap.min.css?v=5.3.8")
+	PUI.StyleSheet(head1, "/assets/css/bootstrap-icons.min.css?v=1.13.1")
+	PUI.StyleSheet(head1, "/assets/css/pakaiui.css?v=" & PUI.VERSION)
+	Dim body1 As MiniHtml = PUI.Body(page)
+	PUI.Navbar(navbarOptions).up(body1)
+	Dim container1 As MiniHtml = PUI.Container(Null)
+	container1.cls("py-4")
+	container1.up(body1)
+	PUI.PageHeader(headerOptions).up(container1)
+	PUI.Breadcrumb(crumbOptions).up(container1)
+	PUI.Alert(alertOptions).up(container1)
+	PUI.Badge(PUI.NewBadgeOptions("Badge")).up(container1)
+	PUI.EmptyState(emptyOptions).up(container1)
+	PUI.LoadingState(loadingOptions).up(container1)
+	Check("Sample page starts with doctype", page.build.StartsWith("<!DOCTYPE html>"))
+	Check("Sample page nests the navbar", body1.ChildByClass("navbar") <> Null)
+	Check("Sample page nests the page header", container1.ChildByName("header") <> Null)
+	Check("Sample page nests the breadcrumb", container1.ChildByName("nav") <> Null)
+	Check("Sample page nests an alert", container1.ChildByClass("alert") <> Null)
+	Check("Sample page nests a badge", container1.ChildByClass("badge") <> Null)
+	Check("Sample page nests the loading state", container1.ChildByClass("spinner-border") <> Null)
+
+	' The sample page is written for manual review; the assertions above are the gate.
+	File.WriteString(File.DirApp, "m2-output.html", page.build)
+	Log("")
+	Log($"M2 tests: ${mPassed} passed, ${mFailed} failed"$)
+	Log("Sample page written to: " & File.Combine(File.DirApp, "m2-output.html"))
+
+	Dim system As JavaObject
+	system.InitializeStatic("java.lang.System")
+	If mFailed > 0 Then
+		system.RunMethod("exit", Array(1))
+	Else
+		system.RunMethod("exit", Array(0))
+	End If
+End Sub
+
+Private Sub Check (Name As String, Condition As Boolean)
+	If Condition Then
+		mPassed = mPassed + 1
+		Log("PASS " & Name)
+	Else
+		mFailed = mFailed + 1
+		Log("FAIL " & Name)
+	End If
+End Sub
+
+' Returns the class attribute value, or an empty string when there is none.
+Private Sub Classes (Element As MiniHtml) As String
+	If Element.GetAttributes.ContainsKey("class") Then Return Element.GetAttributes.Get("class")
+	Return ""
+End Sub
+
+' Exact class token test, so "primary" does not match "text-bg-primary".
+Private Sub HasClass (Element As MiniHtml, Name As String) As Boolean
+	Dim value As String = Classes(Element)
+	Return (" " & value & " ").Contains(" " & Name & " ")
+End Sub
+
+Private Sub CountOf (Haystack As String, Needle As String) As Int
+	Dim count As Int = 0
+	Dim index As Int = Haystack.IndexOf(Needle)
+	Do While index > -1
+		count = count + 1
+		index = Haystack.IndexOf2(Needle, index + Needle.Length)
+	Loop
+	Return count
+End Sub
