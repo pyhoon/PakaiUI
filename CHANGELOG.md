@@ -3,6 +3,61 @@
 All notable changes to PakaiUI are recorded here. The project follows a `0.x` versioning policy: public
 APIs may change, and breaking changes are documented explicitly.
 
+## 0.13.0 (unreleased) — M3: forms and data display
+
+### Added
+
+- `PUI.Input` (`PUIInputOptions`): label association, safe id derivation, escaped value/placeholder,
+  input types, sizes, help text, error text, required/disabled/read-only and hidden states.
+- `PUI.Textarea` (`PUITextareaOptions`): rows with clamping, escaped text content and the same field
+  group, validation and accessibility behavior as `Input`.
+- `PUI.SelectField` (`PUISelectOptions` + `PUISelectItem`): placeholder option, value fallback to text,
+  single-value selection, multiple selection with per-item flags, disabled options and sizes. Named
+  `SelectField` because `Select` is a reserved B4X keyword.
+- `PUI.Checkbox` (`PUICheckboxOptions`) and `PUI.Radio` (`PUIRadioOptions`): inline and switch variants,
+  explicit checked state, labels, help/error text, and name+value-derived ids so choices in one group
+  stay unique.
+- Server-rendered validation feedback on every field group: `HelpText`, `ErrorText`, `is-invalid`,
+  `aria-invalid` and `aria-describedby`; visible without JavaScript.
+- `PUI.Table` (`PUITableOptions` + `PUITableColumn`): responsive wrapper by default, striped/hover/
+  bordered/compact variants, caption, alignment, empty state and optional row ids. Rows are
+  `List`-of-`Map`; values are converted to text and escaped.
+- `PUI.Pagination` (`PUIPaginationOptions`): pattern-based links, first/last pages, five-page window,
+  ellipsis gaps, disabled Previous/Next, clamping and URL validation.
+- `PUI.FilterBar` (`PUIFilterBarOptions`): accessible search form shell with validated action and
+  `get`/`post` methods.
+- Option factories: `NewInputOptions`, `NewTextareaOptions`, `NewSelectItem`, `NewSelectOptions`,
+  `NewCheckboxOptions`, `NewRadioOptions`, `NewTableColumn`, `NewTableOptions`, `NewTableRow`,
+  `NewPaginationOptions` and `NewFilterBarOptions`.
+- `PUI.AlignStart`, `PUI.AlignCenter` and `PUI.AlignEnd` alignment constants.
+- `tests/m3-forms` console test project: 203 assertions covering markup, escaping, ids, validation,
+  accessibility, tables, pagination and composition.
+- `docs/M3-FORMS.md` form and data-display reference.
+- The gallery now demonstrates a filter form, field groups, validation, checkbox/radio choices, a
+  responsive table and pagination.
+
+### Changed
+
+- `PUI.VERSION` and `manifest.txt` version bumped to 0.13.
+- `PUI.Input` / `Textarea` / `SelectField` / `Checkbox` / `Radio` treat `Id` as the control id and apply
+  `CssClass`/`Hidden` to the field-group root; this differs from components whose root is the control.
+
+### Verified
+
+- M3 form and data-display tests: 203 passed, 0 failed, exit code 0.
+- M2 component tests still pass: 135 passed, 0 failed, exit code 0.
+- M1 foundation tests still pass: 35 passed, 0 failed, exit code 0.
+- M0 proof of concept still passes: 28 passed, 0 failed, exit code 0.
+- Gallery: all M3 components render, 11 labels resolve to controls, 23 element ids are unique, the
+  invalid feedback is visible, the table computes `overflow-x: auto`, dark theme works and the browser
+  console is clean.
+
+### Not included (later milestones)
+
+- HTMX/Alpine helpers, dialogs, toasts, theme switcher, sidebar interactions (M4).
+- Pakai Server adapter, compatibility matrix, release (M5).
+- Table sorting; layer it around `PUI.Table` rather than adding a JavaScript dependency.
+
 ## 0.12.0 (unreleased) — M2: core components
 
 ### Added

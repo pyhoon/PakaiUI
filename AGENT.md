@@ -10,8 +10,8 @@ works without Pakai Server. HTMX 2.x and Alpine.js are optional enhancements onl
 
 | Item | Value |
 | --- | --- |
-| Library version | `0.12` (experimental; public API may change) |
-| Current milestone | **M2 complete** - core components (badge, alert, card extensions, breadcrumb, page header, navigation, empty/loading states) |
+| Library version | `0.13` (experimental; public API may change) |
+| Current milestone | **M3 complete** - forms and data display (input, textarea, select, checkbox/radio, validation feedback, tables, pagination, filter bar) |
 | B4J | 10.7 (`C:\Program Files\B4X\B4J`) |
 | JDK used for builds/runs | 19 (`C:\Java\jdk-19.0.2`) |
 | HTML foundation | MiniHTML 4.02 (`C:\B4X\Additional\B4X\MiniHTML.b4xlib`) |
@@ -30,6 +30,7 @@ README.md                    Project overview and quick start
 CHANGELOG.md                 Release history (0.x, breaking changes documented)
 docs/M0-RECONNAISSANCE.md    Verified findings, API inventory, M0 evidence
 docs/M2-COMPONENTS.md        M2 component reference: options, markup, accessibility, dependencies
+docs/M3-FORMS.md             M3 form and data-display reference: options, markup, accessibility, verification
 docs/PakaiUI-*.md            Design inputs: specification, API proposal, considerations (read-only)
 assets/                      Tracked frontend assets (Bootstrap 5.3.8, icons, HTMX 2.0.8, pakaiui.css)
   README.md                  Versions, SHA-256 hashes, serving and upgrade notes
@@ -44,6 +45,7 @@ source/                      PakaiUI library B4J project
 tests/m0-poc/                Console proof of concept (consumes the installed b4xlib)
 tests/m1-foundation/         M1 foundation API tests (35 assertions)
 tests/m2-components/         M2 core component tests (135 assertions)
+tests/m3-forms/              M3 form and data-display tests (203 assertions)
 gallery/                     Standalone jServer demo (plain jServer, no Pakai Server) + HTMX baseline
 demo/                        Pakai Server Web 6.99 starter (reference; not a PakaiUI demo)
 ```
@@ -150,6 +152,18 @@ Expected: 135 `PASS` lines, `M2 tests: 135 passed, 0 failed`, exit code 0. The s
 `File.DirApp\m2-output.html`. The `PakaiUI: rejected unsafe ...` and `unknown ... variant` lines are
 expected stderr messages from the negative tests.
 
+### Build and run the M3 form and data-display tests
+
+```powershell
+cd C:\Projects\PakaiUI\tests\m3-forms
+& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="M3Forms.b4j" -NoClean=True -ShowWarnings=True
+& "C:\Java\jdk-19.0.2\bin\java.exe" -jar Objects\M3Forms.jar
+```
+
+Expected: 203 `PASS` lines, `M3 tests: 203 passed, 0 failed`, exit code 0. The sample page is written to
+`File.DirApp\m3-output.html`. Lines about rejected pagination URLs, unsupported input types/methods,
+clamped rows and missing `{page}` patterns are expected from the negative tests.
+
 ### Build and run the standalone gallery (HTMX baseline host)
 
 ```powershell
@@ -162,8 +176,9 @@ cd Objects
 
 The server listens on `http://localhost:51010/`. The gallery exercises the HTMX 2.x baseline
 fixture defined in `docs/M0-RECONNAISSANCE.md` section 9 plus the M2 component set (badges, alerts,
-breadcrumb, page header, nav, navbar, empty and loading states); the verified results are recorded there
-and in `docs/M2-COMPONENTS.md`.
+breadcrumb, page header, nav, navbar, empty and loading states) and the M3 set (form fields, choices,
+validation feedback, responsive table and pagination); the verified results are recorded there, in
+`docs/M2-COMPONENTS.md` and in `docs/M3-FORMS.md`.
 
 **Always rebuild the `.b4xlib` and reinstall it before testing a consumer project.** The PoC compiles
 `PUI.bas` from the installed library, not from `source/` directly.
@@ -192,8 +207,8 @@ and any `#AdditionalJar` declarations.
 7. **Public API naming.** The facade is the static module `PUI`; exported option types are prefixed
    (`PUIButtonOptions`, `PUICardOptions`) because B4X types share a global namespace.
 8. **Option-type defaults.** B4X booleans default to `False`, so never introduce a `Visible` option that
-   defaults to `False`. Use `Hidden` (and similar negative flags). `Type` is a reserved word, hence
-   `ButtonType`.
+   defaults to `False`. Use `Hidden` (and similar negative flags). `Type` and `Select` are reserved words,
+   hence `InputType` / `ButtonType` and `PUI.SelectField`.
 
 ## 5. B4J IDE code smells to avoid (mandatory review checklist)
 
@@ -232,7 +247,10 @@ If Index.Get("unique") = 1 Then UniqueLabel = " · unique"
 ```
 
 Comparing a class reference to `Null` (`If options1 = Null Then`) is a null guard, not an
-`Object`-versus-value comparison, and is allowed.
+`Object`-versus-value comparison, and is allowed. The same applies to an `Object` value:
+`If value = Null Then` is the safe direction; `If Null = value Then` is not, because B4J compiles it to a
+call on `Null` and throws a `NullPointerException` at runtime (verified). Keep `Null` on the right for
+null guards, and use the `Object`-on-the-right form only for real value comparisons.
 
 ### 5.3 No unused variables or subs
 

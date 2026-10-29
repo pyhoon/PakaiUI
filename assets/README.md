@@ -10,7 +10,7 @@ its own copy under `Objects/www/assets` and serves it from there.
 | File | Required? | Version | Purpose |
 | --- | --- | --- | --- |
 | `css/bootstrap.min.css` | required | 5.3.8 | All component styling |
-| `css/pakaiui.css` | optional | PakaiUI 0.12 | `--pui-*` token aliases; never overrides Bootstrap |
+| `css/pakaiui.css` | optional | PakaiUI 0.13 | `--pui-*` token aliases; never overrides Bootstrap |
 | `css/bootstrap-icons.min.css` | optional | 1.13.1 | `bi bi-*` icon classes |
 | `css/fonts/bootstrap-icons.woff2` / `.woff` | with icons | 1.13.1 | Icon font, loaded relative to `css/` |
 | `css/LICENSE/bootstrap/LICENSE.txt` | with bootstrap | — | MIT license of Bootstrap |
@@ -26,7 +26,7 @@ font files beside `bootstrap-icons.min.css` under `css/fonts/`.
 | File | SHA-256 |
 | --- | --- |
 | `css/bootstrap.min.css` | `596A918E5D4C71CB731B23412D5B145E429C2203A23E9BF7BA90EFF3E291BBB8` |
-| `css/pakaiui.css` | `CA4280D9D42B2CD0608D2622FE4D5728731766CA6F81C4735953E95AB623BEB2` |
+| `css/pakaiui.css` | `273D3177897B3449266171DEE49B72C4E654B395C243E6DBB0F71CD56D0A961B` |
 | `css/bootstrap-icons.min.css` | `5BDE1B1280C519BE069FF3A711B639E0E996886AD4E4F7C6B4AB99237ED875B4` |
 | `css/fonts/bootstrap-icons.woff2` | `6C75710364A1CA5604267716F6D28997B26319FDB078CF11E0B42AB66FF2EA61` |
 | `css/fonts/bootstrap-icons.woff` | `F55513B7B591CB84A3B87FF0E34EA24D4831D6FEDC22E54B911CA64B5B544A15` |
@@ -62,7 +62,7 @@ string. A changed hash without a documented upgrade is a supply-chain red flag.
    ```b4j
    Dim AssetBase As String = ""      ' same origin, for example "" or "/portal"
    PUI.StyleSheet(head1, AssetBase & "/assets/css/bootstrap.min.css?v=5.3.8")
-   PUI.StyleSheet(head1, AssetBase & "/assets/css/pakaiui.css?v=0.12")
+   PUI.StyleSheet(head1, AssetBase & "/assets/css/pakaiui.css?v=0.13")
    PUI.StyleSheet(head1, AssetBase & "/assets/css/bootstrap-icons.min.css?v=1.13.1")
    ' scripts at the end of <body>, loaded with defer
    PUI.Script(body1, AssetBase & "/assets/js/bootstrap.min.js?v=5.3.8", True)
@@ -85,7 +85,7 @@ at it.
 
 | PakaiUI version | Bootstrap | Bootstrap Icons | HTMX |
 | --- | --- | --- | --- |
-| 0.12 (current) | 5.3.8 | 1.13.1 | 2.0.8 |
+| 0.13 (current) | 5.3.8 | 1.13.1 | 2.0.8 |
 
 Do not jump Bootstrap major/minor versions without re-running the HTMX
 baseline test documented in `docs/M0-RECONNAISSANCE.md` section 9.

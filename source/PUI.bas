@@ -5,8 +5,8 @@ Type=StaticCode
 Version=10.7
 @EndOfDesignText@
 ' PakaiUI - server-rendered UI components for B4J web applications.
-' Version: 0.12 (M2 core components: badge, alert, breadcrumb, header, nav,
-'          empty and loading states, plus card extensions)
+' Version: 0.13 (M3 forms and data display: input, textarea, select, checkbox,
+'          radio, table, pagination and filter bar)
 ' HTML foundation: MiniHTML 4.02 (https://github.com/pyhoon/MiniHTML4)
 '
 ' Safety contract:
@@ -18,7 +18,7 @@ Version=10.7
 '   - Public option types are prefixed with PUI because B4X types share a global namespace.
 '   - No dependency on Pakai Server, MiniJS or MiniCSS.
 Sub Process_Globals
-	Public Const VERSION As String = "0.12"
+	Public Const VERSION As String = "0.13"
 
 	' Bootstrap 5.3 semantic variants
 	Public Const VariantPrimary As String = "primary"
@@ -51,6 +51,11 @@ Sub Process_Globals
 	Public Const ThemeLight As String = "light"
 	Public Const ThemeDark As String = "dark"
 
+	' Table column alignment values for PUITableColumn.Align.
+	Public Const AlignStart As String = "start"
+	Public Const AlignCenter As String = "center"
+	Public Const AlignEnd As String = "end"
+
 	' Component options. Types are global in B4X, hence the PUI prefix.
 	' ButtonType is named ButtonType because "Type" is a B4X reserved word.
 	' Hidden is used instead of Visible so that a default False value means "shown".
@@ -74,6 +79,22 @@ Sub Process_Globals
 	Type PUINavbarOptions (Brand As String, Href As String, Items As List, Breakpoint As String, AriaLabel As String, Id As String, CssClass As String, Hidden As Boolean)
 	Type PUIEmptyStateOptions (Title As String, Message As String, IconClass As String, ActionText As String, ActionHref As String, Id As String, CssClass As String, Hidden As Boolean)
 	Type PUILoadingStateOptions (Text As String, Size As String, Variant As String, Centered As Boolean, Id As String, CssClass As String, Hidden As Boolean)
+
+	' Form and data-display options (M3).
+	' InputType is named InputType because "Type" is a B4X reserved word.
+	Type PUIInputOptions (Label As String, Name As String, Id As String, Value As String, Placeholder As String, InputType As String, Size As String, HelpText As String, ErrorText As String, Required As Boolean, Disabled As Boolean, ReadOnly As Boolean, CssClass As String, Hidden As Boolean)
+	Type PUITextareaOptions (Label As String, Name As String, Id As String, Value As String, Placeholder As String, Rows As Int, Size As String, HelpText As String, ErrorText As String, Required As Boolean, Disabled As Boolean, ReadOnly As Boolean, CssClass As String, Hidden As Boolean)
+	Type PUISelectItem (Text As String, Value As String, Selected As Boolean, Disabled As Boolean)
+	Type PUISelectOptions (Label As String, Name As String, Id As String, Items As List, SelectedValue As String, Placeholder As String, Multiple As Boolean, Size As String, HelpText As String, ErrorText As String, Required As Boolean, Disabled As Boolean, CssClass As String, Hidden As Boolean)
+	Type PUICheckboxOptions (Label As String, Name As String, Id As String, Value As String, Checked As Boolean, Inline As Boolean, Switch As Boolean, HelpText As String, ErrorText As String, Required As Boolean, Disabled As Boolean, CssClass As String, Hidden As Boolean)
+	Type PUIRadioOptions (Label As String, Name As String, Id As String, Value As String, Checked As Boolean, Inline As Boolean, HelpText As String, ErrorText As String, Required As Boolean, Disabled As Boolean, CssClass As String, Hidden As Boolean)
+	Type PUITableColumn (Title As String, Field As String, Align As String)
+	Type PUITableOptions (Columns As List, Rows As List, Caption As String, EmptyText As String, RowIdField As String, Responsive As Boolean, Striped As Boolean, Hover As Boolean, Bordered As Boolean, Compact As Boolean, Id As String, CssClass As String, Hidden As Boolean)
+	Type PUIPaginationOptions (CurrentPage As Int, TotalPages As Int, HrefPattern As String, AriaLabel As String, Size As String, Id As String, CssClass As String, Hidden As Boolean)
+	Type PUIFilterBarOptions (Action As String, Method As String, AriaLabel As String, Id As String, CssClass As String, Hidden As Boolean)
+
+	' Counter for generated field ids when neither Id nor Name is provided.
+	Private mFieldCounter As Int
 End Sub
 
 ' Reserved for future library-wide configuration.
@@ -255,6 +276,104 @@ Public Sub NewLoadingStateOptions (Text As String) As PUILoadingStateOptions
 	Dim options As PUILoadingStateOptions
 	options.Initialize
 	options.Text = Text
+	Return options
+End Sub
+
+Public Sub NewInputOptions (Label As String, Name As String) As PUIInputOptions
+	Dim options As PUIInputOptions
+	options.Initialize
+	options.Label = Label
+	options.Name = Name
+	Return options
+End Sub
+
+Public Sub NewTextareaOptions (Label As String, Name As String) As PUITextareaOptions
+	Dim options As PUITextareaOptions
+	options.Initialize
+	options.Label = Label
+	options.Name = Name
+	options.Rows = 3
+	Return options
+End Sub
+
+Public Sub NewSelectItem (Text As String, Value As String) As PUISelectItem
+	Dim item As PUISelectItem
+	item.Initialize
+	item.Text = Text
+	item.Value = Value
+	Return item
+End Sub
+
+Public Sub NewSelectOptions (Label As String, Name As String) As PUISelectOptions
+	Dim options As PUISelectOptions
+	options.Initialize
+	Dim items1 As List
+	items1.Initialize
+	options.Label = Label
+	options.Name = Name
+	options.Items = items1
+	Return options
+End Sub
+
+Public Sub NewCheckboxOptions (Label As String) As PUICheckboxOptions
+	Dim options As PUICheckboxOptions
+	options.Initialize
+	options.Label = Label
+	Return options
+End Sub
+
+Public Sub NewRadioOptions (Label As String) As PUIRadioOptions
+	Dim options As PUIRadioOptions
+	options.Initialize
+	options.Label = Label
+	Return options
+End Sub
+
+Public Sub NewTableColumn (Title As String, Field As String) As PUITableColumn
+	Dim column As PUITableColumn
+	column.Initialize
+	column.Title = Title
+	column.Field = Field
+	column.Align = AlignStart
+	Return column
+End Sub
+
+Public Sub NewTableOptions As PUITableOptions
+	Dim options As PUITableOptions
+	options.Initialize
+	Dim columns1 As List
+	columns1.Initialize
+	options.Columns = columns1
+	Dim rows1 As List
+	rows1.Initialize
+	options.Rows = rows1
+	options.Responsive = True
+	Return options
+End Sub
+
+' Returns an empty Map for one table row. Add values with Put using the same
+' field names as the PUITableColumn entries.
+Public Sub NewTableRow As Map
+	Dim row1 As Map
+	row1.Initialize
+	Return row1
+End Sub
+
+Public Sub NewPaginationOptions (CurrentPage As Int, TotalPages As Int, HrefPattern As String) As PUIPaginationOptions
+	Dim options As PUIPaginationOptions
+	options.Initialize
+	options.CurrentPage = CurrentPage
+	options.TotalPages = TotalPages
+	options.HrefPattern = HrefPattern
+	options.AriaLabel = "Page navigation"
+	Return options
+End Sub
+
+Public Sub NewFilterBarOptions As PUIFilterBarOptions
+	Dim options As PUIFilterBarOptions
+	options.Initialize
+	options.Method = "get"
+	options.AriaLabel = "Filters"
 	Return options
 End Sub
 
@@ -853,6 +972,352 @@ Public Sub LoadingState (Options As PUILoadingStateOptions) As MiniHtml
 	Return box1
 End Sub
 
+' Text input field group: div.mb-3 > label + input.form-control + help/error.
+' Id identifies the control (the label's for attribute points at it); CssClass
+' and Hidden apply to the group. When Id is empty a stable id is derived from
+' Name, so label association works without extra setup.
+Public Sub Input (Options As PUIInputOptions) As MiniHtml
+	Dim options1 As PUIInputOptions = Options
+	If options1 = Null Then options1 = NewInputOptions("", "")
+
+	Dim group1 As MiniHtml = Tag("div").cls("mb-3")
+	If options1.CssClass <> "" Then group1.cls(EscapeHtml(options1.CssClass))
+	If options1.Hidden Then group1.hidden
+
+	Dim fieldId As String = ResolveFieldId(options1.Id, options1.Name, "input")
+	AppendFieldLabel(group1, options1.Label, fieldId, options1.Required)
+
+	Dim input1 As MiniHtml = Tag("input")
+	input1.attr("type", NormalizeInputType(options1.InputType))
+	input1.cls("form-control")
+	Dim size1 As String = NormalizeFieldSize(options1.Size)
+	If size1 <> "" Then input1.cls("form-control-" & size1)
+	If options1.ErrorText <> "" Then input1.cls("is-invalid")
+	input1.attr("id", EscapeHtml(fieldId))
+	If options1.Name <> "" Then input1.attr("name", EscapeHtml(options1.Name))
+	If options1.Value <> "" Then input1.attr("value", EscapeHtml(options1.Value))
+	If options1.Placeholder <> "" Then input1.attr("placeholder", EscapeHtml(options1.Placeholder))
+	If options1.Required Then input1.required
+	If options1.Disabled Then input1.disabled
+	If options1.ReadOnly Then input1.readonly
+	If options1.ErrorText <> "" Then input1.attr("aria-invalid", "true")
+	Dim describedBy1 As String = DescribedBy(fieldId, options1.HelpText, options1.ErrorText)
+	If describedBy1 <> "" Then input1.attr("aria-describedby", EscapeHtml(describedBy1))
+	input1.up(group1)
+
+	AppendFieldFeedback(group1, fieldId, options1.HelpText, options1.ErrorText)
+	Return group1
+End Sub
+
+' Multiline text field group. Value is rendered as escaped text content.
+' Rows defaults to 3; values outside 1-50 are clamped with a log message.
+Public Sub Textarea (Options As PUITextareaOptions) As MiniHtml
+	Dim options1 As PUITextareaOptions = Options
+	If options1 = Null Then options1 = NewTextareaOptions("", "")
+
+	Dim group1 As MiniHtml = Tag("div").cls("mb-3")
+	If options1.CssClass <> "" Then group1.cls(EscapeHtml(options1.CssClass))
+	If options1.Hidden Then group1.hidden
+
+	Dim fieldId As String = ResolveFieldId(options1.Id, options1.Name, "textarea")
+	AppendFieldLabel(group1, options1.Label, fieldId, options1.Required)
+
+	Dim textarea1 As MiniHtml = Tag("textarea")
+	textarea1.cls("form-control")
+	Dim size1 As String = NormalizeFieldSize(options1.Size)
+	If size1 <> "" Then textarea1.cls("form-control-" & size1)
+	If options1.ErrorText <> "" Then textarea1.cls("is-invalid")
+	textarea1.attr("id", EscapeHtml(fieldId))
+	If options1.Name <> "" Then textarea1.attr("name", EscapeHtml(options1.Name))
+	textarea1.attr("rows", "" & NormalizeRows(options1.Rows))
+	If options1.Placeholder <> "" Then textarea1.attr("placeholder", EscapeHtml(options1.Placeholder))
+	If options1.Required Then textarea1.required
+	If options1.Disabled Then textarea1.disabled
+	If options1.ReadOnly Then textarea1.readonly
+	If options1.ErrorText <> "" Then textarea1.attr("aria-invalid", "true")
+	Dim describedBy1 As String = DescribedBy(fieldId, options1.HelpText, options1.ErrorText)
+	If describedBy1 <> "" Then textarea1.attr("aria-describedby", EscapeHtml(describedBy1))
+	textarea1.text(EscapeHtml(options1.Value))
+	textarea1.up(group1)
+
+	AppendFieldFeedback(group1, fieldId, options1.HelpText, options1.ErrorText)
+	Return group1
+End Sub
+
+' Select field group. Item values are escaped and fall back to the item text
+' when Value is empty. SelectedValue marks one option; for a multiple select
+' set PUISelectItem.Selected on each selected item instead.
+' Named SelectField because Select is a reserved B4X keyword.
+Public Sub SelectField (Options As PUISelectOptions) As MiniHtml
+	Dim options1 As PUISelectOptions = Options
+	If options1 = Null Then options1 = NewSelectOptions("", "")
+
+	Dim group1 As MiniHtml = Tag("div").cls("mb-3")
+	If options1.CssClass <> "" Then group1.cls(EscapeHtml(options1.CssClass))
+	If options1.Hidden Then group1.hidden
+
+	Dim fieldId As String = ResolveFieldId(options1.Id, options1.Name, "select")
+	AppendFieldLabel(group1, options1.Label, fieldId, options1.Required)
+
+	Dim select1 As MiniHtml = Tag("select")
+	select1.cls("form-select")
+	Dim size1 As String = NormalizeFieldSize(options1.Size)
+	If size1 <> "" Then select1.cls("form-select-" & size1)
+	If options1.ErrorText <> "" Then select1.cls("is-invalid")
+	select1.attr("id", EscapeHtml(fieldId))
+	If options1.Name <> "" Then select1.attr("name", EscapeHtml(options1.Name))
+	If options1.Required Then select1.required
+	If options1.Disabled Then select1.disabled
+	If options1.Multiple Then select1.bool("multiple")
+	If options1.ErrorText <> "" Then select1.attr("aria-invalid", "true")
+	Dim describedBy1 As String = DescribedBy(fieldId, options1.HelpText, options1.ErrorText)
+	If describedBy1 <> "" Then select1.attr("aria-describedby", EscapeHtml(describedBy1))
+
+	If options1.Placeholder <> "" Then
+		Dim placeholder1 As MiniHtml = Tag("option")
+		placeholder1.attr("value", "")
+		If Not(options1.Multiple) And options1.SelectedValue = "" And Not(HasSelectedItem(options1.Items)) Then
+			placeholder1.selected
+		End If
+		placeholder1.text(EscapeHtml(options1.Placeholder))
+		placeholder1.up(select1)
+	End If
+
+	If options1.Items <> Null Then
+		For i = 0 To options1.Items.Size - 1
+			Dim item As PUISelectItem = options1.Items.Get(i)
+			Dim option1 As MiniHtml = Tag("option")
+			Dim itemValue As String = item.Value
+			If itemValue = "" Then itemValue = item.Text
+			option1.attr("value", EscapeHtml(itemValue))
+			Dim itemSelected As Boolean = False
+			If options1.Multiple Then
+				itemSelected = item.Selected
+			Else If options1.SelectedValue <> "" Then
+				itemSelected = (itemValue = options1.SelectedValue)
+			Else
+				itemSelected = item.Selected
+			End If
+			If itemSelected Then option1.selected
+			If item.Disabled Then option1.disabled
+			option1.text(EscapeHtml(item.Text))
+			option1.up(select1)
+		Next
+	End If
+
+	select1.up(group1)
+	AppendFieldFeedback(group1, fieldId, options1.HelpText, options1.ErrorText)
+	Return group1
+End Sub
+
+' Checkbox field group: div.form-check > input + label + help/error.
+' Switch renders a Bootstrap switch; Inline adds form-check-inline for use in
+' filter rows. The checked state is explicit because B4X booleans default False.
+Public Sub Checkbox (Options As PUICheckboxOptions) As MiniHtml
+	Dim options1 As PUICheckboxOptions = Options
+	If options1 = Null Then options1 = NewCheckboxOptions("")
+
+	Return CheckControl("checkbox", options1.Label, options1.Name, options1.Id, options1.Value, _
+		options1.Checked, options1.Inline, options1.Switch, options1.HelpText, options1.ErrorText, _
+		options1.Required, options1.Disabled, options1.CssClass, options1.Hidden)
+End Sub
+
+' Radio field group. Use the same Name for every radio in a group and set
+' Checked on the selected one.
+Public Sub Radio (Options As PUIRadioOptions) As MiniHtml
+	Dim options1 As PUIRadioOptions = Options
+	If options1 = Null Then options1 = NewRadioOptions("")
+
+	Return CheckControl("radio", options1.Label, options1.Name, options1.Id, options1.Value, _
+		options1.Checked, options1.Inline, False, options1.HelpText, options1.ErrorText, _
+		options1.Required, options1.Disabled, options1.CssClass, options1.Hidden)
+End Sub
+
+' Responsive table from column definitions and List-of-Map rows.
+' Cell values are converted to text and escaped; Null values render empty.
+' When Responsive is set the returned root is div.table-responsive, otherwise
+' the table itself. RowIdField optionally copies a row value into <tr id>.
+Public Sub Table (Options As PUITableOptions) As MiniHtml
+	Dim options1 As PUITableOptions = Options
+	If options1 = Null Then options1 = NewTableOptions
+
+	Dim columnCount As Int = 0
+	If options1.Columns <> Null Then columnCount = options1.Columns.Size
+
+	Dim table1 As MiniHtml = Tag("table").cls("table")
+	If options1.Striped Then table1.cls("table-striped")
+	If options1.Hover Then table1.cls("table-hover")
+	If options1.Bordered Then table1.cls("table-bordered")
+	If options1.Compact Then table1.cls("table-sm")
+	If options1.Caption <> "" Then table1.cls("caption-top")
+
+	Dim root1 As MiniHtml = table1
+	If options1.Responsive Then
+		root1 = Tag("div").cls("table-responsive")
+		table1.up(root1)
+	End If
+	If options1.CssClass <> "" Then root1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then root1.attr("id", EscapeHtml(options1.Id))
+	If options1.Hidden Then root1.hidden
+
+	If options1.Caption <> "" Then
+		Dim caption1 As MiniHtml = Tag("caption")
+		caption1.text(EscapeHtml(options1.Caption))
+		caption1.up(table1)
+	End If
+
+	Dim head1 As MiniHtml = Tag("thead")
+	head1.up(table1)
+	Dim headRow1 As MiniHtml = Tag("tr")
+	headRow1.up(head1)
+	If options1.Columns <> Null Then
+		For i = 0 To options1.Columns.Size - 1
+			Dim column As PUITableColumn = options1.Columns.Get(i)
+			Dim th1 As MiniHtml = Tag("th")
+			th1.attr("scope", "col")
+			Dim align1 As String = NormalizeAlignClass(column.Align, "table column")
+			If align1 <> "" Then th1.cls(align1)
+			th1.text(EscapeHtml(column.Title))
+			th1.up(headRow1)
+		Next
+	End If
+
+	Dim body1 As MiniHtml = Tag("tbody")
+	body1.up(table1)
+	Dim hasRows As Boolean = False
+	If options1.Rows <> Null Then
+		If options1.Rows.Size > 0 Then hasRows = True
+	End If
+	If hasRows = False Then
+		Dim emptyRow1 As MiniHtml = Tag("tr")
+		emptyRow1.up(body1)
+		Dim emptyCell1 As MiniHtml = Tag("td")
+		If columnCount > 0 Then emptyCell1.attr("colspan", "" & columnCount)
+		emptyCell1.cls("text-center text-body-secondary")
+		Dim emptyText1 As String = options1.EmptyText
+		If emptyText1 = "" Then emptyText1 = "No data."
+		emptyCell1.text(EscapeHtml(emptyText1))
+		emptyCell1.up(emptyRow1)
+	Else
+		For i = 0 To options1.Rows.Size - 1
+			Dim rowData As Map = options1.Rows.Get(i)
+			Dim row1 As MiniHtml = Tag("tr")
+			If options1.RowIdField <> "" Then
+				Dim rowId1 As String = CellText(rowData, options1.RowIdField)
+				If rowId1 <> "" Then row1.attr("id", EscapeHtml(rowId1))
+			End If
+			row1.up(body1)
+			If options1.Columns <> Null Then
+				For j = 0 To options1.Columns.Size - 1
+					Dim rowColumn As PUITableColumn = options1.Columns.Get(j)
+					Dim td1 As MiniHtml = Tag("td")
+					Dim rowAlign As String = NormalizeAlignClass(rowColumn.Align, "table column")
+					If rowAlign <> "" Then td1.cls(rowAlign)
+					td1.text(EscapeHtml(CellText(rowData, rowColumn.Field)))
+					td1.up(row1)
+				Next
+			End If
+		Next
+	End If
+	Return root1
+End Sub
+
+' Pagination navigation. HrefPattern must contain {page}, for example
+' "/items?page={page}&sort=name". Pages outside 1..TotalPages are clamped.
+' Page numbers and Previous/Next are rendered as links only when the pattern
+' is usable and the resulting URL passes IsSafeUrl.
+Public Sub Pagination (Options As PUIPaginationOptions) As MiniHtml
+	Dim options1 As PUIPaginationOptions = Options
+	If options1 = Null Then options1 = NewPaginationOptions(1, 1, "")
+
+	Dim total1 As Int = options1.TotalPages
+	If total1 < 1 Then total1 = 1
+	Dim current1 As Int = options1.CurrentPage
+	If current1 < 1 Then current1 = 1
+	If current1 > total1 Then current1 = total1
+
+	Dim nav1 As MiniHtml = Tag("nav")
+	Dim label1 As String = options1.AriaLabel.Trim
+	If label1 = "" Then label1 = "Page navigation"
+	nav1.attr("aria-label", EscapeHtml(label1))
+	If options1.CssClass <> "" Then nav1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then nav1.attr("id", EscapeHtml(options1.Id))
+	If options1.Hidden Then nav1.hidden
+
+	Dim list1 As MiniHtml = Tag("ul").cls("pagination")
+	Dim paginationSize As String = NormalizePaginationSize(options1.Size)
+	If paginationSize <> "" Then list1.cls(paginationSize)
+	list1.up(nav1)
+
+	Dim pattern1 As String = options1.HrefPattern
+	Dim linkable1 As Boolean = pattern1.Contains("{page}")
+	If pattern1 <> "" And Not(linkable1) Then
+		Log("PakaiUI: pagination HrefPattern is missing {page}; rendering page numbers as text")
+	End If
+
+	AppendPageItem(list1, "Previous", current1 - 1, current1 > 1, False, pattern1, linkable1, "Previous page")
+	If total1 <= 7 Then
+		For page = 1 To total1
+			AppendPageItem(list1, "" & page, page, True, page = current1, pattern1, linkable1, "")
+		Next
+	Else
+		Dim windowStart As Int = current1 - 2
+		Dim windowEnd As Int = current1 + 2
+		If windowStart < 1 Then windowStart = 1
+		If windowEnd > total1 Then windowEnd = total1
+		If windowEnd - windowStart < 4 Then
+			If windowStart = 1 Then
+				windowEnd = windowStart + 4
+				If windowEnd > total1 Then windowEnd = total1
+			Else
+				windowStart = windowEnd - 4
+				If windowStart < 1 Then windowStart = 1
+			End If
+		End If
+
+		If windowStart > 1 Then
+			AppendPageItem(list1, "1", 1, True, current1 = 1, pattern1, linkable1, "")
+			If windowStart > 2 Then AppendEllipsis(list1)
+		End If
+		For page = windowStart To windowEnd
+			AppendPageItem(list1, "" & page, page, True, page = current1, pattern1, linkable1, "")
+		Next
+		If windowEnd < total1 Then
+			If windowEnd < total1 - 1 Then AppendEllipsis(list1)
+			AppendPageItem(list1, "" & total1, total1, True, current1 = total1, pattern1, linkable1, "")
+		End If
+	End If
+	AppendPageItem(list1, "Next", current1 + 1, current1 < total1, False, pattern1, linkable1, "Next page")
+	Return nav1
+End Sub
+
+' Filter/search form shell. Returns the form element so callers append Input,
+' Select, Checkbox or Button controls with .up/.down. Method accepts get or
+' post (default get); unsafe Action URLs are rejected and logged.
+Public Sub FilterBar (Options As PUIFilterBarOptions) As MiniHtml
+	Dim options1 As PUIFilterBarOptions = Options
+	If options1 = Null Then options1 = NewFilterBarOptions
+
+	Dim form1 As MiniHtml = Tag("form")
+	form1.cls("row row-cols-lg-auto g-2 align-items-center mb-3")
+	form1.attr("role", "search")
+	Dim label1 As String = options1.AriaLabel.Trim
+	If label1 = "" Then label1 = "Filters"
+	form1.attr("aria-label", EscapeHtml(label1))
+	form1.attr("method", NormalizeFormMethod(options1.Method))
+	If options1.Action <> "" Then
+		If IsSafeUrl(options1.Action) Then
+			form1.attr("action", EscapeHtml(options1.Action))
+		Else
+			LogError("PakaiUI: rejected unsafe filter action URL: " & options1.Action)
+		End If
+	End If
+	If options1.CssClass <> "" Then form1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then form1.attr("id", EscapeHtml(options1.Id))
+	If options1.Hidden Then form1.hidden
+	Return form1
+End Sub
+
 ' Returns True for relative URLs and for the http, https, mailto and tel schemes.
 ' Anything else, including javascript:, data: and vbscript:, is rejected.
 Public Sub IsSafeUrl (Url As String) As Boolean
@@ -873,6 +1338,266 @@ Private Sub Tag (Name As String) As MiniHtml
 	Dim tag1 As MiniHtml
 	tag1.Initialize(Name)
 	Return tag1
+End Sub
+
+' Appends <label class="form-label" for="..."> when LabelText is set.
+' Required controls get a decorative asterisk; the control itself carries the
+' required attribute, so assistive technology does not depend on the marker.
+Private Sub AppendFieldLabel (Wrapper As MiniHtml, LabelText As String, FieldId As String, IsRequired As Boolean)
+	If LabelText = "" Then Return
+	Dim label1 As MiniHtml = Tag("label").cls("form-label")
+	label1.attr("for", EscapeHtml(FieldId))
+	label1.text(EscapeHtml(LabelText))
+	If IsRequired Then
+		Dim mark1 As MiniHtml = Tag("span").cls("text-danger")
+		mark1.attr("aria-hidden", "true")
+		mark1.text(" *")
+		mark1.up(label1)
+	End If
+	label1.up(Wrapper)
+End Sub
+
+' Appends the optional helper and validation text. Both are plain escaped text
+' so a server-side message can never inject markup.
+Private Sub AppendFieldFeedback (Wrapper As MiniHtml, FieldId As String, HelpText As String, ErrorText As String)
+	If HelpText <> "" Then
+		Dim help1 As MiniHtml = Tag("div").cls("form-text")
+		help1.attr("id", EscapeHtml(FieldId & "-help"))
+		help1.text(EscapeHtml(HelpText))
+		help1.up(Wrapper)
+	End If
+	If ErrorText <> "" Then
+		Dim error1 As MiniHtml = Tag("div").cls("invalid-feedback")
+		error1.attr("id", EscapeHtml(FieldId & "-error"))
+		error1.text(EscapeHtml(ErrorText))
+		error1.up(Wrapper)
+	End If
+End Sub
+
+' Builds the aria-describedby value from the ids that are actually rendered.
+Private Sub DescribedBy (FieldId As String, HelpText As String, ErrorText As String) As String
+	Dim value As String = ""
+	If HelpText <> "" Then value = FieldId & "-help"
+	If ErrorText <> "" Then
+		If value <> "" Then value = value & " "
+		value = value & FieldId & "-error"
+	End If
+	Return value
+End Sub
+
+' Resolves the control id: explicit Id, then a sanitized Name, then a counter.
+' A stable id is required so the label's for attribute has a target.
+Private Sub ResolveFieldId (Id As String, Name As String, Prefix As String) As String
+	Dim value As String = Id.Trim
+	If value <> "" Then Return value
+	value = SanitizeId(Name)
+	If value <> "" Then Return "pui-" & value
+	mFieldCounter = mFieldCounter + 1
+	Return "pui-" & Prefix & "-" & mFieldCounter
+End Sub
+
+' Choice controls share a Name, so the derived id also includes the value to
+' keep each checkbox or radio id unique. Set Id explicitly when values are empty.
+Private Sub ResolveChoiceId (Id As String, Name As String, Value As String, Prefix As String) As String
+	Dim value1 As String = Id.Trim
+	If value1 <> "" Then Return value1
+	Dim base1 As String = SanitizeId(Name)
+	If base1 <> "" Then
+		Dim valuePart1 As String = SanitizeId(Value)
+		If valuePart1 <> "" Then base1 = base1 & "-" & valuePart1
+		Return "pui-" & base1
+	End If
+	mFieldCounter = mFieldCounter + 1
+	Return "pui-" & Prefix & "-" & mFieldCounter
+End Sub
+
+' Keeps letters, digits, dash, underscore and dot; replaces everything else.
+Private Sub SanitizeId (Value As String) As String
+	Dim sb As StringBuilder
+	sb.Initialize
+	For i = 0 To Value.Length - 1
+		Dim c As Char = Value.CharAt(i)
+		Dim code As Int = Asc(c)
+		If (code >= 48 And code <= 57) Or (code >= 65 And code <= 90) Or (code >= 97 And code <= 122) _
+			Or code = 45 Or code = 95 Or code = 46 Then
+			sb.Append(c)
+		Else
+			sb.Append("-")
+		End If
+	Next
+	Return sb.ToString.Trim
+End Sub
+
+Private Sub HasSelectedItem (Items As List) As Boolean
+	If Items = Null Then Return False
+	For i = 0 To Items.Size - 1
+		Dim item As PUISelectItem = Items.Get(i)
+		If item.Selected Then Return True
+	Next
+	Return False
+End Sub
+
+Private Sub NormalizeInputType (InputType As String) As String
+	Dim value As String = InputType.Trim.ToLowerCase
+	If value = "" Then Return "text"
+	Select value
+		Case "text", "email", "password", "number", "search", "url", "tel", _
+			"date", "datetime-local", "month", "week", "time"
+			Return value
+		Case Else
+			Log("PakaiUI: unsupported input type '" & value & "'; using text")
+			Return "text"
+	End Select
+End Sub
+
+Private Sub NormalizeFieldSize (Size As String) As String
+	Dim value As String = Size.Trim.ToLowerCase
+	Select value
+		Case SizeSmall, SizeLarge
+			Return value
+		Case Else
+			Return ""
+	End Select
+End Sub
+
+Private Sub NormalizeRows (Rows As Int) As Int
+	If Rows <= 0 Then Return 3
+	If Rows > 50 Then
+		Log("PakaiUI: textarea rows " & Rows & " clamped to 50")
+		Return 50
+	End If
+	Return Rows
+End Sub
+
+' Shared renderer for Checkbox and Radio. InputType is "checkbox" or "radio".
+Private Sub CheckControl (InputType As String, LabelText As String, Name As String, Id As String, _
+		Value As String, Checked As Boolean, Inline As Boolean, Switch As Boolean, _
+		HelpText As String, ErrorText As String, Required As Boolean, Disabled As Boolean, _
+		CssClass As String, Hidden As Boolean) As MiniHtml
+
+	Dim wrapper1 As MiniHtml = Tag("div").cls("form-check")
+	If Inline Then wrapper1.cls("form-check-inline")
+	If Switch Then wrapper1.cls("form-switch")
+	If CssClass <> "" Then wrapper1.cls(EscapeHtml(CssClass))
+	If Hidden Then wrapper1.hidden
+
+	Dim fieldId As String = ResolveChoiceId(Id, Name, Value, InputType)
+
+	Dim input1 As MiniHtml = Tag("input")
+	input1.cls("form-check-input")
+	If ErrorText <> "" Then input1.cls("is-invalid")
+	input1.attr("type", InputType)
+	input1.attr("id", EscapeHtml(fieldId))
+	If Name <> "" Then input1.attr("name", EscapeHtml(Name))
+	If Value <> "" Then input1.attr("value", EscapeHtml(Value))
+	If Checked Then input1.checked
+	If Required Then input1.required
+	If Disabled Then input1.disabled
+	If ErrorText <> "" Then input1.attr("aria-invalid", "true")
+	Dim describedBy1 As String = DescribedBy(fieldId, HelpText, ErrorText)
+	If describedBy1 <> "" Then input1.attr("aria-describedby", EscapeHtml(describedBy1))
+	input1.up(wrapper1)
+
+	If LabelText <> "" Then
+		Dim label1 As MiniHtml = Tag("label").cls("form-check-label")
+		label1.attr("for", EscapeHtml(fieldId))
+		label1.text(EscapeHtml(LabelText))
+		label1.up(wrapper1)
+	End If
+
+	AppendFieldFeedback(wrapper1, fieldId, HelpText, ErrorText)
+	Return wrapper1
+End Sub
+
+' Reads one table cell as text. Missing keys and Null values render empty.
+Private Sub CellText (RowMap As Map, Field As String) As String
+	If RowMap = Null Or Field = "" Then Return ""
+	If RowMap.ContainsKey(Field) = False Then Return ""
+	Dim value As Object = RowMap.Get(Field)
+	If value = Null Then Return ""
+	Return "" & value
+End Sub
+
+Private Sub NormalizeAlignClass (Align As String, Component As String) As String
+	Dim value As String = Align.Trim.ToLowerCase
+	Select value
+		Case "", AlignStart, "left"
+			Return ""
+		Case AlignCenter, "center"
+			Return "text-center"
+		Case AlignEnd, "right"
+			Return "text-end"
+		Case Else
+			Log("PakaiUI: unknown " & Component & " alignment '" & value & "'; using default")
+			Return ""
+	End Select
+End Sub
+
+' Appends one pagination <li>. Active and disabled entries render a span;
+' ordinary pages render a link when the pattern produces a safe URL.
+Private Sub AppendPageItem (List As MiniHtml, Text As String, Page As Int, Enabled As Boolean, _
+		Active As Boolean, Pattern As String, Linkable As Boolean, AriaLabel As String)
+
+	Dim item1 As MiniHtml = Tag("li").cls("page-item")
+	If Active Then item1.cls("active")
+	If Not(Enabled) Then item1.cls("disabled")
+	If Active Then item1.attr("aria-current", "page")
+
+	Dim label1 As String = EscapeHtml(Text)
+	If Enabled And Not(Active) And Linkable And Page >= 1 Then
+		Dim href1 As String = Pattern.Replace("{page}", "" & Page)
+		If IsSafeUrl(href1) Then
+			Dim link1 As MiniHtml = Tag("a").cls("page-link")
+			link1.attr("href", EscapeHtml(href1))
+			If AriaLabel <> "" Then link1.attr("aria-label", EscapeHtml(AriaLabel))
+			link1.text(label1)
+			link1.up(item1)
+			item1.up(List)
+			Return
+		Else
+			LogError("PakaiUI: rejected unsafe pagination URL: " & href1)
+		End If
+	End If
+
+	Dim span1 As MiniHtml = Tag("span").cls("page-link")
+	If AriaLabel <> "" Then span1.attr("aria-label", EscapeHtml(AriaLabel))
+	span1.text(label1)
+	span1.up(item1)
+	item1.up(List)
+End Sub
+
+Private Sub AppendEllipsis (List As MiniHtml)
+	Dim item1 As MiniHtml = Tag("li").cls("page-item disabled")
+	Dim span1 As MiniHtml = Tag("span").cls("page-link")
+	span1.attr("aria-hidden", "true")
+	span1.text("...")
+	span1.up(item1)
+	item1.up(List)
+End Sub
+
+Private Sub NormalizePaginationSize (Size As String) As String
+	Dim value As String = Size.Trim.ToLowerCase
+	Select value
+		Case SizeSmall
+			Return "pagination-sm"
+		Case SizeLarge
+			Return "pagination-lg"
+		Case Else
+			Return ""
+	End Select
+End Sub
+
+Private Sub NormalizeFormMethod (Method As String) As String
+	Dim value As String = Method.Trim.ToLowerCase
+	Select value
+		Case "get", "post"
+			Return value
+		Case ""
+			Return "get"
+		Case Else
+			Log("PakaiUI: unsupported filter method '" & value & "'; using get")
+			Return "get"
+	End Select
 End Sub
 
 Private Sub NormalizeVariant (Variant As String) As String

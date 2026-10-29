@@ -1,0 +1,600 @@
+﻿AppType=StandardJava
+Build1=Default,b4j.pakaiui.m3
+Group=PakaiUI
+Library1=b4xcollections
+Library2=javaobject
+Library3=jcore
+Library4=json
+Library5=minihtml
+Library6=pakaiui
+NumberOfFiles=0
+NumberOfLibraries=6
+NumberOfModules=0
+Version=10.7
+@EndOfDesignText@
+' PakaiUI M3 forms and data-display tests
+' Version: 0.13
+' Verifies Input, Textarea, SelectField, Checkbox, Radio, Table, Pagination and
+' FilterBar: markup, escaping, ids, validation feedback, accessibility and
+' composition. Console (non-UI) application.
+#Region Project Attributes
+	#CommandLineArgs:
+	#MergeLibraries: True
+#End Region
+
+Sub Process_Globals
+	Private mPassed As Int
+	Private mFailed As Int
+End Sub
+
+Sub AppStart (Args() As String)
+	Dim hostile As String = "<img src=x onerror=alert(1)> & 'x'"
+
+	' =====================================================================
+	' Input
+	' =====================================================================
+	Dim inputOptions As PUIInputOptions = PUI.NewInputOptions(hostile, "email")
+	inputOptions.Id = "email-field"
+	inputOptions.Value = hostile
+	inputOptions.Placeholder = hostile
+	inputOptions.InputType = "email"
+	inputOptions.HelpText = hostile
+	inputOptions.ErrorText = hostile
+	inputOptions.Required = True
+	inputOptions.Disabled = True
+	inputOptions.ReadOnly = True
+	inputOptions.CssClass = "col-md-6"
+	Dim inputField As MiniHtml = PUI.Input(inputOptions)
+	Dim input1 As MiniHtml = inputField.ChildByName("input")
+	Dim inputLabel As MiniHtml = inputField.ChildByName("label")
+	Dim inputHelp As MiniHtml = inputField.ChildByClass("form-text")
+	Dim inputError As MiniHtml = inputField.ChildByClass("invalid-feedback")
+	Dim inputHtml As String = inputField.build
+	Check("Input group is a div", inputField.getName = "div")
+	Check("Input group has mb-3", HasClass(inputField, "mb-3"))
+	Check("Input group custom class", HasClass(inputField, "col-md-6"))
+	Check("Input is an input element", input1 <> Null And input1.getName = "input")
+	Check("Input form-control class", HasClass(input1, "form-control"))
+	Check("Input type email", input1.GetAttributes.Get("type") = "email")
+	Check("Input id", input1.GetAttributes.Get("id") = "email-field")
+	Check("Input name", input1.GetAttributes.Get("name") = "email")
+	Check("Input value escaped", input1.GetAttributes.Get("value") = PUI.EscapeHtml(hostile))
+	Check("Input placeholder escaped", input1.GetAttributes.Get("placeholder") = PUI.EscapeHtml(hostile))
+	Check("Input required attribute", input1.GetAttributes.ContainsKey("required"))
+	Check("Input disabled attribute", input1.GetAttributes.ContainsKey("disabled"))
+	Check("Input readonly attribute", input1.GetAttributes.ContainsKey("readonly"))
+	Check("Input invalid class", HasClass(input1, "is-invalid"))
+	Check("Input aria-invalid", input1.GetAttributes.Get("aria-invalid") = "true")
+	Check("Input label for", inputLabel.GetAttributes.Get("for") = "email-field")
+	Check("Input label escaped", inputLabel.build.Contains(PUI.EscapeHtml(hostile)))
+	Check("Input required marker", inputLabel.ChildByClass("text-danger") <> Null)
+	Check("Input help id", inputHelp.GetAttributes.Get("id") = "email-field-help")
+	Check("Input help escaped", inputHelp.build.Contains(PUI.EscapeHtml(hostile)))
+	Check("Input error id", inputError.GetAttributes.Get("id") = "email-field-error")
+	Check("Input error escaped", inputError.build.Contains(PUI.EscapeHtml(hostile)))
+	Check("Input aria-describedby lists help and error", input1.GetAttributes.Get("aria-describedby") = "email-field-help email-field-error")
+	Check("Input renders no raw markup", inputHtml.Contains("<img") = False)
+
+	Dim plainInputOptions As PUIInputOptions = PUI.NewInputOptions("Name", "display-name")
+	Dim plainInputField As MiniHtml = PUI.Input(plainInputOptions)
+	Dim plainInput1 As MiniHtml = plainInputField.ChildByName("input")
+	Check("Input default type is text", plainInput1.GetAttributes.Get("type") = "text")
+	Check("Input derives id from name", plainInput1.GetAttributes.Get("id") = "pui-display-name")
+	Check("Input label follows derived id", plainInputField.ChildByName("label").GetAttributes.Get("for") = "pui-display-name")
+	Check("Input without error has no is-invalid", HasClass(plainInput1, "is-invalid") = False)
+	Check("Input without error has no aria-invalid", plainInput1.GetAttributes.ContainsKey("aria-invalid") = False)
+	Check("Input without help or error has no aria-describedby", plainInput1.GetAttributes.ContainsKey("aria-describedby") = False)
+
+	Dim generatedA As PUIInputOptions = PUI.NewInputOptions("", "")
+	Dim generatedB As PUIInputOptions = PUI.NewInputOptions("", "")
+	Dim generatedIdA As String = PUI.Input(generatedA).ChildByName("input").GetAttributes.Get("id")
+	Dim generatedIdB As String = PUI.Input(generatedB).ChildByName("input").GetAttributes.Get("id")
+	Check("Input generated id has prefix", generatedIdA.StartsWith("pui-input-"))
+	Check("Input generated ids are unique", generatedIdA <> generatedIdB)
+
+	Dim unsupportedOptions As PUIInputOptions = PUI.NewInputOptions("Unsupported", "unsupported")
+	unsupportedOptions.InputType = "checkbox"
+	Check("Input unsupported type falls back to text", PUI.Input(unsupportedOptions).ChildByName("input").GetAttributes.Get("type") = "text")
+	unsupportedOptions.InputType = "password"
+	unsupportedOptions.Size = PUI.SizeLarge
+	Check("Input password type", PUI.Input(unsupportedOptions).ChildByName("input").GetAttributes.Get("type") = "password")
+	Check("Input large size", HasClass(PUI.Input(unsupportedOptions).ChildByName("input"), "form-control-lg"))
+	unsupportedOptions.Size = PUI.SizeSmall
+	Check("Input small size", HasClass(PUI.Input(unsupportedOptions).ChildByName("input"), "form-control-sm"))
+	unsupportedOptions.Hidden = True
+	Check("Input hidden group", PUI.Input(unsupportedOptions).GetAttributes.ContainsKey("hidden"))
+	unsupportedOptions.Hidden = False
+	unsupportedOptions.Id = hostile
+	Check("Input explicit hostile id escaped", PUI.Input(unsupportedOptions).ChildByName("input").GetAttributes.Get("id") = PUI.EscapeHtml(hostile))
+
+	' =====================================================================
+	' Textarea
+	' =====================================================================
+	Dim textareaOptions As PUITextareaOptions = PUI.NewTextareaOptions("Notes", "notes")
+	textareaOptions.Id = "notes-field"
+	textareaOptions.Value = hostile
+	textareaOptions.Placeholder = hostile
+	textareaOptions.Rows = 6
+	textareaOptions.HelpText = hostile
+	textareaOptions.ErrorText = hostile
+	textareaOptions.Required = True
+	textareaOptions.Disabled = True
+	textareaOptions.ReadOnly = True
+	Dim textareaField As MiniHtml = PUI.Textarea(textareaOptions)
+	Dim textarea1 As MiniHtml = textareaField.ChildByName("textarea")
+	Dim textareaHtml As String = textareaField.build
+	Check("Textarea is a textarea", textarea1 <> Null And textarea1.getName = "textarea")
+	Check("Textarea form-control class", HasClass(textarea1, "form-control"))
+	Check("Textarea id", textarea1.GetAttributes.Get("id") = "notes-field")
+	Check("Textarea name", textarea1.GetAttributes.Get("name") = "notes")
+	Check("Textarea rows", textarea1.GetAttributes.Get("rows") = "6")
+	Check("Textarea value escaped as text", textareaHtml.Contains(PUI.EscapeHtml(hostile)))
+	Check("Textarea placeholder escaped", textarea1.GetAttributes.Get("placeholder") = PUI.EscapeHtml(hostile))
+	Check("Textarea required attribute", textarea1.GetAttributes.ContainsKey("required"))
+	Check("Textarea disabled attribute", textarea1.GetAttributes.ContainsKey("disabled"))
+	Check("Textarea readonly attribute", textarea1.GetAttributes.ContainsKey("readonly"))
+	Check("Textarea invalid class", HasClass(textarea1, "is-invalid"))
+	Check("Textarea help text", textareaField.ChildByClass("form-text") <> Null)
+	Check("Textarea error text", textareaField.ChildByClass("invalid-feedback") <> Null)
+	Check("Textarea renders no raw markup", textareaHtml.Contains("<img") = False)
+
+	Dim defaultTextarea As PUITextareaOptions = PUI.NewTextareaOptions("Default", "default")
+	Check("Textarea factory rows default 3", PUI.Textarea(defaultTextarea).ChildByName("textarea").GetAttributes.Get("rows") = "3")
+	defaultTextarea.Rows = 0
+	Check("Textarea zero rows defaults 3", PUI.Textarea(defaultTextarea).ChildByName("textarea").GetAttributes.Get("rows") = "3")
+	defaultTextarea.Rows = 200
+	Check("Textarea rows clamp to 50", PUI.Textarea(defaultTextarea).ChildByName("textarea").GetAttributes.Get("rows") = "50")
+	defaultTextarea.Rows = 5
+	defaultTextarea.Size = PUI.SizeSmall
+	Check("Textarea small size", HasClass(PUI.Textarea(defaultTextarea).ChildByName("textarea"), "form-control-sm"))
+	defaultTextarea.Hidden = True
+	Check("Textarea hidden group", PUI.Textarea(defaultTextarea).GetAttributes.ContainsKey("hidden"))
+
+	' =====================================================================
+	' SelectField
+	' =====================================================================
+	Dim selectOptions As PUISelectOptions = PUI.NewSelectOptions("Status", "status")
+	selectOptions.Id = "status-field"
+	selectOptions.Items.Add(PUI.NewSelectItem("Active", "active"))
+	selectOptions.Items.Add(PUI.NewSelectItem("Archived", "archived"))
+	Dim selectedItem As PUISelectItem = PUI.NewSelectItem(hostile, "hostile")
+	selectedItem.Selected = True
+	selectOptions.Items.Add(selectedItem)
+	selectOptions.SelectedValue = "archived"
+	selectOptions.Placeholder = "Choose a status"
+	selectOptions.HelpText = hostile
+	selectOptions.ErrorText = hostile
+	selectOptions.Required = True
+	selectOptions.Disabled = True
+	Dim selectGroup As MiniHtml = PUI.SelectField(selectOptions)
+	Dim select1 As MiniHtml = selectGroup.ChildByName("select")
+	Dim selectHtml As String = selectGroup.build
+	Check("SelectField is a select", select1 <> Null And select1.getName = "select")
+	Check("SelectField form-select class", HasClass(select1, "form-select"))
+	Check("SelectField id", select1.GetAttributes.Get("id") = "status-field")
+	Check("SelectField name", select1.GetAttributes.Get("name") = "status")
+	Check("SelectField option count", select1.GetChildren.Size = 4)
+	Check("SelectField selected value", select1.ChildByIndex(2).GetAttributes.ContainsKey("selected"))
+	Check("SelectField SelectedValue wins over item flag", select1.ChildByIndex(3).GetAttributes.ContainsKey("selected") = False)
+	Check("SelectField unselected item", select1.ChildByIndex(1).GetAttributes.ContainsKey("selected") = False)
+	Check("SelectField placeholder value", select1.ChildByIndex(0).GetAttributes.Get("value") = "")
+	Check("SelectField placeholder not selected when a value is set", select1.ChildByIndex(0).GetAttributes.ContainsKey("selected") = False)
+	Check("SelectField placeholder text escaped", select1.ChildByIndex(0).build.Contains("Choose a status"))
+	Check("SelectField item text escaped", selectHtml.Contains(PUI.EscapeHtml(hostile)))
+	Check("SelectField item value escaped", select1.ChildByIndex(3).GetAttributes.Get("value") = "hostile")
+	Check("SelectField required attribute", select1.GetAttributes.ContainsKey("required"))
+	Check("SelectField disabled attribute", select1.GetAttributes.ContainsKey("disabled"))
+	Check("SelectField invalid class", HasClass(select1, "is-invalid"))
+	Check("SelectField aria-invalid", select1.GetAttributes.Get("aria-invalid") = "true")
+	Check("SelectField help text", selectGroup.ChildByClass("form-text") <> Null)
+	Check("SelectField error text", selectGroup.ChildByClass("invalid-feedback") <> Null)
+	Check("SelectField renders no raw markup", selectHtml.Contains("<img") = False)
+
+	Dim emptySelect As PUISelectOptions = PUI.NewSelectOptions("Empty", "empty")
+	emptySelect.Placeholder = "Pick one"
+	Dim emptySelect1 As MiniHtml = PUI.SelectField(emptySelect).ChildByName("select")
+	Check("SelectField placeholder selected when no value", emptySelect1.ChildByIndex(0).GetAttributes.ContainsKey("selected"))
+	Check("SelectField text fallback value", PUI.SelectField(emptySelect).ChildByName("select").ChildByIndex(0).GetAttributes.Get("value") = "")
+
+	Dim explicitOptions As PUISelectOptions = PUI.NewSelectOptions("Explicit", "explicit")
+	explicitOptions.Placeholder = "Pick one"
+	explicitOptions.Items.Add(PUI.NewSelectItem("First", "first"))
+	Dim explicitItem As PUISelectItem = PUI.NewSelectItem("Second", "second")
+	explicitItem.Selected = True
+	explicitOptions.Items.Add(explicitItem)
+	Dim explicitSelect1 As MiniHtml = PUI.SelectField(explicitOptions).ChildByName("select")
+	Check("SelectField single item selection without SelectedValue", explicitSelect1.ChildByIndex(2).GetAttributes.ContainsKey("selected"))
+	Check("SelectField placeholder not selected when an item is selected", explicitSelect1.ChildByIndex(0).GetAttributes.ContainsKey("selected") = False)
+
+	Dim fallbackOptions As PUISelectOptions = PUI.NewSelectOptions("Fallback", "fallback")
+	fallbackOptions.Items.Add(PUI.NewSelectItem("No value", ""))
+	Check("SelectField empty item value falls back to text", PUI.SelectField(fallbackOptions).ChildByName("select").ChildByIndex(0).GetAttributes.Get("value") = "No value")
+
+	Dim multiOptions As PUISelectOptions = PUI.NewSelectOptions("Tags", "tags")
+	multiOptions.Multiple = True
+	multiOptions.Size = PUI.SizeLarge
+	multiOptions.Items.Add(PUI.NewSelectItem("One", "one"))
+	Dim multiItem As PUISelectItem = PUI.NewSelectItem("Two", "two")
+	multiItem.Selected = True
+	multiOptions.Items.Add(multiItem)
+	Dim multiSelect1 As MiniHtml = PUI.SelectField(multiOptions).ChildByName("select")
+	Check("SelectField multiple attribute", multiSelect1.GetAttributes.ContainsKey("multiple"))
+	Check("SelectField multiple item selected", multiSelect1.ChildByIndex(1).GetAttributes.ContainsKey("selected"))
+	Check("SelectField large size", HasClass(multiSelect1, "form-select-lg"))
+	multiOptions.Hidden = True
+	Check("SelectField hidden group", PUI.SelectField(multiOptions).GetAttributes.ContainsKey("hidden"))
+
+	' =====================================================================
+	' Checkbox
+	' =====================================================================
+	Dim checkboxOptions As PUICheckboxOptions = PUI.NewCheckboxOptions(hostile)
+	checkboxOptions.Id = "agree"
+	checkboxOptions.Name = "agree"
+	checkboxOptions.Value = hostile
+	checkboxOptions.Checked = True
+	checkboxOptions.Switch = True
+	checkboxOptions.Inline = True
+	checkboxOptions.HelpText = hostile
+	checkboxOptions.ErrorText = hostile
+	checkboxOptions.Required = True
+	checkboxOptions.Disabled = True
+	checkboxOptions.CssClass = "mt-2"
+	Dim checkboxGroup As MiniHtml = PUI.Checkbox(checkboxOptions)
+	Dim checkbox1 As MiniHtml = checkboxGroup.ChildByName("input")
+	Dim checkboxLabel As MiniHtml = checkboxGroup.ChildByName("label")
+	Check("Checkbox group is form-check", checkboxGroup.getName = "div" And HasClass(checkboxGroup, "form-check"))
+	Check("Checkbox switch class", HasClass(checkboxGroup, "form-switch"))
+	Check("Checkbox inline class", HasClass(checkboxGroup, "form-check-inline"))
+	Check("Checkbox custom class", HasClass(checkboxGroup, "mt-2"))
+	Check("Checkbox input type", checkbox1.GetAttributes.Get("type") = "checkbox")
+	Check("Checkbox form-check-input class", HasClass(checkbox1, "form-check-input"))
+	Check("Checkbox id", checkbox1.GetAttributes.Get("id") = "agree")
+	Check("Checkbox name", checkbox1.GetAttributes.Get("name") = "agree")
+	Check("Checkbox value escaped", checkbox1.GetAttributes.Get("value") = PUI.EscapeHtml(hostile))
+	Check("Checkbox checked attribute", checkbox1.GetAttributes.ContainsKey("checked"))
+	Check("Checkbox required attribute", checkbox1.GetAttributes.ContainsKey("required"))
+	Check("Checkbox disabled attribute", checkbox1.GetAttributes.ContainsKey("disabled"))
+	Check("Checkbox invalid class", HasClass(checkbox1, "is-invalid"))
+	Check("Checkbox aria-invalid", checkbox1.GetAttributes.Get("aria-invalid") = "true")
+	Check("Checkbox label for", checkboxLabel.GetAttributes.Get("for") = "agree")
+	Check("Checkbox label class", HasClass(checkboxLabel, "form-check-label"))
+	Check("Checkbox label escaped", checkboxLabel.build.Contains(PUI.EscapeHtml(hostile)))
+	Check("Checkbox help text", checkboxGroup.ChildByClass("form-text") <> Null)
+	Check("Checkbox error text", checkboxGroup.ChildByClass("invalid-feedback") <> Null)
+	checkboxOptions.Hidden = True
+	Check("Checkbox hidden group", PUI.Checkbox(checkboxOptions).GetAttributes.ContainsKey("hidden"))
+
+	Dim derivedCheckbox As PUICheckboxOptions = PUI.NewCheckboxOptions("Email me")
+	derivedCheckbox.Name = "contact-email"
+	derivedCheckbox.Id = ""
+	Dim derivedCheckbox1 As MiniHtml = PUI.Checkbox(derivedCheckbox)
+	Check("Checkbox derives id from name", derivedCheckbox1.ChildByName("input").GetAttributes.Get("id") = "pui-contact-email")
+	Check("Checkbox label follows derived id", derivedCheckbox1.ChildByName("label").GetAttributes.Get("for") = "pui-contact-email")
+
+	Dim choiceEmail As PUICheckboxOptions = PUI.NewCheckboxOptions("Email")
+	choiceEmail.Name = "updates"
+	choiceEmail.Value = "email"
+	Dim choiceSms As PUICheckboxOptions = PUI.NewCheckboxOptions("SMS")
+	choiceSms.Name = "updates"
+	choiceSms.Value = "sms"
+	Dim choiceEmailId As String = PUI.Checkbox(choiceEmail).ChildByName("input").GetAttributes.Get("id")
+	Dim choiceSmsId As String = PUI.Checkbox(choiceSms).ChildByName("input").GetAttributes.Get("id")
+	Check("Checkbox derived ids include value", choiceEmailId = "pui-updates-email")
+	Check("Checkbox derived ids stay unique in a group", choiceEmailId <> choiceSmsId)
+
+	Dim derivedRadio As PUIRadioOptions = PUI.NewRadioOptions("Weekly")
+	derivedRadio.Name = "frequency"
+	derivedRadio.Value = "weekly"
+	Check("Radio derives id from name and value", PUI.Radio(derivedRadio).ChildByName("input").GetAttributes.Get("id") = "pui-frequency-weekly")
+
+	' =====================================================================
+	' Radio
+	' =====================================================================
+	Dim radioOptions As PUIRadioOptions = PUI.NewRadioOptions("Weekly")
+	radioOptions.Name = "frequency"
+	radioOptions.Id = "frequency-weekly"
+	radioOptions.Value = "weekly"
+	radioOptions.Checked = True
+	radioOptions.Inline = True
+	radioOptions.ErrorText = "Choose a frequency"
+	Dim radioGroup As MiniHtml = PUI.Radio(radioOptions)
+	Dim radio1 As MiniHtml = radioGroup.ChildByName("input")
+	Check("Radio input type", radio1.GetAttributes.Get("type") = "radio")
+	Check("Radio form-check-input class", HasClass(radio1, "form-check-input"))
+	Check("Radio checked attribute", radio1.GetAttributes.ContainsKey("checked"))
+	Check("Radio inline class", HasClass(radioGroup, "form-check-inline"))
+	Check("Radio is not a switch", HasClass(radioGroup, "form-switch") = False)
+	Check("Radio invalid class", HasClass(radio1, "is-invalid"))
+	Check("Radio error text", radioGroup.ChildByClass("invalid-feedback") <> Null)
+	Check("Radio label for", radioGroup.ChildByName("label").GetAttributes.Get("for") = "frequency-weekly")
+	radioOptions.Hidden = True
+	Check("Radio hidden group", PUI.Radio(radioOptions).GetAttributes.ContainsKey("hidden"))
+
+	' =====================================================================
+	' Table
+	' =====================================================================
+	Dim tableOptions As PUITableOptions = PUI.NewTableOptions
+	tableOptions.Id = "people"
+	tableOptions.CssClass = "align-middle"
+	tableOptions.Caption = hostile
+	tableOptions.RowIdField = "id"
+	tableOptions.Striped = True
+	tableOptions.Hover = True
+	tableOptions.Bordered = True
+	tableOptions.Compact = True
+	Dim nameColumn As PUITableColumn = PUI.NewTableColumn("Name", "name")
+	Dim qtyColumn As PUITableColumn = PUI.NewTableColumn("Quantity", "qty")
+	qtyColumn.Align = PUI.AlignCenter
+	Dim noteColumn As PUITableColumn = PUI.NewTableColumn("Note", "note")
+	noteColumn.Align = PUI.AlignEnd
+	tableOptions.Columns.Add(nameColumn)
+	tableOptions.Columns.Add(qtyColumn)
+	tableOptions.Columns.Add(noteColumn)
+
+	Dim rowA As Map = PUI.NewTableRow
+	rowA.Put("id", "row-1")
+	rowA.Put("name", hostile)
+	rowA.Put("qty", 42)
+	rowA.Put("note", Null)
+	Dim rowB As Map = PUI.NewTableRow
+	rowB.Put("id", "row-2")
+	rowB.Put("name", "Second")
+	rowB.Put("qty", 7)
+	tableOptions.Rows.Add(rowA)
+	tableOptions.Rows.Add(rowB)
+
+	Dim tableRoot As MiniHtml = PUI.Table(tableOptions)
+	Dim table1 As MiniHtml = tableRoot.ChildByName("table")
+	Dim tbody1 As MiniHtml = table1.ChildByName("tbody")
+	Dim firstRow As MiniHtml = tbody1.ChildByIndex(0)
+	Dim secondRow As MiniHtml = tbody1.ChildByIndex(1)
+	Dim tableHtml As String = tableRoot.build
+	Check("Table responsive root", tableRoot.getName = "div" And HasClass(tableRoot, "table-responsive"))
+	Check("Table id on root", tableRoot.GetAttributes.Get("id") = "people")
+	Check("Table custom class on root", HasClass(tableRoot, "align-middle"))
+	Check("Table base class", HasClass(table1, "table"))
+	Check("Table striped class", HasClass(table1, "table-striped"))
+	Check("Table hover class", HasClass(table1, "table-hover"))
+	Check("Table bordered class", HasClass(table1, "table-bordered"))
+	Check("Table compact class", HasClass(table1, "table-sm"))
+	Check("Table caption class", HasClass(table1, "caption-top"))
+	Check("Table caption escaped", table1.ChildByName("caption").build.Contains(PUI.EscapeHtml(hostile)))
+	Check("Table header column count", table1.ChildByName("thead").ChildByIndex(0).GetChildren.Size = 3)
+	Check("Table header scope", table1.ChildByName("thead").ChildByIndex(0).ChildByIndex(0).GetAttributes.Get("scope") = "col")
+	Check("Table start alignment has no class", HasClass(table1.ChildByName("thead").ChildByIndex(0).ChildByIndex(0), "text-center") = False)
+	Check("Table center alignment header", HasClass(table1.ChildByName("thead").ChildByIndex(0).ChildByIndex(1), "text-center"))
+	Check("Table end alignment header", HasClass(table1.ChildByName("thead").ChildByIndex(0).ChildByIndex(2), "text-end"))
+	Check("Table body row count", tbody1.GetChildren.Size = 2)
+	Check("Table row id", firstRow.GetAttributes.Get("id") = "row-1")
+	Check("Table first row cell count", firstRow.GetChildren.Size = 3)
+	Check("Table text escaped", firstRow.ChildByIndex(0).build.Contains(PUI.EscapeHtml(hostile)))
+	Check("Table integer cell rendered", firstRow.ChildByIndex(1).build.Contains(">42<"))
+	Check("Table Null cell is empty", firstRow.ChildByIndex(2).build.Contains("null") = False)
+	Check("Table missing key is empty", secondRow.ChildByIndex(2).build.Contains(">Second<") = False)
+	Check("Table center alignment cell", HasClass(firstRow.ChildByIndex(1), "text-center"))
+	Check("Table end alignment cell", HasClass(firstRow.ChildByIndex(2), "text-end"))
+	Check("Table renders no raw markup", tableHtml.Contains("<img") = False)
+
+	Dim emptyTableOptions As PUITableOptions = PUI.NewTableOptions
+	emptyTableOptions.Columns.Add(PUI.NewTableColumn("Name", "name"))
+	emptyTableOptions.Columns.Add(PUI.NewTableColumn("Status", "status"))
+	emptyTableOptions.EmptyText = hostile
+	Dim emptyTableRoot As MiniHtml = PUI.Table(emptyTableOptions)
+	Dim emptyTable1 As MiniHtml = emptyTableRoot.ChildByName("table")
+	Dim emptyRow1 As MiniHtml = emptyTable1.ChildByName("tbody").ChildByIndex(0)
+	Check("Table empty row rendered", emptyTable1.ChildByName("tbody").GetChildren.Size = 1)
+	Check("Table empty cell colspan", emptyRow1.ChildByIndex(0).GetAttributes.Get("colspan") = "2")
+	Check("Table empty text escaped", emptyRow1.ChildByIndex(0).build.Contains(PUI.EscapeHtml(hostile)))
+
+	Dim defaultEmptyOptions As PUITableOptions = PUI.NewTableOptions
+	defaultEmptyOptions.Columns.Add(PUI.NewTableColumn("Name", "name"))
+	Check("Table default empty text", PUI.Table(defaultEmptyOptions).build.Contains("No data."))
+
+	Dim plainTableOptions As PUITableOptions = PUI.NewTableOptions
+	plainTableOptions.Responsive = False
+	plainTableOptions.Hidden = True
+	plainTableOptions.Columns.Add(PUI.NewTableColumn("Name", "name"))
+	Dim plainTable1 As MiniHtml = PUI.Table(plainTableOptions)
+	Check("Table non-responsive root is table", plainTable1.getName = "table")
+	Check("Table non-responsive hidden attribute", plainTable1.GetAttributes.ContainsKey("hidden"))
+
+	Dim nullTable1 As MiniHtml = PUI.Table(Null)
+	Check("Table Null options renders responsive empty table", nullTable1.getName = "div" And HasClass(nullTable1, "table-responsive") And nullTable1.ChildByName("table") <> Null)
+
+	' =====================================================================
+	' Pagination
+	' =====================================================================
+	Dim pageOptions As PUIPaginationOptions = PUI.NewPaginationOptions(1, 5, "/items?page={page}&sort=name")
+	Dim pagination1 As MiniHtml = PUI.Pagination(pageOptions)
+	Dim pageList1 As MiniHtml = pagination1.ChildByClass("pagination")
+	Dim pageHtml As String = pagination1.build
+	Check("Pagination is a nav", pagination1.getName = "nav")
+	Check("Pagination default aria-label", pagination1.GetAttributes.Get("aria-label") = "Page navigation")
+	Check("Pagination list class", pageList1 <> Null And HasClass(pageList1, "pagination"))
+	Check("Pagination item count on five pages", CountOf(pageHtml, "page-item") = 7)
+	Check("Pagination first page is active", pagination1.ChildByClass("active").build.Contains(">1<"))
+	Check("Pagination active aria-current", pagination1.ChildByClass("active").GetAttributes.Get("aria-current") = "page")
+	Check("Pagination active item is not a link", pagination1.ChildByClass("active").ChildByClass("page-link").getName = "span")
+	Dim previous1 As MiniHtml = pageList1.ChildByIndex(0)
+	Dim next1 As MiniHtml = pageList1.ChildByIndex(pageList1.GetChildren.Size - 1)
+	Check("Pagination previous disabled on first page", HasClass(previous1, "disabled"))
+	Check("Pagination previous is a span", previous1.ChildByClass("page-link").getName = "span")
+	Check("Pagination next link on first page", next1.ChildByClass("page-link").getName = "a")
+	Check("Pagination next href", next1.ChildByClass("page-link").GetAttributes.Get("href") = "/items?page=2&amp;sort=name")
+
+	pageOptions.CurrentPage = 2
+	Dim pageTwo1 As MiniHtml = PUI.Pagination(pageOptions)
+	Dim pageTwoList As MiniHtml = pageTwo1.ChildByClass("pagination")
+	Dim previousTwo As MiniHtml = pageTwoList.ChildByIndex(0)
+	Check("Pagination previous href", previousTwo.ChildByClass("page-link").GetAttributes.Get("href") = "/items?page=1&amp;sort=name")
+	Check("Pagination active page two", pageTwo1.ChildByClass("active").build.Contains(">2<"))
+	Check("Pagination amp escaped once", CountOf(pageTwo1.build, "&amp;amp;") = 0)
+
+	pageOptions.CurrentPage = 5
+	Check("Pagination next disabled on last page", HasClass(PUI.Pagination(pageOptions).ChildByClass("pagination").ChildByIndex(6), "disabled"))
+
+	Dim manyOptions As PUIPaginationOptions = PUI.NewPaginationOptions(10, 20, "/items?page={page}")
+	Dim many1 As MiniHtml = PUI.Pagination(manyOptions)
+	Dim manyHtml As String = many1.build
+	Check("Pagination window keeps first page", manyHtml.Contains(">1<"))
+	Check("Pagination window keeps last page", manyHtml.Contains(">20<"))
+	Check("Pagination window has two ellipses", CountOf(manyHtml, "...") = 2)
+	Check("Pagination window active page", many1.ChildByClass("active").build.Contains(">10<"))
+
+	Dim clampLow As PUIPaginationOptions = PUI.NewPaginationOptions(0, 5, "/p/{page}")
+	Check("Pagination clamps low current page", PUI.Pagination(clampLow).ChildByClass("active").build.Contains(">1<"))
+	Dim clampHigh As PUIPaginationOptions = PUI.NewPaginationOptions(99, 5, "/p/{page}")
+	Check("Pagination clamps high current page", PUI.Pagination(clampHigh).ChildByClass("active").build.Contains(">5<"))
+	Dim noPages As PUIPaginationOptions = PUI.NewPaginationOptions(1, 0, "/p/{page}")
+	Dim noPages1 As MiniHtml = PUI.Pagination(noPages)
+	Check("Pagination total zero renders one page", CountOf(noPages1.build, "page-item") = 3)
+
+	Dim unsafePage As PUIPaginationOptions = PUI.NewPaginationOptions(1, 3, "javascript:alert({page})")
+	Dim unsafePage1 As MiniHtml = PUI.Pagination(unsafePage)
+	Check("Pagination rejects unsafe href", unsafePage1.build.Contains("javascript:") = False)
+	Check("Pagination unsafe pattern still renders pages", CountOf(unsafePage1.build, "page-item") = 5)
+
+	Dim missingPattern As PUIPaginationOptions = PUI.NewPaginationOptions(1, 3, "/items")
+	Dim missingPattern1 As MiniHtml = PUI.Pagination(missingPattern)
+	Check("Pagination missing placeholder renders text", missingPattern1.build.Contains("href") = False)
+
+	Dim styledPages As PUIPaginationOptions = PUI.NewPaginationOptions(2, 4, "/p/{page}")
+	styledPages.AriaLabel = "Search results"
+	styledPages.Size = PUI.SizeSmall
+	styledPages.Id = "pager"
+	styledPages.CssClass = "mt-3"
+	styledPages.Hidden = True
+	Dim styledPages1 As MiniHtml = PUI.Pagination(styledPages)
+	Check("Pagination custom aria-label", styledPages1.GetAttributes.Get("aria-label") = "Search results")
+	Check("Pagination small size", HasClass(styledPages1.ChildByClass("pagination"), "pagination-sm"))
+	Check("Pagination id", styledPages1.GetAttributes.Get("id") = "pager")
+	Check("Pagination custom class", HasClass(styledPages1, "mt-3"))
+	Check("Pagination hidden attribute", styledPages1.GetAttributes.ContainsKey("hidden"))
+
+	' =====================================================================
+	' FilterBar
+	' =====================================================================
+	Dim filterOptions As PUIFilterBarOptions = PUI.NewFilterBarOptions
+	filterOptions.Action = "/search?tab=all&x=1"
+	filterOptions.AriaLabel = "People filters"
+	filterOptions.Id = "people-filters"
+	filterOptions.CssClass = "shadow-sm"
+	Dim filter1 As MiniHtml = PUI.FilterBar(filterOptions)
+	Check("FilterBar is a form", filter1.getName = "form")
+	Check("FilterBar role search", filter1.GetAttributes.Get("role") = "search")
+	Check("FilterBar default method get", filter1.GetAttributes.Get("method") = "get")
+	Check("FilterBar action escaped", filter1.GetAttributes.Get("action") = "/search?tab=all&amp;x=1")
+	Check("FilterBar row class", HasClass(filter1, "row") And HasClass(filter1, "align-items-center"))
+	Check("FilterBar custom aria-label", filter1.GetAttributes.Get("aria-label") = "People filters")
+	Check("FilterBar id", filter1.GetAttributes.Get("id") = "people-filters")
+	Check("FilterBar custom class", HasClass(filter1, "shadow-sm"))
+
+	Dim filterInputOptions As PUIInputOptions = PUI.NewInputOptions("Search", "q")
+	filterInputOptions.CssClass = "col-auto"
+	PUI.Input(filterInputOptions).up(filter1)
+	Dim filterSelectOptions As PUISelectOptions = PUI.NewSelectOptions("Status", "status")
+	filterSelectOptions.CssClass = "col-auto"
+	filterSelectOptions.Items.Add(PUI.NewSelectItem("Active", "active"))
+	PUI.SelectField(filterSelectOptions).up(filter1)
+	Dim filterButtonOptions As PUIButtonOptions = PUI.NewButtonOptions("Apply")
+	filterButtonOptions.ButtonType = "submit"
+	PUI.Button(filterButtonOptions).up(filter1)
+	Check("FilterBar composes three controls", filter1.GetChildren.Size = 3)
+	Check("FilterBar first child is a field group", filter1.ChildByIndex(0).ChildByName("input") <> Null)
+	Check("FilterBar second child is a select", filter1.ChildByIndex(1).ChildByName("select") <> Null)
+	Check("FilterBar third child is a submit button", filter1.ChildByIndex(2).GetAttributes.Get("type") = "submit")
+
+	Dim postFilterOptions As PUIFilterBarOptions = PUI.NewFilterBarOptions
+	postFilterOptions.Method = "post"
+	Check("FilterBar accepts post", PUI.FilterBar(postFilterOptions).GetAttributes.Get("method") = "post")
+	postFilterOptions.Method = "dialog"
+	Check("FilterBar unsupported method falls back to get", PUI.FilterBar(postFilterOptions).GetAttributes.Get("method") = "get")
+	postFilterOptions.Action = "javascript:alert(1)"
+	Check("FilterBar rejects unsafe action", PUI.FilterBar(postFilterOptions).GetAttributes.ContainsKey("action") = False)
+	postFilterOptions.Action = ""
+	postFilterOptions.Hidden = True
+	Check("FilterBar hidden attribute", PUI.FilterBar(postFilterOptions).GetAttributes.ContainsKey("hidden"))
+
+	' =====================================================================
+	' Composition sample page
+	' =====================================================================
+	Dim pageDocOptions As PUIPageOptions = PUI.NewPageOptions("PakaiUI M3 sample")
+	pageDocOptions.Theme = PUI.ThemeLight
+	Dim pageDoc As MiniHtml = PUI.Document(pageDocOptions)
+	Dim pageHead As MiniHtml = PUI.Head(pageDoc)
+	PUI.StyleSheet(pageHead, "/assets/css/bootstrap.min.css?v=5.3.8")
+	Dim pageBody As MiniHtml = PUI.Body(pageDoc)
+	Dim container1 As MiniHtml = PUI.Container(Null)
+	container1.up(pageBody)
+
+	Dim sampleFilterOptions As PUIFilterBarOptions = PUI.NewFilterBarOptions
+	sampleFilterOptions.Action = "/"
+	Dim sampleFilter1 As MiniHtml = PUI.FilterBar(sampleFilterOptions)
+	sampleFilter1.up(container1)
+	Dim sampleSearch As PUIInputOptions = PUI.NewInputOptions("Search", "q")
+	sampleSearch.InputType = "search"
+	PUI.Input(sampleSearch).up(sampleFilter1)
+	PUI.Button(PUI.NewButtonOptions("Find")).up(sampleFilter1)
+
+	Dim sampleTableOptions As PUITableOptions = PUI.NewTableOptions
+	sampleTableOptions.Columns.Add(PUI.NewTableColumn("Name", "name"))
+	Dim sampleRow As Map = PUI.NewTableRow
+	sampleRow.Put("name", "PakaiUI")
+	sampleTableOptions.Rows.Add(sampleRow)
+	PUI.Table(sampleTableOptions).up(container1)
+
+	Dim samplePages As PUIPaginationOptions = PUI.NewPaginationOptions(1, 3, "/?page={page}")
+	PUI.Pagination(samplePages).up(container1)
+
+	Check("Sample page starts with doctype", pageDoc.build.StartsWith("<!DOCTYPE html>"))
+	Check("Sample page nests the filter form", container1.ChildByName("form") <> Null)
+	Check("Sample page nests the search input", container1.ChildByName("input") <> Null)
+	Check("Sample page nests the table", container1.ChildByClass("table-responsive") <> Null)
+	Check("Sample page nests the pagination", container1.ChildByName("nav") <> Null)
+
+	File.WriteString(File.DirApp, "m3-output.html", pageDoc.build)
+	Log("")
+	Log($"M3 tests: ${mPassed} passed, ${mFailed} failed"$)
+	Log("Sample page written to: " & File.Combine(File.DirApp, "m3-output.html"))
+
+	Dim system As JavaObject
+	system.InitializeStatic("java.lang.System")
+	If mFailed > 0 Then
+		system.RunMethod("exit", Array(1))
+	Else
+		system.RunMethod("exit", Array(0))
+	End If
+End Sub
+
+Private Sub Check (Name As String, Condition As Boolean)
+	If Condition Then
+		mPassed = mPassed + 1
+		Log("PASS " & Name)
+	Else
+		mFailed = mFailed + 1
+		Log("FAIL " & Name)
+	End If
+End Sub
+
+' Returns the class attribute value, or an empty string when there is none.
+Private Sub Classes (Element As MiniHtml) As String
+	If Element.GetAttributes.ContainsKey("class") Then Return Element.GetAttributes.Get("class")
+	Return ""
+End Sub
+
+' Exact class token test, so "primary" does not match "text-bg-primary".
+Private Sub HasClass (Element As MiniHtml, Name As String) As Boolean
+	If Element = Null Then Return False
+	Dim value As String = Classes(Element)
+	Return (" " & value & " ").Contains(" " & Name & " ")
+End Sub
+
+Private Sub CountOf (Haystack As String, Needle As String) As Int
+	Dim count As Int = 0
+	Dim index As Int = Haystack.IndexOf(Needle)
+	Do While index > -1
+		count = count + 1
+		index = Haystack.IndexOf2(Needle, index + Needle.Length)
+	Loop
+	Return count
+End Sub

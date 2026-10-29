@@ -8,16 +8,18 @@ Alpine.js are optional enhancements, never requirements.
 
 ## Status
 
-**v0.12 — M2 complete (experimental API).**
+**v0.13 — M3 complete (experimental API).**
 
 M0 delivered the verified MiniHTML4 reconnaissance, the escaping/composition contract and a compiled
 proof of concept. M1 added theme tokens (light/dark via `data-bs-theme`), the document skeleton
 (`PUI.Document` / `Head` / `Body`), page-layout primitives (`PUI.Container`, `PUI.Row`, `PUI.Col`), the
-tracked `assets/` folder, the asset sync script and the standalone gallery. M2 adds the core component
+tracked `assets/` folder, the asset sync script and the standalone gallery. M2 added the core component
 set: `Badge`, `Alert`, `Breadcrumb`, `PageHeader`, `Nav` / `NavItem` / `Navbar`, `EmptyState`,
-`LoadingState` and card extensions (header, image, hidden). See
-[`docs/M2-COMPONENTS.md`](docs/M2-COMPONENTS.md) for the component reference and
-[`docs/M0-RECONNAISSANCE.md`](docs/M0-RECONNAISSANCE.md) for the verified MiniHTML behaviour.
+`LoadingState` and card extensions. M3 adds form and data-display components: `Input`, `Textarea`,
+`SelectField`, `Checkbox`, `Radio`, validation feedback, `Table`, `Pagination` and `FilterBar`. See
+[`docs/M2-COMPONENTS.md`](docs/M2-COMPONENTS.md) and [`docs/M3-FORMS.md`](docs/M3-FORMS.md) for the
+component references, and [`docs/M0-RECONNAISSANCE.md`](docs/M0-RECONNAISSANCE.md) for the verified
+MiniHTML behaviour.
 
 ## Requirements
 
@@ -74,7 +76,37 @@ body1.down(card1)
 ' Empty and loading states
 body1.down(PUI.EmptyState(PUI.NewEmptyStateOptions("No records", "Create one to get started.")))
 body1.down(PUI.LoadingState(PUI.NewLoadingStateOptions("Loading...")))
+
+' Form fields: labels, help text and server-rendered validation feedback
+Dim emailOptions As PUIInputOptions = PUI.NewInputOptions("Email", "email")
+emailOptions.InputType = "email"
+emailOptions.HelpText = "Never shown publicly."
+body1.down(PUI.Input(emailOptions))
+
+Dim planOptions As PUISelectOptions = PUI.NewSelectOptions("Plan", "plan")
+planOptions.Placeholder = "Choose a plan"
+planOptions.Items.Add(PUI.NewSelectItem("Starter", "starter"))
+planOptions.Items.Add(PUI.NewSelectItem("Pro", "pro"))
+body1.down(PUI.SelectField(planOptions))
+
+' Responsive table from column definitions and List-of-Map rows
+Dim tableOptions As PUITableOptions = PUI.NewTableOptions
+tableOptions.Striped = True
+tableOptions.Columns.Add(PUI.NewTableColumn("Name", "name"))
+tableOptions.Columns.Add(PUI.NewTableColumn("Plan", "plan"))
+Dim row1 As Map = PUI.NewTableRow
+row1.Put("name", "Aeric")
+row1.Put("plan", "Pro")
+tableOptions.Rows.Add(row1)
+body1.down(PUI.Table(tableOptions))
+
+Dim pagerOptions As PUIPaginationOptions = PUI.NewPaginationOptions(1, 5, "/?page={page}")
+body1.down(PUI.Pagination(pagerOptions))
 ```
+
+`PUI.Select` is named `PUI.SelectField` because `Select` is a reserved B4X keyword. Form controls return
+complete field groups: `Id` identifies the control (for the label), while `CssClass` and `Hidden` apply to
+the group.
 
 Text and attribute values are escaped by default. Raw HTML must be explicit:
 
@@ -92,8 +124,9 @@ sync-assets.bat              Copies assets/ into <project>\Objects\www\assets (a
 tests/m0-poc/                Console proof of concept consuming the installed b4xlib
 tests/m1-foundation/         M1 foundation API tests (35 assertions)
 tests/m2-components/         M2 core component tests (135 assertions)
+tests/m3-forms/              M3 form and data-display tests (203 assertions)
 gallery/                     Standalone jServer demo and HTMX 2.x baseline host
-docs/                        M0 findings, M2 component reference, specification and API inputs
+docs/                        M0 findings, M2/M3 component references, specification and API inputs
 demo/                        Pakai Server Web starter kept for reference
 AGENT.md                     Build/test commands and contribution rules
 CHANGELOG.md                 Version history and breaking changes
@@ -128,7 +161,12 @@ cd ..\m2-components
 & "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="M2Components.b4j" -NoClean=True -ShowWarnings=True
 & "C:\Java\jdk-19.0.2\bin\java.exe" -jar Objects\M2Components.jar
 
-# Standalone gallery (HTMX baseline + M2 components) on http://localhost:51010/
+# M3 form and data-display tests (expects 203/203 PASS and exit code 0)
+cd ..\m3-forms
+& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="M3Forms.b4j" -NoClean=True -ShowWarnings=True
+& "C:\Java\jdk-19.0.2\bin\java.exe" -jar Objects\M3Forms.jar
+
+# Standalone gallery (HTMX baseline + M2/M3 components) on http://localhost:51010/
 cd ..\..\gallery
 cmd /c ..\sync-assets.bat .
 & "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="Gallery.b4j" -NoClean=True -ShowWarnings=True

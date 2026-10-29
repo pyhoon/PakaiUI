@@ -1,6 +1,6 @@
 {
   "comment": "PakaiUI tracked frontend assets, manifest of upstream sources. Re-download and verify the SHA-256 hashes in assets/README.md before trusting fresh copies.",
-  "Version": "0.12",
+  "Version": "0.13",
   "Resources": [
     {
       "File": "www\\assets\\css\\bootstrap.min.css",

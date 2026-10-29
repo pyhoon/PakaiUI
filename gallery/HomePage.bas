@@ -13,7 +13,7 @@ Sub Class_Globals
 	Private Const BootstrapVersion As String = "5.3.8"
 	Private Const IconsVersion As String = "1.13.1"
 	Private Const HtmxVersion As String = "2.0.8"
-	Private Const PakaiUIVersion As String = "0.12"
+	Private Const PakaiUIVersion As String = "0.13"
 	Private Const UrlPing As String = "/hx/ping"
 	Private Const UrlEcho As String = "/hx/echo"
 	Private Const UrlSpin As String = "/hx/spin"
@@ -113,6 +113,35 @@ Private Sub BuildPage (Theme As String) As String
 	Dim coreCol3 As MiniHtml = PUI.Col(coreColOptions)
 	coreCol3.up(coreGrid)
 	coreCol3.down(StatesCard)
+
+	' Forms and data display (M3) -----------------------------------------
+	Dim formsHeaderOptions As PUIPageHeaderOptions = PUI.NewPageHeaderOptions("Forms and data display")
+	formsHeaderOptions.Subtitle = "Accessible field groups, validation feedback, responsive tables and pagination."
+	formsHeaderOptions.CssClass = "mt-5"
+	formsHeaderOptions.Id = "forms-data"
+	PUI.PageHeader(formsHeaderOptions).up(container1)
+
+	Dim formsGrid As MiniHtml = PUI.Row(Null)
+	formsGrid.cls("g-3")
+	formsGrid.up(container1)
+	Dim wideColOptions As PUIColOptions
+	wideColOptions.Initialize
+	wideColOptions.Breakpoint = "md"
+	wideColOptions.Width = 7
+	Dim wideCol1 As MiniHtml = PUI.Col(wideColOptions)
+	wideCol1.up(formsGrid)
+	wideCol1.down(FormsCard)
+	Dim sideColOptions As PUIColOptions
+	sideColOptions.Initialize
+	sideColOptions.Breakpoint = "md"
+	sideColOptions.Width = 5
+	Dim sideCol1 As MiniHtml = PUI.Col(sideColOptions)
+	sideCol1.up(formsGrid)
+	sideCol1.down(ChoicesCard)
+
+	Dim tableCard1 As MiniHtml = TableCard
+	tableCard1.cls("mt-3")
+	tableCard1.up(container1)
 
 	' Scripts at the end of the body --------------------------------------
 	PUI.Script(body1, AssetBase & "/assets/js/bootstrap.min.js?v=" & BootstrapVersion, True)
@@ -324,6 +353,7 @@ Private Sub NavigationCard As MiniHtml
 	navOptions.Items.Add(overviewItem)
 	navOptions.Items.Add(PUI.NewNavItemOptions("HTMX baseline", "#m0-htmx"))
 	navOptions.Items.Add(PUI.NewNavItemOptions("States", "#core-states"))
+	navOptions.Items.Add(PUI.NewNavItemOptions("Forms", "#forms-data"))
 	Dim nav1 As MiniHtml = PUI.Nav(navOptions)
 	nav1.cls("mb-3")
 	nav1.up(body1)
@@ -356,6 +386,170 @@ Private Sub StatesCard As MiniHtml
 	loadingOptions.Centered = True
 	loadingOptions.CssClass = "border-top pt-3"
 	PUI.LoadingState(loadingOptions).up(body1)
+	Return card1
+End Sub
+
+Private Sub FormsCard As MiniHtml
+	Dim options As PUICardOptions = PUI.NewCardOptions("Filter form", "")
+	Dim card1 As MiniHtml = PUI.Card(options)
+	Dim body1 As MiniHtml = card1.ChildByClass("card-body")
+
+	Dim filterOptions As PUIFilterBarOptions = PUI.NewFilterBarOptions
+	filterOptions.Action = "/"
+	Dim filter1 As MiniHtml = PUI.FilterBar(filterOptions)
+	filter1.up(body1)
+
+	Dim searchOptions As PUIInputOptions = PUI.NewInputOptions("Search", "q")
+	searchOptions.InputType = "search"
+	searchOptions.Placeholder = "Name or email"
+	searchOptions.CssClass = "col-auto"
+	PUI.Input(searchOptions).up(filter1)
+
+	Dim statusOptions As PUISelectOptions = PUI.NewSelectOptions("Status", "status")
+	statusOptions.CssClass = "col-auto"
+	statusOptions.Placeholder = "All"
+	statusOptions.Items.Add(PUI.NewSelectItem("Active", "active"))
+	statusOptions.Items.Add(PUI.NewSelectItem("Archived", "archived"))
+	PUI.SelectField(statusOptions).up(filter1)
+
+	Dim applyOptions As PUIButtonOptions = MakeButton("Apply", PUI.VariantPrimary, "")
+	applyOptions.ButtonType = "submit"
+	PUI.Button(applyOptions).up(filter1)
+
+	Dim emailOptions As PUIInputOptions = PUI.NewInputOptions("Email address", "email")
+	emailOptions.InputType = "email"
+	emailOptions.Placeholder = "you@example.com"
+	emailOptions.HelpText = "Used for sign-in only; never shown publicly."
+	PUI.Input(emailOptions).up(body1)
+
+	Dim notesOptions As PUITextareaOptions = PUI.NewTextareaOptions("Notes", "notes")
+	notesOptions.Placeholder = "Optional context for the record"
+	notesOptions.Rows = 3
+	notesOptions.HelpText = "Plain text; markup is escaped."
+	PUI.Textarea(notesOptions).up(body1)
+	Return card1
+End Sub
+
+Private Sub ChoicesCard As MiniHtml
+	Dim options As PUICardOptions = PUI.NewCardOptions("Validation and choices", "")
+	Dim card1 As MiniHtml = PUI.Card(options)
+	Dim body1 As MiniHtml = card1.ChildByClass("card-body")
+
+	Dim invalidOptions As PUIInputOptions = PUI.NewInputOptions("Email address", "email-error")
+	invalidOptions.InputType = "email"
+	invalidOptions.Value = "not-an-email"
+	invalidOptions.Required = True
+	invalidOptions.ErrorText = "Enter a valid email address."
+	PUI.Input(invalidOptions).up(body1)
+
+	Dim updatesLabel As MiniHtml
+	updatesLabel.Initialize("p")
+	updatesLabel.cls("form-label mb-1")
+	updatesLabel.up(body1)
+	PUI.AddText(updatesLabel, "Email updates")
+
+	Dim emailChoice As PUICheckboxOptions = PUI.NewCheckboxOptions("Product news")
+	emailChoice.Name = "updates"
+	emailChoice.Value = "email"
+	emailChoice.Checked = True
+	emailChoice.Inline = True
+	PUI.Checkbox(emailChoice).up(body1)
+
+	Dim smsChoice As PUICheckboxOptions = PUI.NewCheckboxOptions("SMS alerts")
+	smsChoice.Name = "updates"
+	smsChoice.Value = "sms"
+	smsChoice.Inline = True
+	PUI.Checkbox(smsChoice).up(body1)
+
+	Dim digestChoice As PUICheckboxOptions = PUI.NewCheckboxOptions("Weekly digest")
+	digestChoice.Name = "digest"
+	digestChoice.Switch = True
+	digestChoice.Checked = True
+	digestChoice.CssClass = "mt-2"
+	PUI.Checkbox(digestChoice).up(body1)
+
+	Dim frequencyLabel As MiniHtml
+	frequencyLabel.Initialize("p")
+	frequencyLabel.cls("form-label mb-1 mt-3")
+	frequencyLabel.up(body1)
+	PUI.AddText(frequencyLabel, "Frequency")
+
+	Dim dailyRadio As PUIRadioOptions = PUI.NewRadioOptions("Daily")
+	dailyRadio.Name = "frequency"
+	dailyRadio.Value = "daily"
+	dailyRadio.Inline = True
+	PUI.Radio(dailyRadio).up(body1)
+
+	Dim weeklyRadio As PUIRadioOptions = PUI.NewRadioOptions("Weekly")
+	weeklyRadio.Name = "frequency"
+	weeklyRadio.Value = "weekly"
+	weeklyRadio.Checked = True
+	weeklyRadio.Inline = True
+	PUI.Radio(weeklyRadio).up(body1)
+
+	Dim monthlyRadio As PUIRadioOptions = PUI.NewRadioOptions("Monthly")
+	monthlyRadio.Name = "frequency"
+	monthlyRadio.Value = "monthly"
+	monthlyRadio.Inline = True
+	PUI.Radio(monthlyRadio).up(body1)
+	Return card1
+End Sub
+
+Private Sub TableCard As MiniHtml
+	Dim options As PUICardOptions = PUI.NewCardOptions("Responsive table", "Rows are maps; every value is escaped.")
+	Dim card1 As MiniHtml = PUI.Card(options)
+	Dim body1 As MiniHtml = card1.ChildByClass("card-body")
+
+	Dim tableOptions As PUITableOptions = PUI.NewTableOptions
+	tableOptions.Caption = "Recent sign-ups"
+	tableOptions.Striped = True
+	tableOptions.Hover = True
+	tableOptions.RowIdField = "id"
+	tableOptions.Columns.Add(PUI.NewTableColumn("Name", "name"))
+	tableOptions.Columns.Add(PUI.NewTableColumn("Plan", "plan"))
+	tableOptions.Columns.Add(PUI.NewTableColumn("Status", "status"))
+	Dim joinedColumn As PUITableColumn = PUI.NewTableColumn("Joined", "joined")
+	joinedColumn.Align = PUI.AlignEnd
+	tableOptions.Columns.Add(joinedColumn)
+
+	Dim firstRow As Map = PUI.NewTableRow
+	firstRow.Put("id", "signup-1")
+	firstRow.Put("name", "Aeric")
+	firstRow.Put("plan", "Pro")
+	firstRow.Put("status", "Active")
+	firstRow.Put("joined", "2026-10-28")
+	tableOptions.Rows.Add(firstRow)
+
+	Dim secondRow As Map = PUI.NewTableRow
+	secondRow.Put("id", "signup-2")
+	secondRow.Put("name", "Mei")
+	secondRow.Put("plan", "Team")
+	secondRow.Put("status", "Active")
+	secondRow.Put("joined", "2026-10-21")
+	tableOptions.Rows.Add(secondRow)
+
+	Dim thirdRow As Map = PUI.NewTableRow
+	thirdRow.Put("id", "signup-3")
+	thirdRow.Put("name", "Hafiz")
+	thirdRow.Put("plan", "Starter")
+	thirdRow.Put("status", "Trial")
+	thirdRow.Put("joined", "2026-10-14")
+	tableOptions.Rows.Add(thirdRow)
+
+	Dim fourthRow As Map = PUI.NewTableRow
+	fourthRow.Put("id", "signup-4")
+	fourthRow.Put("name", "Siti")
+	fourthRow.Put("plan", "Pro")
+	fourthRow.Put("status", "Archived")
+	fourthRow.Put("joined", "2026-09-30")
+	tableOptions.Rows.Add(fourthRow)
+
+	PUI.Table(tableOptions).up(body1)
+
+	Dim pageOptions As PUIPaginationOptions = PUI.NewPaginationOptions(2, 4, "/?page={page}")
+	pageOptions.AriaLabel = "Recent sign-ups pages"
+	pageOptions.CssClass = "mt-3 mb-0"
+	PUI.Pagination(pageOptions).up(body1)
 	Return card1
 End Sub
 
