@@ -404,6 +404,107 @@
 	text-transform: uppercase;
 }
 
+/* Authentication ---------------------------------------------------------- */
+.pui-asadi .pui-asadi-auth {
+	display: grid;
+	place-items: center;
+	min-height: 100vh;
+	padding: 40px 20px;
+	background:
+		radial-gradient(circle at 50% 0, rgba(66, 99, 235, .10), transparent 45%),
+		var(--pui-asadi-bg);
+}
+
+.pui-asadi .pui-asadi-auth-card {
+	width: 100%;
+	max-width: 400px;
+	padding: 34px 32px 28px;
+	border: 1px solid var(--pui-asadi-line);
+	border-radius: 16px;
+	background: var(--pui-asadi-surface);
+	box-shadow: 0 24px 60px rgba(16, 26, 44, .10);
+}
+
+.pui-asadi .pui-asadi-auth-brand {
+	display: flex;
+	align-items: center;
+	gap: 11px;
+	color: var(--pui-asadi-ink);
+	font-size: 14px;
+	font-weight: 700;
+	letter-spacing: -.01em;
+}
+
+.pui-asadi .pui-asadi-auth-mark {
+	display: grid;
+	place-items: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 9px;
+	background: var(--pui-asadi-blue);
+	color: #fff;
+	font-weight: 800;
+}
+
+.pui-asadi .pui-asadi-auth-eyebrow {
+	margin-top: 30px;
+	color: var(--pui-asadi-accent);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: .15em;
+}
+
+.pui-asadi .pui-asadi-auth-title {
+	margin: 8px 0 6px;
+	color: var(--pui-asadi-ink);
+	font-size: 26px;
+	font-weight: 700;
+	letter-spacing: -.035em;
+}
+
+.pui-asadi .pui-asadi-auth-sub {
+	margin: 0 0 22px;
+	color: var(--pui-asadi-muted);
+	font-size: 13px;
+	line-height: 1.55;
+}
+
+.pui-asadi .pui-asadi-auth .alert {
+	margin-bottom: 18px;
+	padding: 10px 14px;
+}
+
+.pui-asadi .pui-asadi-auth-foot {
+	margin-top: 22px;
+	padding-top: 18px;
+	border-top: 1px solid var(--pui-asadi-line);
+	color: var(--pui-asadi-muted);
+	font-size: 12px;
+	text-align: center;
+}
+
+.pui-asadi .pui-asadi-auth-foot a {
+	color: var(--pui-asadi-accent);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.pui-asadi .pui-asadi-auth-foot a:hover,
+.pui-asadi .pui-asadi-auth-foot a:focus {
+	color: var(--pui-asadi-blue-dark);
+	text-decoration: underline;
+}
+
+.pui-asadi .pui-asadi-auth-meta {
+	margin-top: 16px;
+	color: var(--pui-asadi-muted);
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: .08em;
+	text-align: center;
+	text-transform: uppercase;
+}
+
 /* Bootstrap component overrides scoped to the theme ----------------------- */
 .pui-asadi .btn {
 	border-radius: 8px;
@@ -555,6 +656,16 @@
 	color: var(--pui-asadi-ink);
 }
 
+[data-bs-theme="dark"] .pui-asadi .pui-asadi-auth {
+	background:
+		radial-gradient(circle at 50% 0, rgba(143, 166, 248, .14), transparent 45%),
+		var(--pui-asadi-bg);
+}
+
+[data-bs-theme="dark"] .pui-asadi .pui-asadi-auth-card {
+	box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+}
+
 /* Responsive -------------------------------------------------------------- */
 @media (max-width: 850px) {
 	.pui-asadi .pui-asadi-sidebar {
@@ -643,6 +754,18 @@
 	.pui-asadi .pui-asadi-panel-head {
 		align-items: flex-start;
 		flex-direction: column;
+	}
+
+	.pui-asadi .pui-asadi-auth {
+		padding: 24px 14px;
+	}
+
+	.pui-asadi .pui-asadi-auth-card {
+		padding: 26px 20px 22px;
+	}
+
+	.pui-asadi .pui-asadi-auth-title {
+		font-size: 23px;
 	}
 }
 

@@ -10,6 +10,9 @@ APIs may change, and breaking changes are documented explicitly.
 - `assets/css/pakaiui-asadi.css`: opt-in Asadi-style dashboard theme scoped to `.pui-asadi`, with sidebar,
   topbar, panels, stats, table, form, button and dark-mode styling. Loaded after Bootstrap and
   `pakaiui.css`; it does not change Bootstrap defaults outside the wrapper.
+- `assets/css/pakaiui-asadi.css`: centred authentication layout (`.pui-asadi-auth`, `-card`, `-brand`,
+  `-mark`, `-eyebrow`, `-title`, `-sub`, `-foot`, `-meta`) for login and registration pages, including
+  dark-mode and small-screen rules.
 - `demo/`: standalone jServer demo on port 51030, composed from PUI Sidebar, Breadcrumb, Badge,
   ThemeSwitcher, PageHeader, Alert, Card, Table, FilterBar, Input and SelectField. Mock data supports a
   working server-side search/type filter, plus light/dark/auto themes without JavaScript.
