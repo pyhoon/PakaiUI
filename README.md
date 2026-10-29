@@ -139,11 +139,18 @@ body1.down(PUI.RawHtml("<strong>trusted markup</strong>"))
 PUI.AddText(body1, "<script>this is escaped</script>")
 ```
 
+## Demos
+
+- `demo/` — Asadi-style dashboard on `http://localhost:51030/`, using PUI components plus the optional
+  `pakaiui-asadi.css` theme layer. Server-rendered, no JavaScript.
+- `gallery/` — full component gallery and HTMX baseline on `http://localhost:51010/`.
+- `examples/pakai-server/` — Pakai Server/EndsMeet host on `http://localhost:51020/`.
+
 ## Repository layout
 
 ```
 source/                      PakaiUI library project (PUI.bas, manifest, b4xlib build script)
-assets/                      Tracked frontend assets (Bootstrap 5.3.8, icons, HTMX 2.0.8, Alpine 3.15.8, pakaiui.css)
+assets/                      Tracked frontend assets (Bootstrap 5.3.8, icons, HTMX 2.0.8, Alpine 3.15.8, pakaiui.css, Asadi theme)
 sync-assets.bat              Copies assets/ into <project>\Objects\www\assets (additive)
 tests/m0-poc/                Console proof of concept consuming the installed b4xlib
 tests/m1-foundation/         M1 foundation API tests (35 assertions)
@@ -153,7 +160,7 @@ tests/m4-interactions/       M4 optional interaction tests (162 assertions)
 gallery/                     Standalone jServer demo and HTMX 2.x baseline host
 examples/pakai-server/       Pakai Server/EndsMeet host example (optional integration)
 docs/                        M0 findings, M2-M4 references, API, compatibility, versioning, integration
-demo/                        Pakai Server Web starter kept for reference
+demo/                        Asadi-style standalone demo using the optional theme layer
 AGENT.md                     Build/test commands and contribution rules
 CHANGELOG.md                 Version history and breaking changes
 ```
@@ -210,6 +217,13 @@ cd ..\..\examples\pakai-server
 cmd /c ..\..\sync-assets.bat .
 cd Objects
 & "C:\Java\jdk-19.0.2\bin\java.exe" -jar PakaiServerExample.jar
+
+# Asadi-style demo on http://localhost:51030/
+cd ..\..\..\demo
+& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="PakaiDemo.b4j" -NoClean=True -ShowWarnings=True
+cmd /c ..\sync-assets.bat .
+cd Objects
+& "C:\Java\jdk-19.0.2\bin\java.exe" -jar PakaiDemo.jar
 ```
 
 See [`AGENT.md`](AGENT.md) for the full command reference and the B4J/MiniHTML pitfalls that must be

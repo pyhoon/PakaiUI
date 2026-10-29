@@ -1,0 +1,45 @@
+﻿AppType=StandardJava
+Build1=Default,b4j.pakaiui.demo
+Group=PakaiUI
+Library1=b4xcollections
+Library2=jcore
+Library3=jserver
+Library4=json
+Library5=minihtml
+Library6=pakaiui
+Module1=DemoPage
+NumberOfFiles=0
+NumberOfLibraries=6
+NumberOfModules=1
+Version=10.7
+@EndOfDesignText@
+' PakaiUI Asadi-style demo
+' A standalone jServer page that composes PUI components and loads the optional
+' pakaiui-asadi.css theme layer. No Pakai Server, database or JavaScript needed.
+'
+' Run:
+'   cd demo
+'   B4JBuilder -Task=Build -Project=PakaiDemo.b4j
+'   cmd /c ..\sync-assets.bat .
+'   cd Objects
+'   java -jar PakaiDemo.jar
+#Region Project Attributes
+	#CommandLineArgs:
+	#MergeLibraries: True
+#End Region
+
+Sub Process_Globals
+	Private srvr As Server
+	Private Const Port As Int = 51030
+End Sub
+
+' <link>Open in browser|http://127.0.0.1:51030</link>
+Sub AppStart (Args() As String)
+	srvr.Initialize("srvr")
+	srvr.Port = Port
+	srvr.StaticFilesFolder = File.Combine(File.DirApp, "www")
+	srvr.AddFilter("/*", "DemoPage", False)
+	srvr.Start
+	Log($"PakaiUI Asadi demo listening on http://localhost:${Port}/"$)
+	StartMessageLoop
+End Sub

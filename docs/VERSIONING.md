@@ -26,6 +26,7 @@ agree:
 | `source/libs.json` | `"Version": "0.15"` |
 | `assets/res.json` | `"Version": "0.15"` |
 | `assets/css/pakaiui.css` | header `PakaiUI theme tokens 0.15` |
+| `assets/css/pakaiui-asadi.css` | header `PakaiUI Asadi theme 0.15` |
 | `README.md`, `AGENT.md`, `CHANGELOG.md` | current milestone/version |
 | `gallery/HomePage.bas` | `PakaiUIVersion` |
 | Milestone documents | version they describe |

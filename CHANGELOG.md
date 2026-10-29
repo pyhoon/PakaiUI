@@ -3,6 +3,36 @@
 All notable changes to PakaiUI are recorded here. The project follows a `0.x` versioning policy: public
 APIs may change, and breaking changes are documented explicitly.
 
+## Unreleased — Asadi-style demo and theme
+
+### Added
+
+- `assets/css/pakaiui-asadi.css`: opt-in Asadi-style dashboard theme scoped to `.pui-asadi`, with sidebar,
+  topbar, panels, stats, table, form, button and dark-mode styling. Loaded after Bootstrap and
+  `pakaiui.css`; it does not change Bootstrap defaults outside the wrapper.
+- `demo/`: standalone jServer demo on port 51030, composed from PUI Sidebar, Breadcrumb, Badge,
+  ThemeSwitcher, PageHeader, Alert, Card, Table, FilterBar, Input and SelectField. Mock data supports a
+  working server-side search/type filter, plus light/dark/auto themes without JavaScript.
+- Demo README and asset documentation for the theme layer.
+
+### Changed
+
+- Replaced the vendored Pakai Server Web starter in `demo/` with the standalone Asadi-style demo.
+- Updated README/AGENT demo entries and build/run commands.
+- `.gitignore` now ignores the new demo's build output and metadata.
+
+### Verified
+
+- Demo build: B4JBuilder 10.70, exit code 0.
+- Demo page: 4 stat cards, 8 table rows, filter form, theme switcher, 3 base stylesheets plus the theme.
+- Server-side filters: `?q=users` -> 2 rows; `?type=view` -> 2 views; `?q=zzz` -> empty-state colspan 4.
+- Dark theme: `?theme=dark` applies dark tokens to the body, panels and text; Dark is the active switcher.
+- Browser console: no errors; no horizontal overflow at the tested viewport.
+
+### Not changed
+
+- No PakaiUI public API changes and no library version bump; 0.15.0 and the `v0.15.0` tag remain intact.
+
 ## 0.15.0 (2026-10-30) — M5: integration and release readiness
 
 ### Added

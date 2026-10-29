@@ -1,12 +1,7 @@
-demo/Objects/b4xlibs
-demo/Objects/bin
-demo/Objects/logs
-demo/Objects/shell
-demo/Objects/src
-demo/Objects/*.ini
-demo/Objects/*db*
+demo/Objects/
 demo/AutoBackups/
 demo/logs/
+demo/*.b4j.meta
 source/Objects/
 source/AutoBackups/
 source/logs/

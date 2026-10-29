@@ -248,8 +248,9 @@ Verified from the installed EndsMeet 4.03 `.b4xlib` and the demo source:
 | `ReplaceMap(Base, Replacements)` (line 381) | Replaces `$KEY$` tokens; `$H_KEY$` values are escaped | Explains `$SERVER_URL$` in demo views; PakaiUI must not hard-code these placeholders |
 | `WriteHtml` / `WriteHtml2` | Writes a rendered response | M5 adapter can call `PUI` components and render with MiniHTML |
 
-The demo (`demo/`) is a Pakai Server starter, not a PakaiUI demo. It is retained as reference for M1/M5
-and is not part of the M0 build.
+At M0 the `demo/` folder contained a Pakai Server starter, not a PakaiUI demo. It was used as reference
+for M1/M5 and was later replaced by the standalone Asadi-style demo; the observations below are historical
+evidence from that checkout.
 
 ---
 

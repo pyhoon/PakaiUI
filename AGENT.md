@@ -37,7 +37,7 @@ docs/COMPATIBILITY.md        Verified versions, evidence, constraints
 docs/VERSIONING.md           Versioning, migration, deprecation and release policy
 docs/PAKAI-SERVER-INTEGRATION.md  EndsMeet/Pakai Server host model, example and production notes
 docs/PakaiUI-*.md            Design inputs: specification, API proposal, considerations (read-only)
-assets/                      Tracked frontend assets (Bootstrap 5.3.8, icons, HTMX 2.0.8, Alpine 3.15.8, pakaiui.css)
+assets/                      Tracked frontend assets (Bootstrap 5.3.8, icons, HTMX 2.0.8, Alpine 3.15.8, pakaiui.css, Asadi theme)
   README.md                  Versions, SHA-256 hashes, serving and upgrade notes
   res.json                   Pakai-style manifest of upstream sources
 sync-assets.bat              Copies assets/ into <project>\Objects\www\assets (additive)
@@ -54,14 +54,14 @@ tests/m3-forms/              M3 form and data-display tests (203 assertions)
 tests/m4-interactions/       M4 optional interaction tests (162 assertions)
 gallery/                     Standalone jServer demo (plain jServer, no Pakai Server) + HTMX baseline
 examples/pakai-server/       Optional Pakai Server/EndsMeet host example (not packaged)
-demo/                        Pakai Server Web 6.99 starter (reference; not a PakaiUI demo)
+demo/                        Asadi-style standalone demo using the optional theme layer
 ```
 
 - `docs/PakaiUI-Technical-Specification.md`, `docs/PakaiUI-Initial-Public-API.md` and
   `docs/PakaiUI-Consideration-Before-Started.md` are the design inputs. Treat them as **design input**,
   not as a description of what is implemented.
-- `demo/` is a Pakai Server starter that was vendored for reference. It is **not** built or shipped with
-  PakaiUI and must not leak framework assumptions into `source/`.
+- `demo/` is a standalone Asadi-style demo. It is built and tested, but is not packaged into
+  `PakaiUI.b4xlib` and must not create a framework dependency in `source/`.
 - `C:\Projects\pakai-asadi` is a separate Pakai Server application and the first planned integration
   consumer (M5). It is not part of this repository: do not add it as a dependency or copy its code into the
   core.
@@ -214,6 +214,19 @@ cd Objects
 Expected: build exit code 0 and `EndsMeet server (version = 4.03) is running on port 51020`. Open
 `http://localhost:51020/`; `POST /submit` renders the escaped form value. This project is an example only
 and is not packaged into `PakaiUI.b4xlib`; see `docs/PAKAI-SERVER-INTEGRATION.md`.
+
+### Build and run the Asadi-style demo
+
+```powershell
+cd C:\Projects\PakaiUI\demo
+& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="PakaiDemo.b4j" -NoClean=True -ShowWarnings=True
+cmd /c ..\sync-assets.bat .
+cd Objects
+& "C:\Java\jdk-19.0.2\bin\java.exe" -jar PakaiDemo.jar
+```
+
+Expected: `PakaiUI Asadi demo listening on http://localhost:51030/`. The page uses PUI components plus the
+opt-in `assets/css/pakaiui-asadi.css` theme layer. It is not packaged into the library.
 
 **Always rebuild the `.b4xlib` and reinstall it before testing a consumer project.** The PoC compiles
 `PUI.bas` from the installed library, not from `source/` directly.
