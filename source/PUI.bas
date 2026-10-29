@@ -5,8 +5,8 @@ Type=StaticCode
 Version=10.7
 @EndOfDesignText@
 ' PakaiUI - server-rendered UI components for B4J web applications.
-' Version: 0.14 (M4 optional interactions: HTMX and Alpine helpers, modal,
-'          toast, theme switcher and sidebar)
+' Version: 0.15 (M5 integration and release readiness: Pakai Server example,
+'          compatibility matrix, API reference, versioning policy)
 ' HTML foundation: MiniHTML 4.02 (https://github.com/pyhoon/MiniHTML4)
 '
 ' Safety contract:
@@ -18,7 +18,7 @@ Version=10.7
 '   - Public option types are prefixed with PUI because B4X types share a global namespace.
 '   - No dependency on Pakai Server, MiniJS or MiniCSS.
 Sub Process_Globals
-	Public Const VERSION As String = "0.14"
+	Public Const VERSION As String = "0.15"
 
 	' Bootstrap 5.3 semantic variants
 	Public Const VariantPrimary As String = "primary"

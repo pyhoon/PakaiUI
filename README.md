@@ -8,7 +8,7 @@ Alpine.js are optional enhancements, never requirements.
 
 ## Status
 
-**v0.14 — M4 complete (experimental API).**
+**v0.15 — M5 complete, release readiness (experimental API).**
 
 M0 delivered the verified MiniHTML4 reconnaissance, the escaping/composition contract and a compiled
 proof of concept. M1 added theme tokens (light/dark via `data-bs-theme`), the document skeleton
@@ -16,12 +16,14 @@ proof of concept. M1 added theme tokens (light/dark via `data-bs-theme`), the do
 tracked `assets/` folder, the asset sync script and the standalone gallery. M2 added the core component
 set: `Badge`, `Alert`, `Breadcrumb`, `PageHeader`, `Nav` / `NavItem` / `Navbar`, `EmptyState`,
 `LoadingState` and card extensions. M3 added form and data-display components: `Input`, `Textarea`,
-`SelectField`, `Checkbox`, `Radio`, validation feedback, `Table`, `Pagination` and `FilterBar`. M4 adds
+`SelectField`, `Checkbox`, `Radio`, validation feedback, `Table`, `Pagination` and `FilterBar`. M4 added
 optional interactions: typed `Htmx` and `Alpine` attribute helpers, `Modal` / `ModalTrigger`, `Toast`,
-`ThemeSwitcher` and `Sidebar`. None of them makes HTMX or Alpine.js mandatory. See
-[`docs/M2-COMPONENTS.md`](docs/M2-COMPONENTS.md), [`docs/M3-FORMS.md`](docs/M3-FORMS.md) and
-[`docs/M4-INTERACTIONS.md`](docs/M4-INTERACTIONS.md) for the component references, and
-[`docs/M0-RECONNAISSANCE.md`](docs/M0-RECONNAISSANCE.md) for the verified MiniHTML behaviour.
+`ThemeSwitcher` and `Sidebar`. M5 adds the verified Pakai Server/EndsMeet example, the complete API
+reference, the compatibility matrix and the versioning/migration/release policy. None of it makes HTMX,
+Alpine.js or Pakai Server a core dependency. See [`docs/API-REFERENCE.md`](docs/API-REFERENCE.md),
+[`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md), [`docs/VERSIONING.md`](docs/VERSIONING.md),
+[`docs/PAKAI-SERVER-INTEGRATION.md`](docs/PAKAI-SERVER-INTEGRATION.md) and the milestone references
+[`M2`](docs/M2-COMPONENTS.md), [`M3`](docs/M3-FORMS.md), [`M4`](docs/M4-INTERACTIONS.md).
 
 ## Requirements
 
@@ -33,6 +35,7 @@ optional interactions: typed `Htmx` and `Alpine` attribute helpers, `Modal` / `M
 | Bootstrap | 5.3.8 (for the rendered markup) |
 | HTMX | 2.0.8 (optional) |
 | Alpine.js | 3.15.8 (optional, not required) |
+| EndsMeet | 4.03 (optional Pakai Server-style example host) |
 
 PakaiUI core does not depend on Pakai Server, MiniJS, MiniCSS, HTMX or Alpine.js.
 
@@ -148,7 +151,8 @@ tests/m2-components/         M2 core component tests (135 assertions)
 tests/m3-forms/              M3 form and data-display tests (203 assertions)
 tests/m4-interactions/       M4 optional interaction tests (162 assertions)
 gallery/                     Standalone jServer demo and HTMX 2.x baseline host
-docs/                        M0 findings, M2/M3/M4 component references, specification and API inputs
+examples/pakai-server/       Pakai Server/EndsMeet host example (optional integration)
+docs/                        M0 findings, M2-M4 references, API, compatibility, versioning, integration
 demo/                        Pakai Server Web starter kept for reference
 AGENT.md                     Build/test commands and contribution rules
 CHANGELOG.md                 Version history and breaking changes
@@ -199,6 +203,13 @@ cmd /c ..\sync-assets.bat .
 & "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="Gallery.b4j" -NoClean=True -ShowWarnings=True
 cd Objects
 & "C:\Java\jdk-19.0.2\bin\java.exe" -jar Gallery.jar
+
+# Optional Pakai Server / EndsMeet example on http://localhost:51020/
+cd ..\..\examples\pakai-server
+& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="PakaiServerExample.b4j" -NoClean=True -ShowWarnings=True
+cmd /c ..\..\sync-assets.bat .
+cd Objects
+& "C:\Java\jdk-19.0.2\bin\java.exe" -jar PakaiServerExample.jar
 ```
 
 See [`AGENT.md`](AGENT.md) for the full command reference and the B4J/MiniHTML pitfalls that must be

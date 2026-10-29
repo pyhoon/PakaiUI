@@ -1,0 +1,51 @@
+﻿AppType=StandardJava
+Build1=Default,b4j.pakaiui.example
+Group=PakaiUI
+Library1=b4xcollections
+Library2=endsmeet
+Library3=jcore
+Library4=json
+Library5=minihtml
+Library6=pakaiui
+Module1=PuiFormHandler
+Module2=PuiHomeHandler
+NumberOfFiles=0
+NumberOfLibraries=6
+NumberOfModules=2
+Version=10.7
+@EndOfDesignText@
+' PakaiUI on Pakai Server / EndsMeet example host
+' Consumes the installed PakaiUI b4xlib from an EndsMeet application.
+' PakaiUI itself stays independent of EndsMeet; this project is an example only.
+'
+' Routes:
+'   GET  /        home page rendered by PUI
+'   POST /submit  form result rendered by PUI
+' Static assets live in Objects\www\assets (created by sync-assets.bat).
+' Run from Objects so File.DirApp resolves www:
+'   cd examples\pakai-server
+'   B4JBuilder -Task=Build -Project=PakaiServerExample.b4j
+'   cd Objects
+'   java -jar PakaiServerExample.jar
+#Region Project Attributes
+	#CommandLineArgs:
+	#MergeLibraries: True
+#End Region
+
+Sub Process_Globals
+	Public App As EndsMeet
+	Private Const Port As Int = 51020
+End Sub
+
+' <link>Open in browser|http://127.0.0.1:51020</link>
+Sub AppStart (Args() As String)
+	App.Initialize
+	App.Port = Port
+	App.Get("", "PuiHomeHandler")
+	App.Post("/submit", "PuiFormHandler")
+	App.Start
+	Log(App.StartupMessage)
+	Log("PakaiUI example: " & App.ServerUrl)
+	Log("Static assets: " & File.Combine(File.DirApp, "www\assets"))
+	StartMessageLoop
+End Sub

@@ -12,7 +12,7 @@ NumberOfModules=1
 Version=10.7
 @EndOfDesignText@
 ' PakaiUI library project
-' Version: 0.14 (M4 optional interactions)
+' Version: 0.15 (M5 integration and release readiness)
 ' License: MIT
 ' HTML foundation: MiniHTML 4.02
 #Region Project Attributes

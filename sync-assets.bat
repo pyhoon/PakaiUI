@@ -15,11 +15,13 @@ if not exist "%~1\Objects" (
 	echo PakaiUI: target "%~1" has no Objects folder. Build the project once first.
 	exit /b 2
 )
-if not exist "assets\css\bootstrap.min.css" (
-	echo PakaiUI: cannot find assets\css\bootstrap.min.css relative to "%CD%".
+rem Resolve the tracked assets relative to this script, not the caller's folder.
+set "ASSETS=%~dp0assets"
+if not exist "%ASSETS%\css\bootstrap.min.css" (
+	echo PakaiUI: cannot find assets\css\bootstrap.min.css beside "%ASSETS%".
 	exit /b 2
 )
-robocopy assets "%TARGET%" /E /XF README.md res.json /NFL /NDL /NJH /NP /NS /NC
+robocopy "%ASSETS%" "%TARGET%" /E /XF README.md res.json /NFL /NDL /NJH /NP /NS /NC
 if %ERRORLEVEL% LEQ 7 (
 	echo PakaiUI: synced assets into %TARGET%
 	endlocal

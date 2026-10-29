@@ -10,7 +10,7 @@ its own copy under `Objects/www/assets` and serves it from there.
 | File | Required? | Version | Purpose |
 | --- | --- | --- | --- |
 | `css/bootstrap.min.css` | required | 5.3.8 | All component styling |
-| `css/pakaiui.css` | optional | PakaiUI 0.14 | `--pui-*` token aliases; never overrides Bootstrap |
+| `css/pakaiui.css` | optional | PakaiUI 0.15 | `--pui-*` token aliases; never overrides Bootstrap |
 | `css/bootstrap-icons.min.css` | optional | 1.13.1 | `bi bi-*` icon classes |
 | `css/fonts/bootstrap-icons.woff2` / `.woff` | with icons | 1.13.1 | Icon font, loaded relative to `css/` |
 | `css/LICENSE/bootstrap/LICENSE.txt` | with bootstrap | — | MIT license of Bootstrap |
@@ -28,7 +28,7 @@ font files beside `bootstrap-icons.min.css` under `css/fonts/`.
 | File | SHA-256 |
 | --- | --- |
 | `css/bootstrap.min.css` | `596A918E5D4C71CB731B23412D5B145E429C2203A23E9BF7BA90EFF3E291BBB8` |
-| `css/pakaiui.css` | `F2D56892532D18E3D2A29FB51CB790BA3E4A67B9AB86EFA78FC8EEDEF18C4F0B` |
+| `css/pakaiui.css` | `6A06950FF828193EC2106617D34137BE6A4194938C5773E53DE392D020A49AF3` |
 | `css/bootstrap-icons.min.css` | `5BDE1B1280C519BE069FF3A711B639E0E996886AD4E4F7C6B4AB99237ED875B4` |
 | `css/fonts/bootstrap-icons.woff2` | `6C75710364A1CA5604267716F6D28997B26319FDB078CF11E0B42AB66FF2EA61` |
 | `css/fonts/bootstrap-icons.woff` | `F55513B7B591CB84A3B87FF0E34EA24D4831D6FEDC22E54B911CA64B5B544A15` |
@@ -46,7 +46,7 @@ string. A changed hash without a documented upgrade is a supply-chain red flag.
 1. Copy the assets into the consuming project:
 
    ```powershell
-   # From the repository root; works for any project folder
+   # The script finds its tracked assets beside itself; the target is relative to you
    cmd /c sync-assets.bat demo        # -> demo\Objects\www\assets
    ```
 
@@ -66,7 +66,7 @@ string. A changed hash without a documented upgrade is a supply-chain red flag.
    ```b4j
    Dim AssetBase As String = ""      ' same origin, for example "" or "/portal"
    PUI.StyleSheet(head1, AssetBase & "/assets/css/bootstrap.min.css?v=5.3.8")
-   PUI.StyleSheet(head1, AssetBase & "/assets/css/pakaiui.css?v=0.14")
+   PUI.StyleSheet(head1, AssetBase & "/assets/css/pakaiui.css?v=0.15")
    PUI.StyleSheet(head1, AssetBase & "/assets/css/bootstrap-icons.min.css?v=1.13.1")
    ' scripts at the end of <body>, loaded with defer
    PUI.Script(body1, AssetBase & "/assets/js/bootstrap.min.js?v=5.3.8", True)
@@ -89,7 +89,7 @@ at it.
 
 | PakaiUI version | Bootstrap | Bootstrap Icons | HTMX | Alpine.js |
 | --- | --- | --- | --- | --- |
-| 0.14 (current) | 5.3.8 | 1.13.1 | 2.0.8 | 3.15.8 |
+| 0.15 (current) | 5.3.8 | 1.13.1 | 2.0.8 | 3.15.8 |
 
 Do not jump Bootstrap major/minor versions without re-running the HTMX
 baseline test documented in `docs/M0-RECONNAISSANCE.md` section 9.

@@ -3,6 +3,48 @@
 All notable changes to PakaiUI are recorded here. The project follows a `0.x` versioning policy: public
 APIs may change, and breaking changes are documented explicitly.
 
+## 0.15.0 (2026-10-30) — M5: integration and release readiness
+
+### Added
+
+- Verified `examples/pakai-server` host: an EndsMeet 4.03 application that renders PakaiUI pages from
+  `GET /` and handles `POST /submit` with escaped request data. It consumes the installed `.b4xlib` and
+  is not packaged with the library.
+- `docs/PAKAI-SERVER-INTEGRATION.md`: host model, build/run steps, static assets, base paths,
+  authentication/CSP/error-handling guidance and verified results.
+- `docs/API-REFERENCE.md`: complete public methods, option types and constants.
+- `docs/COMPATIBILITY.md`: verified B4J/JDK/MiniHTML/Bootstrap/HTMX/Alpine/EndsMeet versions, evidence and
+  constraints.
+- `docs/VERSIONING.md`: version policy, migration history, deprecation, release checklist and tagging rules.
+- Example host README with routes and verification record.
+
+### Changed
+
+- `PUI.VERSION`, `manifest.txt`, `source/libs.json`, `assets/res.json`, the CSS header, gallery and docs
+  bumped to 0.15.
+- `source/libs.json` version corrected from the stale 0.10 value to 0.15.
+- `.gitignore` now excludes `examples/*/Objects`, logs, backups and IDE metadata.
+- `sync-assets.bat` resolves the tracked `assets\` folder relative to the script, so the documented
+  commands work from a project folder as well as from the repository root.
+- README/AGENT document the example, API reference, compatibility matrix and release policy.
+
+### Verified
+
+- Pakai Server/EndsMeet example build: PASS, exit code 0.
+- Example runtime: PASS - EndsMeet 4.03 on port 51020; `/` renders navbar/form/table with assets.
+- Example POST: PASS - `<b>Test</b>` rendered escaped on `/submit`.
+- Example browser console: PASS - no errors; no horizontal overflow.
+- M4 interactions: 162 passed, 0 failed, exit code 0.
+- M3 forms/data display: 203 passed, 0 failed, exit code 0.
+- M2 components: 135 passed, 0 failed, exit code 0.
+- M1 foundation: 35 passed, 0 failed, exit code 0.
+- M0 proof of concept: 28 passed, 0 failed, exit code 0.
+
+### Not included
+
+- No Git tag or remote push was performed; release tagging awaits maintainer approval.
+- `C:\Projects\pakai-asadi` was inspected as a reference consumer and was not modified or repackaged.
+
 ## 0.14.0 (unreleased) — M4: optional interactions
 
 ### Added

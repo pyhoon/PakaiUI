@@ -20,3 +20,8 @@ gallery/Objects/
 gallery/AutoBackups/
 gallery/logs/
 gallery/*.b4j.meta
+
+examples/*/Objects/
+examples/*/AutoBackups/
+examples/*/logs/
+examples/*/*.b4j.meta

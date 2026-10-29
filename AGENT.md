@@ -10,8 +10,8 @@ works without Pakai Server. HTMX 2.x and Alpine.js are optional enhancements onl
 
 | Item | Value |
 | --- | --- |
-| Library version | `0.14` (experimental; public API may change) |
-| Current milestone | **M4 complete** - optional interactions (HTMX and Alpine helpers, modal, toast, theme switcher, sidebar) |
+| Library version | `0.15` (experimental; public API may change) |
+| Current milestone | **M5 complete** - Pakai Server example, API reference, compatibility matrix, versioning/release policy |
 | B4J | 10.7 (`C:\Program Files\B4X\B4J`) |
 | JDK used for builds/runs | 19 (`C:\Java\jdk-19.0.2`) |
 | HTML foundation | MiniHTML 4.02 (`C:\B4X\Additional\B4X\MiniHTML.b4xlib`) |
@@ -32,6 +32,10 @@ docs/M0-RECONNAISSANCE.md    Verified findings, API inventory, M0 evidence
 docs/M2-COMPONENTS.md        M2 component reference: options, markup, accessibility, dependencies
 docs/M3-FORMS.md             M3 form and data-display reference: options, markup, accessibility, verification
 docs/M4-INTERACTIONS.md      M4 optional interaction reference: behavior owners, options, security, verification
+docs/API-REFERENCE.md        Complete public API, option types and constants
+docs/COMPATIBILITY.md        Verified versions, evidence, constraints
+docs/VERSIONING.md           Versioning, migration, deprecation and release policy
+docs/PAKAI-SERVER-INTEGRATION.md  EndsMeet/Pakai Server host model, example and production notes
 docs/PakaiUI-*.md            Design inputs: specification, API proposal, considerations (read-only)
 assets/                      Tracked frontend assets (Bootstrap 5.3.8, icons, HTMX 2.0.8, Alpine 3.15.8, pakaiui.css)
   README.md                  Versions, SHA-256 hashes, serving and upgrade notes
@@ -49,6 +53,7 @@ tests/m2-components/         M2 core component tests (135 assertions)
 tests/m3-forms/              M3 form and data-display tests (203 assertions)
 tests/m4-interactions/       M4 optional interaction tests (162 assertions)
 gallery/                     Standalone jServer demo (plain jServer, no Pakai Server) + HTMX baseline
+examples/pakai-server/       Optional Pakai Server/EndsMeet host example (not packaged)
 demo/                        Pakai Server Web 6.99 starter (reference; not a PakaiUI demo)
 ```
 
@@ -196,6 +201,20 @@ validation feedback, responsive table and pagination) and the M4 set (HTMX/Alpin
 theme switcher, sidebar); the verified results are recorded there, in `docs/M2-COMPONENTS.md`,
 `docs/M3-FORMS.md` and `docs/M4-INTERACTIONS.md`.
 
+### Build and run the Pakai Server / EndsMeet example
+
+```powershell
+cd C:\Projects\PakaiUI\examples\pakai-server
+& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="PakaiServerExample.b4j" -NoClean=True -ShowWarnings=True
+cmd /c ..\..\sync-assets.bat .
+cd Objects
+& "C:\Java\jdk-19.0.2\bin\java.exe" -jar PakaiServerExample.jar
+```
+
+Expected: build exit code 0 and `EndsMeet server (version = 4.03) is running on port 51020`. Open
+`http://localhost:51020/`; `POST /submit` renders the escaped form value. This project is an example only
+and is not packaged into `PakaiUI.b4xlib`; see `docs/PAKAI-SERVER-INTEGRATION.md`.
+
 **Always rebuild the `.b4xlib` and reinstall it before testing a consumer project.** The PoC compiles
 `PUI.bas` from the installed library, not from `source/` directly.
 
@@ -320,7 +339,7 @@ MiniHTML; handle them in `PUI`.
 | M2 | Button, Badge, Alert, Card, Breadcrumb, page header, navigation, empty/loading states | **Done** |
 | M3 | Forms, validation feedback, tables, pagination, filters | **Done** |
 | M4 | Optional HTMX/Alpine interactions (dialogs, toasts, theme switcher) | **Done** |
-| M5 | Pakai Server adapter/examples, first consumer integration (`pakai-asadi`), docs, compatibility matrix, release | Not started |
+| M5 | Pakai Server adapter/examples, first consumer integration (`pakai-asadi`), docs, compatibility matrix, release | **Done** (example; `pakai-asadi` not modified) |
 
 M0 scope deliberately stops at Button + Card. Do not implement the rest of the catalogue without moving
 to the corresponding milestone.
