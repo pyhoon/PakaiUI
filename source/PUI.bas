@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10.7
 @EndOfDesignText@
 ' PakaiUI - server-rendered UI components for B4J web applications.
-' Version: 0.10 (M0 proof of concept - public API may change)
+' Version: 0.11 (M1 foundation: theme, document and page-layout primitives)
 ' HTML foundation: MiniHTML 4.02 (https://github.com/pyhoon/MiniHTML4)
 '
 ' Safety contract:
@@ -17,7 +17,7 @@ Version=10.7
 '   - Public option types are prefixed with PUI because B4X types share a global namespace.
 '   - No dependency on Pakai Server, MiniJS or MiniCSS.
 Sub Process_Globals
-	Public Const VERSION As String = "0.10"
+	Public Const VERSION As String = "0.11"
 
 	' Bootstrap 5.3 semantic variants
 	Public Const VariantPrimary As String = "primary"
@@ -43,11 +43,24 @@ Sub Process_Globals
 	Public Const SizeDefault As String = ""
 	Public Const SizeLarge As String = "lg"
 
+	' Theme values for PUIPageOptions.Theme (data-bs-theme on the <html> element).
+	' ThemeAuto renders no attribute: the page follows the browser default, which
+	' Bootstrap treats as light.
+	Public Const ThemeAuto As String = ""
+	Public Const ThemeLight As String = "light"
+	Public Const ThemeDark As String = "dark"
+
 	' Component options. Types are global in B4X, hence the PUI prefix.
 	' ButtonType is named ButtonType because "Type" is a B4X reserved word.
 	' Hidden is used instead of Visible so that a default False value means "shown".
 	Type PUIButtonOptions (Text As String, Variant As String, Size As String, ButtonType As String, Href As String, Id As String, CssClass As String, Disabled As Boolean, Hidden As Boolean)
 	Type PUICardOptions (Title As String, Subtitle As String, BodyText As String, FooterText As String, Id As String, CssClass As String)
+
+	' Page and layout options (M1 foundation).
+	Type PUIPageOptions (Title As String, Description As String, Lang As String, Theme As String, BodyCssClass As String)
+	Type PUIContainerOptions (Id As String, CssClass As String, Breakpoint As String, Fluid As Boolean, Hidden As Boolean)
+	Type PUIRowOptions (Id As String, CssClass As String, Hidden As Boolean)
+	Type PUIColOptions (Id As String, CssClass As String, Breakpoint As String, Width As Int, Auto As Boolean, Hidden As Boolean)
 End Sub
 
 ' Reserved for future library-wide configuration.
@@ -120,6 +133,182 @@ Public Sub NewCardOptions (Title As String, BodyText As String) As PUICardOption
 	options.Title = Title
 	options.BodyText = BodyText
 	Return options
+End Sub
+
+Public Sub NewPageOptions (Title As String) As PUIPageOptions
+	Dim options As PUIPageOptions
+	options.Initialize
+	options.Title = Title
+	options.Lang = "en"
+	options.Theme = ThemeAuto
+	Return options
+End Sub
+
+Public Sub NewContainerOptions As PUIContainerOptions
+	Dim options As PUIContainerOptions
+	options.Initialize
+	Return options
+End Sub
+
+Public Sub NewRowOptions As PUIRowOptions
+	Dim options As PUIRowOptions
+	options.Initialize
+	Return options
+End Sub
+
+Public Sub NewColOptions As PUIColOptions
+	Dim options As PUIColOptions
+	options.Initialize
+	Return options
+End Sub
+
+' Builds a complete document skeleton: <html lang data-bs-theme> with head
+' (charset, viewport, title, optional description meta) and an empty body.
+' Rendering the returned root automatically prepends the HTML5 doctype
+' (verified MiniHtml behaviour for the "html" tag). Attach head assets with
+' StyleSheet / MetaDescription / Script, page content through PUI.Body.
+Public Sub Document (Options As PUIPageOptions) As MiniHtml
+	Dim options1 As PUIPageOptions = Options
+	If options1 = Null Then options1 = NewPageOptions("")
+
+	Dim html1 As MiniHtml
+	html1.Initialize("html")
+	Dim lang1 As String = options1.Lang.Trim
+	If lang1 = "" Then lang1 = "en"
+	html1.attr("lang", EscapeHtml(lang1))
+	Dim theme1 As String = NormalizeTheme(options1.Theme)
+	If theme1 <> "" Then html1.attr("data-bs-theme", theme1)
+
+	Dim head1 As MiniHtml
+	head1.Initialize("head")
+	head1.up(html1)
+	Dim charset1 As MiniHtml
+	charset1.Initialize("meta")
+	charset1.attr("charset", "utf-8")
+	charset1.up(head1)
+	Dim viewport1 As MiniHtml
+	viewport1.Initialize("meta")
+	viewport1.attr("name", "viewport")
+	viewport1.attr("content", "width=device-width, initial-scale=1")
+	viewport1.up(head1)
+	Dim title1 As MiniHtml
+	title1.Initialize("title")
+	title1.up(head1)
+	title1.text(EscapeHtml(options1.Title))
+	If options1.Description <> "" Then
+		Dim description1 As MiniHtml
+		description1.Initialize("meta")
+		description1.attr("name", "description")
+		description1.attr("content", EscapeHtml(options1.Description))
+		description1.up(head1)
+	End If
+
+	Dim body1 As MiniHtml
+	body1.Initialize("body")
+	body1.up(html1)
+	If options1.BodyCssClass <> "" Then body1.cls(EscapeHtml(options1.BodyCssClass))
+	Return html1
+End Sub
+
+' Returns the <head> element of a document built by Document.
+Public Sub Head (Doc As MiniHtml) As MiniHtml
+	If Doc = Null Then Return Null
+	Return Doc.ChildByName("head")
+End Sub
+
+' Returns the <body> element of a document built by Document.
+Public Sub Body (Doc As MiniHtml) As MiniHtml
+	If Doc = Null Then Return Null
+	Return Doc.ChildByName("body")
+End Sub
+
+' Appends <link rel="stylesheet" href="..."> to Parent (usually the head)
+' and returns Parent.
+Public Sub StyleSheet (Parent As MiniHtml, Href As String) As MiniHtml
+	If Parent = Null Then Return Null
+	Dim link1 As MiniHtml
+	link1.Initialize("link")
+	link1.attr("rel", "stylesheet")
+	link1.attr("href", EscapeHtml(Href))
+	link1.up(Parent)
+	Return Parent
+End Sub
+
+' Appends <meta name="description" content="..."> to Parent and returns Parent.
+Public Sub MetaDescription (Parent As MiniHtml, Content As String) As MiniHtml
+	If Parent = Null Then Return Null
+	Dim meta1 As MiniHtml
+	meta1.Initialize("meta")
+	meta1.attr("name", "description")
+	meta1.attr("content", EscapeHtml(Content))
+	meta1.up(Parent)
+	Return Parent
+End Sub
+
+' Appends <script src="..."> to Parent (usually the end of the body).
+' Defer adds the defer attribute. Scripts must never contain package user
+' data; this helper only sets the src attribute. Returns Parent.
+Public Sub Script (Parent As MiniHtml, Src As String, Defer As Boolean) As MiniHtml
+	If Parent = Null Then Return Null
+	Dim script1 As MiniHtml
+	script1.Initialize("script")
+	script1.attr("src", EscapeHtml(Src))
+	If Defer Then script1.defer
+	script1.up(Parent)
+	Return Parent
+End Sub
+
+' Renders the page container: div.container, or div.container-fluid when
+' Fluid is set, or div.container-{breakpoint} when Breakpoint is set
+' (Fluid wins; Breakpoint only applies to the fixed container).
+Public Sub Container (Options As PUIContainerOptions) As MiniHtml
+	Dim options1 As PUIContainerOptions = Options
+	If options1 = Null Then options1 = NewContainerOptions
+
+	Dim container1 As MiniHtml
+	container1.Initialize("div")
+	If options1.Fluid Then
+		container1.cls("container-fluid")
+	Else If options1.Breakpoint <> "" Then
+		container1.cls("container-" & NormalizeBreakpoint(options1.Breakpoint))
+	Else
+		container1.cls("container")
+	End If
+	If options1.CssClass <> "" Then container1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then container1.attr("id", EscapeHtml(options1.Id))
+	If options1.Hidden Then container1.hidden
+	Return container1
+End Sub
+
+' Renders a flexbox row: div.row. Nest col elements with .down(col1).
+Public Sub Row (Options As PUIRowOptions) As MiniHtml
+	Dim options1 As PUIRowOptions = Options
+	If options1 = Null Then options1 = NewRowOptions
+
+	Dim row1 As MiniHtml
+	row1.Initialize("div")
+	row1.cls("row")
+	If options1.CssClass <> "" Then row1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then row1.attr("id", EscapeHtml(options1.Id))
+	If options1.Hidden Then row1.hidden
+	Return row1
+End Sub
+
+' Renders a grid column. Width 1-12 stays as col-12 (with Breakpoint:
+' col-md-6). Width 0 with Auto renders col-auto (col-md-auto), width 0
+' without Auto renders col (col-md). Invalid widths are logged and ignored.
+' Nest inside PUI.Row with .down.
+Public Sub Col (Options As PUIColOptions) As MiniHtml
+	Dim options1 As PUIColOptions = Options
+	If options1 = Null Then options1 = NewColOptions
+
+	Dim col1 As MiniHtml
+	col1.Initialize("div")
+	col1.cls(NormalizeColClass(options1.Breakpoint, options1.Width, options1.Auto))
+	If options1.CssClass <> "" Then col1.cls(EscapeHtml(options1.CssClass))
+	If options1.Id <> "" Then col1.attr("id", EscapeHtml(options1.Id))
+	If options1.Hidden Then col1.hidden
+	Return col1
 End Sub
 
 ' Renders a <button>, or an <a> styled as a button when Href is set.
@@ -290,4 +479,47 @@ Private Sub NormalizeButtonType (ButtonType As String) As String
 		Case Else
 			Return "button"
 	End Select
+End Sub
+
+Private Sub NormalizeTheme (Theme As String) As String
+	Dim value As String = Theme.Trim.ToLowerCase
+	Select value
+		Case ThemeLight, ThemeDark
+			Return value
+		Case Else
+			If value <> "" Then
+				Log("PakaiUI: unknown theme '" & value & "'; rendering no data-bs-theme attribute")
+			End If
+			Return ""
+	End Select
+End Sub
+
+' Lower-cases and validates a Bootstrap breakpoint; unknown values are
+' logged and rendered as the unmodified lower-cased value so a future
+' Bootstrap release is not blocked by a hardcoded PakaiUI list.
+Private Sub NormalizeBreakpoint (Breakpoint As String) As String
+	Dim value As String = Breakpoint.Trim.ToLowerCase
+	Select value
+		Case "sm", "md", "lg", "xl", "xxl"
+			Return value
+		Case Else
+			Log("PakaiUI: unexpected breakpoint '" & value & "'; rendering it as written")
+			Return value
+	End Select
+End Sub
+
+' Builds the Bootstrap column class from the PUIColOptions fields.
+Private Sub NormalizeColClass (Breakpoint As String, Width As Int, Auto As Boolean) As String
+	Dim prefix As String = "col"
+	Dim breakpoint1 As String = Breakpoint.Trim.ToLowerCase
+	If breakpoint1 <> "" Then prefix = "col-" & breakpoint1
+	If Width > 0 Then
+		If Width > 12 Then
+			Log("PakaiUI: col width " & Width & " is outside Bootstrap's 1-12 scale; rendering without a width modifier")
+			Return prefix
+		End If
+		Return prefix & "-" & Width
+	End If
+	If Auto Then Return prefix & "-auto"
+	Return prefix
 End Sub

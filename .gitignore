@@ -13,5 +13,10 @@ source/logs/
 tests/*/Objects/
 tests/*/AutoBackups/
 tests/*/logs/
-tests/*/m0-output.html
+tests/*/*-output.html
 *.b4j.meta
+
+gallery/Objects/
+gallery/AutoBackups/
+gallery/logs/
+gallery/*.b4j.meta

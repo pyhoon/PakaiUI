@@ -1,0 +1,37 @@
+/*!
+ * PakaiUI theme tokens 0.10
+ * Copyright (c) 2026 PakaiUI contributors
+ * Licensed under MIT
+ *
+ * Optional CSS token layer. It only ALIASES Bootstrap 5.3 CSS variables into
+ * `--pui-*` names; it never overrides Bootstrap values. If this file is not
+ * loaded, PakaiUI components still style correctly with Bootstrap alone.
+ *
+ * Use the `--pui-*` tokens in your own CSS instead of referencing Bootstrap
+ * internals, so a framework switch or theme change touches one layer.
+ * Component markup classes used by PakaiUI are plain Bootstrap classes
+ * (btn, card, container, row, col-*, ...) documented per component.
+ */
+
+:root {
+	--pui-body-bg: var(--bs-body-bg);
+	--pui-body-color: var(--bs-body-color);
+	--pui-body-font: var(--bs-body-font-family);
+	--pui-primary: var(--bs-primary);
+	--pui-success: var(--bs-success);
+	--pui-danger: var(--bs-danger);
+	--pui-warning: var(--bs-warning);
+	--pui-info: var(--bs-info);
+	--pui-secondary-text: var(--bs-secondary-color);
+	--pui-border-color: var(--bs-border-color);
+	--pui-border-radius: var(--bs-border-radius);
+	--pui-body-font-size: var(--bs-body-font-size);
+}
+
+/* Bootstrap flips these same variables on [data-bs-theme="dark"], so the
+   aliases follow automatically. The block below exists only to document
+   that mapping explicitly and to host future dark-specific tokens. */
+[data-bs-theme="dark"] {
+	/* values are inherited from Bootstrap's dark variable set */
+	--pui-theme-flip: resolved-dark;
+}

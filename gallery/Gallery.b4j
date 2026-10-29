@@ -1,0 +1,52 @@
+﻿AppType=StandardJava
+Build1=Default,b4j.pakaiui.gallery
+Group=PakaiUI
+Library1=b4xcollections
+Library2=jcore
+Library3=jserver
+Library4=json
+Library5=minihtml
+Library6=pakaiui
+Module1=HomePage
+Module2=HxHandler
+NumberOfFiles=0
+NumberOfLibraries=6
+NumberOfModules=2
+Version=10.7
+@EndOfDesignText@
+' PakaiUI gallery - standalone demo server
+' A plain jServer application that consumes the installed PakaiUI b4xlib.
+' It is intentionally independent of Pakai Server, EndsMeet and MiniJS.
+'
+' Serves:
+'   /          the gallery page, rendered by PUI (via a filter)
+'   /assets/   static frontend assets (jServer DefaultServlet)
+'   /hx/ping   HTMX baseline: GET fragment (innerHTML swap)
+'   /hx/echo   HTMX baseline: POST form echo
+'   /hx/spin   HTMX baseline: outerHTML swap of the target itself
+'   /hx/empty  HTMX baseline: 204 No Content (no swap)
+' Run:
+'   cd gallery
+'   B4JBuilder -Task=Build -Project=Gallery.b4j
+'   java -jar Objects\Gallery.jar        (DirApp = Objects, so www sits there)
+#Region Project Attributes
+	#CommandLineArgs:
+	#MergeLibraries: True
+#End Region
+
+Sub Process_Globals
+	Private srvr As Server
+	Private Const Port As Int = 51010
+End Sub
+
+' <link>Open in browser|http://127.0.0.1:51010</link>
+Sub AppStart (Args() As String)
+	srvr.Initialize("srvr")
+	srvr.Port = Port
+	srvr.StaticFilesFolder = File.Combine(File.DirApp, "www")
+	srvr.AddFilter("/*", "HomePage", False)
+	srvr.AddFilter("/*", "HxHandler", False)
+	srvr.Start
+	Log($"PakaiUI gallery listening on http://localhost:${Port}/"$)
+	StartMessageLoop
+End Sub

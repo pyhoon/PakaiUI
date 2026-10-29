@@ -1,0 +1,190 @@
+﻿AppType=StandardJava
+Build1=Default,b4j.pakaiui.m1
+Group=PakaiUI
+Library1=b4xcollections
+Library2=javaobject
+Library3=jcore
+Library4=json
+Library5=minihtml
+Library6=pakaiui
+NumberOfFiles=0
+NumberOfLibraries=6
+NumberOfModules=0
+Version=10.7
+@EndOfDesignText@
+' PakaiUI M1 foundation tests
+' Version: 0.11
+' Verifies the M1 API additions: PUI.Document / Head / Body, StyleSheet,
+' MetaDescription, Script, Container, Row, Col, theme normalization and the
+' composition contract over the page primitives. Console (non-UI) application.
+#Region Project Attributes
+	#CommandLineArgs:
+	#MergeLibraries: True
+#End Region
+
+Sub Process_Globals
+	Private mPassed As Int
+	Private mFailed As Int
+End Sub
+
+Sub AppStart (Args() As String)
+	Dim hostileText As String = "<script>alert(" & QUOTE & "x" & QUOTE & ")</script> & 'y'"
+
+	' --- Document skeleton and themes --------------------------------------
+	Dim docOptions As PUIPageOptions = PUI.NewPageOptions(hostileText)
+	docOptions.Theme = PUI.ThemeDark
+	docOptions.Description = hostileText
+	Dim doc As MiniHtml = PUI.Document(docOptions)
+	Dim html As String = doc.build
+	Check("Document prepends doctype", html.StartsWith("<!DOCTYPE html>"))
+	Check("Document sets lang attribute", html.Contains("lang=" & QUOTE & "en" & QUOTE))
+	Check("Document sets data-bs-theme dark", html.Contains("data-bs-theme=" & QUOTE & PUI.ThemeDark & QUOTE))
+	Check("Document title escaped", html.Contains("<title>" & PUI.EscapeHtml(hostileText) & "</title>"))
+	Check("No unescaped script tag", html.IndexOf("<script") = -1)
+	Check("Document description meta escaped", html.Contains("content=" & QUOTE & PUI.EscapeHtml(hostileText) & QUOTE))
+	Check("Head slot returns head", PUI.Head(doc) <> Null And PUI.Head(doc).getName = "head")
+	Check("Body slot returns body", PUI.Body(doc) <> Null And PUI.Body(doc).getName = "body")
+
+	Dim lightOptions As PUIPageOptions = PUI.NewPageOptions("Light")
+	lightOptions.Theme = PUI.ThemeLight
+	Check("Document sets data-bs-theme light", PUI.Document(lightOptions).build.Contains("data-bs-theme=" & QUOTE & PUI.ThemeLight & QUOTE))
+
+	Dim autoOptions As PUIPageOptions = PUI.NewPageOptions("Auto")
+	Check("ThemeAuto renders no theme attribute", PUI.Document(autoOptions).build.Contains("data-bs-theme") = False)
+
+	Dim unknownOptions As PUIPageOptions = PUI.NewPageOptions("Unknown")
+	unknownOptions.Theme = "sepia"
+	Check("Unknown theme logs and renders no attribute", PUI.Document(unknownOptions).build.Contains("data-bs-theme") = False)
+
+	' --- Head helpers: StyleSheet, Script, MetaDescription ------------------
+	Dim small As PUIPageOptions = PUI.NewPageOptions("Slots")
+	Dim smallDoc As MiniHtml = PUI.Document(small)
+	Dim head1 As MiniHtml = PUI.Head(smallDoc)
+	Dim body1 As MiniHtml = PUI.Body(smallDoc)
+	PUI.StyleSheet(head1, "https://x.test/a.css?1&2" & QUOTE & " onerror=" & QUOTE & "alert(1)")
+	PUI.Script(body1, "/assets/js/htmx.min.js?v=2.0.8", True)
+	PUI.MetaDescription(head1, "Trusted description")
+
+	Dim headHtml As String = head1.build
+	Check("StyleSheet emits stylesheet link", headHtml.Contains("rel=" & QUOTE & "stylesheet" & QUOTE))
+	Check("StyleSheet href escapes", headHtml.Contains("href=" & QUOTE & "https://x.test/a.css?1&amp;2&quot; onerror=&quot;alert(1)" & QUOTE))
+	Check("MetaDescription emitted", headHtml.Contains("name=" & QUOTE & "description" & QUOTE) And headHtml.Contains("content=" & QUOTE & "Trusted description" & QUOTE))
+
+	Dim bodyHtml As String = body1.build
+	Check("Script emits src attribute", bodyHtml.Contains("src=" & QUOTE & "/assets/js/htmx.min.js?v=2.0.8" & QUOTE))
+	Check("Script defer attribute present", bodyHtml.Contains("defer"))
+
+	Dim scriptHostile As MiniHtml = PUI.Body(PUI.Document(PUI.NewPageOptions("H")))
+	PUI.Script(scriptHostile, "a" & QUOTE & " onmouseover=" & QUOTE & "alert(1)", False)
+	Check("Script src escapes", scriptHostile.build.Contains("src=" & QUOTE & "a&quot; onmouseover=&quot;alert(1)" & QUOTE))
+
+	' --- Container / Row / Col classes --------------------------------------
+	Dim container1 As MiniHtml = PUI.Container(Null)
+	Check("Container default class", "container" = container1.GetAttributes.Get("class"))
+	Check("Container is a div", container1.getName = "div")
+
+	Dim fluidOptions As PUIContainerOptions = PUI.NewContainerOptions
+	fluidOptions.Fluid = True
+	Check("Container fluid class", PUI.Container(fluidOptions).build.Contains("container-fluid"))
+
+	Dim bpOptions As PUIContainerOptions = PUI.NewContainerOptions
+	bpOptions.Breakpoint = "MD"
+	Check("Container breakpoint class", PUI.Container(bpOptions).build.Contains("container-md"))
+
+	Dim containerId As PUIContainerOptions = PUI.NewContainerOptions
+	containerId.Id = hostileText
+	Check("Container id escaped", PUI.Container(containerId).build.Contains("id=" & QUOTE & PUI.EscapeHtml(hostileText) & QUOTE))
+
+	Dim row1 As MiniHtml = PUI.Row(Null)
+	Check("Row default class", "row" = row1.GetAttributes.Get("class"))
+
+	Dim colMd As PUIColOptions = PUI.NewColOptions
+	colMd.Breakpoint = "md"
+	colMd.Width = 6
+	Check("Col md-6 class", "col-md-6" = PUI.Col(colMd).GetAttributes.Get("class"))
+
+	Dim colPlain As PUIColOptions = PUI.NewColOptions
+	colPlain.Width = 6
+	Check("Col width class", "col-6" = PUI.Col(colPlain).GetAttributes.Get("class"))
+
+	Dim colAuto As PUIColOptions = PUI.NewColOptions
+	colAuto.Auto = True
+	Check("Col auto class", "col-auto" = PUI.Col(colAuto).GetAttributes.Get("class"))
+
+	Dim colAutoMd As PUIColOptions = PUI.NewColOptions
+	colAutoMd.Breakpoint = "md"
+	colAutoMd.Auto = True
+	Check("Col breakpoint auto class", "col-md-auto" = PUI.Col(colAutoMd).GetAttributes.Get("class"))
+
+	Dim colBare As PUIColOptions = PUI.NewColOptions
+	Check("Col bare class", "col" = PUI.Col(colBare).GetAttributes.Get("class"))
+
+	Dim colWide As PUIColOptions = PUI.NewColOptions
+	colWide.Width = 13
+	Check("Col oversized width falls back", "col" = PUI.Col(colWide).GetAttributes.Get("class"))
+
+	Dim colHidden As PUIColOptions = PUI.NewColOptions
+	colHidden.Hidden = True
+	Check("Col hidden attribute", PUI.Col(colHidden).GetAttributes.ContainsKey("hidden"))
+
+	' --- Composition: Container > Row > Col > Card > Button -----------------
+	Dim pageOptions As PUIPageOptions = PUI.NewPageOptions("Sample")
+	pageOptions.Theme = PUI.ThemeDark
+	pageOptions.Description = "PakaiUI M1 sample page"
+	Dim page As MiniHtml = PUI.Document(pageOptions)
+	Dim sampleHead As MiniHtml = PUI.Head(page)
+	PUI.StyleSheet(sampleHead, "/assets/css/bootstrap.min.css?v=5.3.8")
+	PUI.StyleSheet(sampleHead, "/assets/css/bootstrap-icons.min.css?v=1.13.1")
+	PUI.StyleSheet(sampleHead, "/assets/css/pakaiui.css?v=0.11")
+	Dim sampleBody As MiniHtml = PUI.Body(page)
+
+	Dim main1 As MiniHtml = PUI.Container(Null)
+	main1.up(sampleBody)
+	Dim grid1 As MiniHtml = PUI.Row(Null)
+	grid1.up(main1)
+	Dim colLeft As PUIColOptions = PUI.NewColOptions
+	colLeft.Breakpoint = "md"
+	colLeft.Width = 6
+	Dim left1 As MiniHtml = PUI.Col(colLeft)
+	left1.up(grid1)
+	left1.down(PUI.Card(PUI.NewCardOptions("Sample card", "Rendered by PakaiUI " & PUI.VERSION)))
+	Dim colRight As PUIColOptions = PUI.NewColOptions
+	colRight.Breakpoint = "md"
+	colRight.Width = 6
+	Dim right1 As MiniHtml = PUI.Col(colRight)
+	right1.up(grid1)
+	Dim buttonOptions As PUIButtonOptions = PUI.NewButtonOptions("Ping")
+	buttonOptions.Variant = PUI.VariantInfo
+	right1.down(PUI.Button(buttonOptions))
+	PUI.Script(sampleBody, "/assets/js/bootstrap.min.js?v=5.3.8", True)
+	PUI.Script(sampleBody, "/assets/js/htmx.min.js?v=2.0.8", True)
+	Check("Container nests row", main1.ChildByClass("row") <> Null)
+	Check("Row nests col", grid1.ChildByClass("col-md-6") <> Null)
+	Check("Col nests card", left1.ChildByClass("card") <> Null)
+	Check("Col nests button", right1.ChildByClass("btn-info") <> Null)
+	Check("Sample page renders", page.build.StartsWith("<!DOCTYPE html>"))
+
+	' The sample page is written for manual review; the assertions above are the gate.
+	File.WriteString(File.DirApp, "m1-output.html", page.build)
+	Log("")
+	Log($"M1 tests: ${mPassed} passed, ${mFailed} failed"$)
+	Log("Sample page written to: " & File.Combine(File.DirApp, "m1-output.html"))
+
+	Dim system As JavaObject
+	system.InitializeStatic("java.lang.System")
+	If mFailed > 0 Then
+		system.RunMethod("exit", Array(1))
+	Else
+		system.RunMethod("exit", Array(0))
+	End If
+End Sub
+
+Private Sub Check (Name As String, Condition As Boolean)
+	If Condition Then
+		mPassed = mPassed + 1
+		Log("PASS " & Name)
+	Else
+		mFailed = mFailed + 1
+		Log("FAIL " & Name)
+	End If
+End Sub

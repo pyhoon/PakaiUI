@@ -25,8 +25,8 @@ executed is labelled as a plan or an open question.
 | Installed EndsMeet | **4.03** | `manifest.txt` inside `C:\B4X\Additional\B4J\EndsMeet.b4xlib` |
 | Pakai Server demo pin | EndsMeet **4.02**, MiniHTML **4.02**, MiniJS **0.60**, MiniCSS **0.40**, MiniORMUtils **6.04**, WebApiUtils **7.00** | `demo/libs.json` |
 | Demo template | Pakai Server Web Demo `6.99 rev4` | `demo/demo.b4j` lines 40-43 |
-| PakaiUI b4xlib SHA-256 | `84E1BB446A16905E2F6304CC50A80116B00274B902CD9F86FD413BB7F8F5A974` | `Get-FileHash` |
-| `PUI.bas` SHA-256 | `C7E5CAFBA61ADB9B0D7F86642D0B8A3ABBF63FD48EA0E4BC4CC659A4AEFEBA95` | `Get-FileHash` |
+| PakaiUI b4xlib SHA-256 | `61BB5919D5B7CF859E271934364CCBF1546D915B05B75C6D90A248F0DAC9D17A` | `Get-FileHash` (M1 build, 0.11) |
+| `PUI.bas` SHA-256 | `7AF539E7E332A9854FBD32972703817404491BE60E4F719F9F97E4ECB4DA6C53` | `Get-FileHash` (M1 build, 0.11) |
 
 **Dependency drift found:** the demo pins EndsMeet 4.02 but 4.03 is installed. PakaiUI does not depend on
 EndsMeet, so this does not affect M0, but Pin-and-verify must be part of the M5 compatibility matrix.
@@ -312,6 +312,37 @@ HTMX compatibility until this test is executed and recorded.
 **HTMX 4:** evaluated as a separate task only after a stable release is available for testing. Do not add
 v4-only attributes or defaults to the core, and do not claim v4 support before the baseline test is
 re-run against it.
+
+### Executed in M1 (2026-10-29)
+
+Fixture page served by the standalone `gallery/` jServer demo at `http://localhost:51010/`
+(PakaiUI 0.11, Bootstrap 5.3.8, HTMX 2.0.8 self-hosted, no Alpine.js). Results verified
+in a Chromium browser with the in-app devtools network panel:
+
+| Criterion | Result |
+| --- | --- |
+| Initial page shows `idle` | PASS — `#m0-htmx` rendered `idle` |
+| Click issues `GET /hx/ping` | PASS — request observed, method GET, URL `/hx/ping` |
+| `HX-Request: true` header | PASS — header present on the request |
+| HTTP 200 | PASS — `statusCode 200` |
+| `#m0-htmx` replaced by `pong` | PASS — innerHTML became `<span id="m0-htmx">pong</span>` |
+| Only that element changed | PASS — `#m0-echo` and `#m0-spin` untouched |
+| No full page load | PASS — `location.href` stayed `http://localhost:51010/` |
+| URL and history unchanged | PASS |
+| No Alpine.js required | PASS — only Bootstrap + HTMX loaded |
+| `hx-post` with a form | PASS — `POST /hx/echo`, body `name=PakaiUI`, `HX-Request: true`, 200, target became `Hello PakaiUI` |
+| `hx-swap="outerHTML"` | PASS — the Ping button was replaced by the `swapped` chip |
+| 204 No Content causes no swap | PASS — `GET /hx/empty` returned 204, body empty, `#m0-htmx` unchanged, no console errors |
+| Console errors | none (the only 404s were from the earlier broken run and are gone) |
+
+JavaScript-disabled degradation: the Ping button lives inside `<form action="/hx/ping" method="get">`
+and the Send button inside `<form action="/hx/echo" method="post">`, so with JavaScript disabled
+the buttons fall back to ordinary form submissions (the server returns the same fragments, which
+the browser then displays as a standalone document). This is documented behaviour, not a silent
+no-op.
+
+**Conclusion:** HTMX 2.0.8 passes the baseline test against PakaiUI 0.11. HTMX 4 remains a separate
+evaluation task and is not claimed.
 
 ---
 

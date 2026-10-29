@@ -30,14 +30,20 @@ README.md                    Project overview and quick start
 CHANGELOG.md                 Release history (0.x, breaking changes documented)
 docs/M0-RECONNAISSANCE.md    Verified findings, API inventory, M0 evidence
 docs/PakaiUI-*.md            Design inputs: specification, API proposal, considerations (read-only)
+assets/                      Tracked frontend assets (Bootstrap 5.3.8, icons, HTMX 2.0.8, pakaiui.css)
+  README.md                  Versions, SHA-256 hashes, serving and upgrade notes
+  res.json                   Pakai-style manifest of upstream sources
+sync-assets.bat              Copies assets/ into <project>\Objects\www\assets (additive)
 source/                      PakaiUI library B4J project
-  PUI.bas                    Public facade: options types, components, escaping
+  PUI.bas                    Public facade: options types, components, escaping, page primitives
   PakaiUI.b4j                Library project (smoke-test AppStart)
   manifest.txt               b4xlib manifest (version + dependencies)
   libs.json                  External library pin (MiniHTML 4.02)
   build_b4xlib.bat           Packages Objects\PakaiUI.b4xlib with jar.exe
 tests/m0-poc/                Console proof of concept (consumes the installed b4xlib)
-demo/                        Pakai Server Web 6.99 starter (reference; not a PakaiUI demo yet)
+tests/m1-foundation/         M1 foundation API tests (35 assertions)
+gallery/                     Standalone jServer demo (plain jServer, no Pakai Server) + HTMX baseline
+demo/                        Pakai Server Web 6.99 starter (reference; not a PakaiUI demo)
 ```
 
 - `docs/PakaiUI-Technical-Specification.md`, `docs/PakaiUI-Initial-Public-API.md` and
@@ -106,6 +112,42 @@ Expected: 28 `PASS` lines, `M0 PoC: 28 passed, 0 failed`, exit code 0. The rende
 `File.DirApp`: `Objects\m0-output.html` when run from the B4J IDE, or the current directory when the jar is
 launched from a terminal. The `PakaiUI: rejected unsafe button URL` line is an expected stderr message from
 the negative URL test.
+
+### Sync tracked frontend assets
+
+```powershell
+cd C:\Projects\PakaiUI
+cmd /c sync-assets.bat gallery        # -> gallery\Objects\www\assets
+cmd /c sync-assets.bat demo          # -> demo\Objects\www\assets (additive)
+```
+
+`sync-assets.bat` copies (never deletes) tracked files from `assets/` into
+`<target>\Objects\www\assets`. Run it again after upgrading tracked assets; project-owned
+files such as `main.css`, `app.js` and images are left in place.
+
+### Build and run the M1 foundation tests
+
+```powershell
+cd C:\Projects\PakaiUI\tests\m1-foundation
+& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="M1Foundation.b4j" -NoClean=True -ShowWarnings=True
+& "C:\Java\jdk-19.0.2\bin\java.exe" -jar Objects\M1Foundation.jar
+```
+
+Expected: 35 `PASS` lines, `M1 tests: 35 passed, 0 failed`, exit code 0. The sample page is written to
+`File.DirApp\m1-output.html`.
+
+### Build and run the standalone gallery (HTMX baseline host)
+
+```powershell
+cd C:\Projects\PakaiUI\gallery
+cmd /c ..\sync-assets.bat .
+& "C:\Program Files\B4X\B4J\B4JBuilder.exe" -Task=Build -Project="Gallery.b4j" -NoClean=True -ShowWarnings=True
+cd Objects
+& "C:\Java\jdk-19.0.2\bin\java.exe" -jar Gallery.jar        # DirApp = Objects, so www is served
+```
+
+The server listens on `http://localhost:51010/`. The gallery exercises the HTMX 2.x baseline
+fixture defined in `docs/M0-RECONNAISSANCE.md` section 9; the verified result is recorded there.
 
 **Always rebuild the `.b4xlib` and reinstall it before testing a consumer project.** The PoC compiles
 `PUI.bas` from the installed library, not from `source/` directly.

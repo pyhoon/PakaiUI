@@ -1,0 +1,53 @@
+{
+  "comment": "PakaiUI tracked frontend assets, manifest of upstream sources. Re-download and verify the SHA-256 hashes in assets/README.md before trusting fresh copies.",
+  "Version": "0.10",
+  "Resources": [
+    {
+      "File": "www\\assets\\css\\bootstrap.min.css",
+      "Link": "https://raw.githubusercontent.com/pyhoon/pakai-server-b4j/refs/heads/main/source/Objects/www/assets/css/bootstrap.min.css",
+      "Version": "5.3.8",
+      "SHA256": "596A918E5D4C71CB731B23412D5B145E429C2203A23E9BF7BA90EFF3E291BBB8"
+    },
+    {
+      "File": "www\\assets\\css\\fonts\\bootstrap-icons.woff",
+      "Link": "https://github.com/pyhoon/pakai-server-b4j/raw/refs/heads/main/source/Objects/www/assets/css/fonts/bootstrap-icons.woff",
+      "Version": "1.13.1",
+      "SHA256": "F55513B7B591CB84A3B87FF0E34EA24D4831D6FEDC22E54B911CA64B5B544A15"
+    },
+    {
+      "File": "www\\assets\\css\\fonts\\bootstrap-icons.woff2",
+      "Link": "https://github.com/pyhoon/pakai-server-b4j/raw/refs/heads/main/source/Objects/www/assets/css/fonts/bootstrap-icons.woff2",
+      "Version": "1.13.1",
+      "SHA256": "6C75710364A1CA5604267716F6D28997B26319FDB078CF11E0B42AB66FF2EA61"
+    },
+    {
+      "File": "www\\assets\\css\\bootstrap-icons.min.css",
+      "Link": "https://raw.githubusercontent.com/pyhoon/pakai-server-b4j/refs/heads/main/source/Objects/www/assets/css/bootstrap-icons.min.css",
+      "Version": "1.13.1",
+      "SHA256": "5BDE1B1280C519BE069FF3A711B639E0E996886AD4E4F7C6B4AB99237ED875B4"
+    },
+    {
+      "File": "www\\assets\\css\\LICENSE\\bootstrap\\LICENSE.txt",
+      "Link": "https://raw.githubusercontent.com/pyhoon/pakai-server-b4j/refs/heads/main/source/Objects/www/assets/css/LICENSE/bootstrap/LICENSE.txt",
+      "Version": "5.3.8"
+    },
+    {
+      "File": "www\\assets\\js\\bootstrap.min.js",
+      "Link": "https://raw.githubusercontent.com/pyhoon/pakai-server-b4j/refs/heads/main/source/Objects/www/assets/js/bootstrap.min.js",
+      "Version": "5.3.8",
+      "SHA256": "175CADA6CDDB051C3B171E8D78DEDC75DDB01758D5FBC17515AB3841D1931279"
+    },
+    {
+      "File": "www\\assets\\js\\bootstrap.min.js.map",
+      "Link": "https://raw.githubusercontent.com/pyhoon/pakai-server-b4j/refs/heads/main/source/Objects/www/assets/js/bootstrap.min.js.map",
+      "Version": "5.3.8",
+      "SHA256": "52B03D8D959CA53D69C1F34C13E6242080C9ACCBBE0237C829349F777383C0CB"
+    },
+    {
+      "File": "www\\assets\\js\\htmx.min.js",
+      "Link": "https://raw.githubusercontent.com/pyhoon/pakai-server-b4j/refs/heads/main/source/Objects/www/assets/js/htmx.min.js",
+      "Version": "2.0.8",
+      "SHA256": "22283EF68CB7545914F0A88A1BDEDC7256A703D1D580C1D255217D0A50D31313"
+    }
+  ]
+}
