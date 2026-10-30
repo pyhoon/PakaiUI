@@ -22,6 +22,8 @@ APIs may change, and breaking changes are documented explicitly.
 
 - Replaced the vendored Pakai Server Web starter in `demo/` with the standalone Asadi-style demo.
 - Updated README/AGENT demo entries and build/run commands.
+- Documented installation from the public GitHub release in README and updated the Pakai Asadi
+  integration notes now that it consumes the theme and components.
 - `.gitignore` now ignores the new demo's build output and metadata.
 
 ### Verified

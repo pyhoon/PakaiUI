@@ -147,10 +147,11 @@ PakaiUI emits no inline `<script>` and no inline event handlers. If the host enf
 
 ## Relationship to Pakai Asadi
 
-`C:\Projects\pakai-asadi` is the first planned integration consumer. It currently builds its SQLite
-workspace with MiniHTML directly. PakaiUI M5 does **not** modify or repackage that project. The example above
-proves the host contract independently. A future integration can replace selected Asadi markup with PUI
-components without changing its EndsMeet routes, authentication or SQL safety rules.
+[Pakai Asadi](https://github.com/pyhoon/PakaiAsadi) is the first integration consumer. Its login,
+registration, workspace shell, product and category pages are built with PUI components and the optional
+`pakaiui-asadi.css` theme, while its EndsMeet routes, authentication, authorization callback and SQL safety
+rules remain its own. The example above proves the same host contract independently and does not require
+Pakai Asadi or any adapter library.
 
 Do not copy PakaiUI source into a host and do not add EndsMeet to `PakaiUI.b4xlib`. The dependency
 direction is one-way: host -> PakaiUI.

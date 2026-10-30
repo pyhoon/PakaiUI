@@ -39,6 +39,23 @@ Alpine.js or Pakai Server a core dependency. See [`docs/API-REFERENCE.md`](docs/
 
 PakaiUI core does not depend on Pakai Server, MiniJS, MiniCSS, HTMX or Alpine.js.
 
+## Installation
+
+Download `PakaiUI.b4xlib` from the [latest release](https://github.com/pyhoon/PakaiUI/releases/latest), copy it
+into `C:\B4X\Additional\B4J`, and restart B4J. Tick **PakaiUI** in the host project's libraries; B4J resolves
+MiniHTML 4.02 from the library manifest.
+
+Then sync the tracked frontend assets into the host project's web root:
+
+```powershell
+cmd /c sync-assets.bat <project-folder>
+```
+
+Run the script from a repository checkout or unpacked source archive; it resolves `assets\` relative to
+itself. The copy is additive: Bootstrap, Bootstrap Icons, HTMX, Alpine.js, `pakaiui.css` and
+`pakaiui-asadi.css` go into `<project-folder>\Objects\www\assets`, and files already present there are left
+alone. Link the versioned stylesheets from the page as shown below.
+
 ## Usage
 
 ```b4j

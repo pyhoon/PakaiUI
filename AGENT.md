@@ -62,9 +62,10 @@ demo/                        Asadi-style standalone demo using the optional them
   not as a description of what is implemented.
 - `demo/` is a standalone Asadi-style demo. It is built and tested, but is not packaged into
   `PakaiUI.b4xlib` and must not create a framework dependency in `source/`.
-- `C:\Projects\pakai-asadi` is a separate Pakai Server application and the first planned integration
-  consumer (M5). It is not part of this repository: do not add it as a dependency or copy its code into the
-  core.
+- [Pakai Asadi](https://github.com/pyhoon/PakaiAsadi) is a separate Pakai Server application and the first
+  integration consumer. Its auth, workspace and catalogue pages use PUI components plus the optional
+  `pakaiui-asadi.css` theme. It is not part of this repository: do not add it as a dependency or copy its
+  code into the core.
 - Do not rewrite the design-input documents. Record verified facts in `docs/M0-RECONNAISSANCE.md`.
   Do not add Pakai Server, MiniJS or MiniCSS as core dependencies.
 
@@ -352,7 +353,7 @@ MiniHTML; handle them in `PUI`.
 | M2 | Button, Badge, Alert, Card, Breadcrumb, page header, navigation, empty/loading states | **Done** |
 | M3 | Forms, validation feedback, tables, pagination, filters | **Done** |
 | M4 | Optional HTMX/Alpine interactions (dialogs, toasts, theme switcher) | **Done** |
-| M5 | Pakai Server adapter/examples, first consumer integration (`pakai-asadi`), docs, compatibility matrix, release | **Done** (example; `pakai-asadi` not modified) |
+| M5 | Pakai Server adapter/examples, first consumer integration (`pakai-asadi`), docs, compatibility matrix, release | **Done** (Pakai Server example; Pakai Asadi integrated after release) |
 
 M0 scope deliberately stops at Button + Card. Do not implement the rest of the catalogue without moving
 to the corresponding milestone.
