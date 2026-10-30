@@ -10,8 +10,8 @@ its own copy under `Objects/www/assets` and serves it from there.
 | File | Required? | Version | Purpose |
 | --- | --- | --- | --- |
 | `css/bootstrap.min.css` | required | 5.3.8 | All component styling |
-| `css/pakaiui.css` | optional | PakaiUI 0.15 | `--pui-*` token aliases; never overrides Bootstrap |
-| `css/pakaiui-asadi.css` | optional | PakaiUI 0.15 | Asadi-style dashboard/auth layer; scoped to `.pui-asadi` |
+| `css/pakaiui.css` | optional | PakaiUI 0.16 | `--pui-*` token aliases; never overrides Bootstrap |
+| `css/pakaiui-asadi.css` | optional | PakaiUI 0.16 | Asadi-style dashboard/auth layer; scoped to `.pui-asadi` |
 | `css/bootstrap-icons.min.css` | optional | 1.13.1 | `bi bi-*` icon classes |
 | `css/fonts/bootstrap-icons.woff2` / `.woff` | with icons | 1.13.1 | Icon font, loaded relative to `css/` |
 | `css/LICENSE/bootstrap/LICENSE.txt` | with bootstrap | — | MIT license of Bootstrap |
@@ -29,8 +29,8 @@ font files beside `bootstrap-icons.min.css` under `css/fonts/`.
 | File | SHA-256 |
 | --- | --- |
 | `css/bootstrap.min.css` | `596A918E5D4C71CB731B23412D5B145E429C2203A23E9BF7BA90EFF3E291BBB8` |
-| `css/pakaiui.css` | `6A06950FF828193EC2106617D34137BE6A4194938C5773E53DE392D020A49AF3` |
-| `css/pakaiui-asadi.css` | `53D70FEF48244273D8C16954F7FD165357762C1019A52E5CD12D6575405D863C` |
+| `css/pakaiui.css` | `FBB5C5AB24616074837DAA042C160594FFC3640B70C2E7AE38DEF673EBA9C2DD` |
+| `css/pakaiui-asadi.css` | `6D1B677FE0E328971D31CEB5EF51E26E49AC887E95BF55BE6EF845DFF62758AE` |
 | `css/bootstrap-icons.min.css` | `5BDE1B1280C519BE069FF3A711B639E0E996886AD4E4F7C6B4AB99237ED875B4` |
 | `css/fonts/bootstrap-icons.woff2` | `6C75710364A1CA5604267716F6D28997B26319FDB078CF11E0B42AB66FF2EA61` |
 | `css/fonts/bootstrap-icons.woff` | `F55513B7B591CB84A3B87FF0E34EA24D4831D6FEDC22E54B911CA64B5B544A15` |
@@ -68,10 +68,10 @@ string. A changed hash without a documented upgrade is a supply-chain red flag.
    ```b4j
    Dim AssetBase As String = ""      ' same origin, for example "" or "/portal"
    PUI.StyleSheet(head1, AssetBase & "/assets/css/bootstrap.min.css?v=5.3.8")
-   PUI.StyleSheet(head1, AssetBase & "/assets/css/pakaiui.css?v=0.15")
+   PUI.StyleSheet(head1, AssetBase & "/assets/css/pakaiui.css?v=0.16")
    PUI.StyleSheet(head1, AssetBase & "/assets/css/bootstrap-icons.min.css?v=1.13.1")
    ' optional Asadi-style dashboard layer, loaded last
-   PUI.StyleSheet(head1, AssetBase & "/assets/css/pakaiui-asadi.css?v=0.15")
+   PUI.StyleSheet(head1, AssetBase & "/assets/css/pakaiui-asadi.css?v=0.16")
    ' scripts at the end of <body>, loaded with defer
    PUI.Script(body1, AssetBase & "/assets/js/bootstrap.min.js?v=5.3.8", True)
    PUI.Script(body1, AssetBase & "/assets/js/htmx.min.js?v=2.0.8", True)
@@ -93,7 +93,8 @@ at it.
 
 | PakaiUI version | Bootstrap | Bootstrap Icons | HTMX | Alpine.js |
 | --- | --- | --- | --- | --- |
-| 0.15 (current) | 5.3.8 | 1.13.1 | 2.0.8 | 3.15.8 |
+| 0.16 (current) | 5.3.8 | 1.13.1 | 2.0.8 | 3.15.8 |
+| 0.15 | 5.3.8 | 1.13.1 | 2.0.8 | 3.15.8 |
 
 Do not jump Bootstrap major/minor versions without re-running the HTMX
 baseline test documented in `docs/M0-RECONNAISSANCE.md` section 9.

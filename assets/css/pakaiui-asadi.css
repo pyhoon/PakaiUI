@@ -1,12 +1,12 @@
 /*!
- * PakaiUI Asadi theme 0.15
+ * PakaiUI Asadi theme 0.16
  * Copyright (c) 2026 PakaiUI contributors
  * Licensed under MIT
  *
  * Optional visual layer inspired by the Pakai Asadi workspace.
  * Load it AFTER bootstrap.min.css and pakaiui.css:
  *
- *   <link rel="stylesheet" href="/assets/css/pakaiui-asadi.css?v=0.15">
+ *   <link rel="stylesheet" href="/assets/css/pakaiui-asadi.css?v=0.16">
  *
  * It only styles content inside an element carrying class="pui-asadi" (usually
  * <body>). Bootstrap defaults outside that wrapper are untouched. PakaiUI

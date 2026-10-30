@@ -1,6 +1,6 @@
 # PakaiUI versioning, migration and release policy
 
-Version 0.15, 2026-10-30. This document is the contract for how PakaiUI versions, changes and releases
+Version 0.16, 2026-10-30. This document is the contract for how PakaiUI versions, changes and releases
 the library, the assets and the documentation.
 
 ## Version policy
@@ -21,12 +21,12 @@ agree:
 
 | Location | Value |
 | --- | --- |
-| `source/PUI.bas` | `Public Const VERSION = "0.15"` and the file header |
-| `source/manifest.txt` | `Version=0.15` |
-| `source/libs.json` | `"Version": "0.15"` |
-| `assets/res.json` | `"Version": "0.15"` |
-| `assets/css/pakaiui.css` | header `PakaiUI theme tokens 0.15` |
-| `assets/css/pakaiui-asadi.css` | header `PakaiUI Asadi theme 0.15` |
+| `source/PUI.bas` | `Public Const VERSION = "0.16"` and the file header |
+| `source/manifest.txt` | `Version=0.16` |
+| `source/libs.json` | `"Version": "0.16"` |
+| `assets/res.json` | `"Version": "0.16"` |
+| `assets/css/pakaiui.css` | header `PakaiUI theme tokens 0.16` |
+| `assets/css/pakaiui-asadi.css` | header `PakaiUI Asadi theme 0.16` |
 | `README.md`, `AGENT.md`, `CHANGELOG.md` | current milestone/version |
 | `gallery/HomePage.bas` | `PakaiUIVersion` |
 | Milestone documents | version they describe |
@@ -52,6 +52,13 @@ agree:
 - Never leave a deprecated alias undocumented or untested.
 
 ## Migration history
+
+### 0.15 -> 0.16 (MiniHTML 4.04+ escaping)
+
+No public API changes. PakaiUI now relies on MiniHTML 4.04+ escaping `.text` values by default and no longer
+pre-escapes them; attribute values are still escaped by PakaiUI. MiniHTML 4.04 or newer is required —
+do not pair 0.16 with 4.02/4.03. Rebuild against the 0.16 `.b4xlib` and refresh `pakaiui.css` and
+`pakaiui-asadi.css` (`?v=0.16`); the CSS changed only in its version header.
 
 ### 0.14 -> 0.15 (M5)
 

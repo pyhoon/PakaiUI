@@ -85,7 +85,7 @@ Private Sub BuildPage As MiniHtml
 	tableOptions.Rows.Add(rowEndsMeet)
 	Dim rowMiniHtml As Map = PUI.NewTableRow
 	rowMiniHtml.Put("component", "MiniHTML")
-	rowMiniHtml.Put("version", "4.02")
+	rowMiniHtml.Put("version", "4.05")
 	tableOptions.Rows.Add(rowMiniHtml)
 	Dim rowPakaiUI As Map = PUI.NewTableRow
 	rowPakaiUI.Put("component", "PakaiUI")

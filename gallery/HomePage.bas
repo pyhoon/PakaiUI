@@ -14,7 +14,7 @@ Sub Class_Globals
 	Private Const IconsVersion As String = "1.13.1"
 	Private Const HtmxVersion As String = "2.0.8"
 	Private Const AlpineVersion As String = "3.15.8"
-	Private Const PakaiUIVersion As String = "0.15"
+	Private Const PakaiUIVersion As String = "0.16"
 	Private Const UrlPing As String = "/hx/ping"
 	Private Const UrlEcho As String = "/hx/echo"
 	Private Const UrlSpin As String = "/hx/spin"

@@ -16,8 +16,8 @@ There is no PakaiUI adapter library to install. The integration point is the sta
 | B4J | 10.7 |
 | Java | 19 (build and run) |
 | EndsMeet | 4.03 (`C:\B4X\Additional\B4J\EndsMeet.b4xlib`) |
-| MiniHTML | 4.02 |
-| PakaiUI | 0.15 (installed `PakaiUI.b4xlib`) |
+| MiniHTML | 4.05 (4.04+ required) |
+| PakaiUI | 0.16 (installed `PakaiUI.b4xlib`) |
 
 ## Build and run
 

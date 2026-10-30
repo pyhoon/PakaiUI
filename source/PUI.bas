@@ -5,9 +5,8 @@ Type=StaticCode
 Version=10.7
 @EndOfDesignText@
 ' PakaiUI - server-rendered UI components for B4J web applications.
-' Version: 0.15 (M5 integration and release readiness: Pakai Server example,
-'          compatibility matrix, API reference, versioning policy)
-' HTML foundation: MiniHTML 4.02 (https://github.com/pyhoon/MiniHTML4)
+' Version: 0.16 (MiniHTML 4.04+ escaping compatibility)
+' HTML foundation: MiniHTML 4.05 (https://github.com/pyhoon/MiniHTML4); 4.04 or newer required
 '
 ' Safety contract:
 '   - Text and attribute values are escaped by default.
@@ -18,7 +17,7 @@ Version=10.7
 '   - Public option types are prefixed with PUI because B4X types share a global namespace.
 '   - No dependency on Pakai Server, MiniJS or MiniCSS.
 Sub Process_Globals
-	Public Const VERSION As String = "0.15"
+	Public Const VERSION As String = "0.16"
 
 	' Bootstrap 5.3 semantic variants
 	Public Const VariantPrimary As String = "primary"
@@ -146,14 +145,14 @@ Public Sub RawHtml (Html As String) As MiniHtml
 	Dim tag1 As MiniHtml
 	tag1.Initialize("")
 	tag1.setFlat(True)
-	tag1.text(Html, False)
+	tag1.text(Html, True, False)
 	Return tag1
 End Sub
 
 ' Appends escaped text to an element and returns the element.
 Public Sub AddText (Parent As MiniHtml, Value As String) As MiniHtml
 	If Parent = Null Then Return Null
-	Parent.text(EscapeHtml(Value))
+	Parent.text(Value)
 	Return Parent
 End Sub
 
@@ -161,7 +160,7 @@ End Sub
 ' Explicit counterpart of AddText. Never pass user input here.
 Public Sub AddHtml (Parent As MiniHtml, Html As String) As MiniHtml
 	If Parent = Null Then Return Null
-	Parent.text(Html)
+	Parent.text(Html, True, False)
 	Return Parent
 End Sub
 
@@ -483,7 +482,7 @@ Public Sub Document (Options As PUIPageOptions) As MiniHtml
 	Dim title1 As MiniHtml
 	title1.Initialize("title")
 	title1.up(head1)
-	title1.text(EscapeHtml(options1.Title))
+	title1.text(options1.Title)
 	If options1.Description <> "" Then
 		Dim description1 As MiniHtml
 		description1.Initialize("meta")
@@ -613,7 +612,7 @@ Public Sub Button (Options As PUIButtonOptions) As MiniHtml
 
 	Dim variant As String = NormalizeVariant(options1.Variant)
 	Dim sizeClass As String = NormalizeSize(options1.Size)
-	Dim label As String = EscapeHtml(options1.Text)
+	Dim label As String = options1.Text
 
 	If options1.Href <> "" Then
 		Dim link1 As MiniHtml
@@ -684,7 +683,7 @@ Public Sub Card (Options As PUICardOptions) As MiniHtml
 
 	If options1.HeaderText <> "" Then
 		Dim header1 As MiniHtml = CardHeader
-		header1.up(card1).text(EscapeHtml(options1.HeaderText))
+		header1.up(card1).text(options1.HeaderText)
 	End If
 
 	If options1.Title <> "" Or options1.Subtitle <> "" Or options1.BodyText <> "" Then
@@ -692,23 +691,23 @@ Public Sub Card (Options As PUICardOptions) As MiniHtml
 		body1.up(card1)
 		If options1.Title <> "" Then
 			Dim title1 As MiniHtml = CardTitle
-			title1.up(body1).text(EscapeHtml(options1.Title))
+			title1.up(body1).text(options1.Title)
 		End If
 		If options1.Subtitle <> "" Then
 			Dim subtitle1 As MiniHtml
 			subtitle1.Initialize("h6")
 			subtitle1.cls("card-subtitle mb-2 text-body-secondary")
-			subtitle1.up(body1).text(EscapeHtml(options1.Subtitle))
+			subtitle1.up(body1).text(options1.Subtitle)
 		End If
 		If options1.BodyText <> "" Then
 			Dim text1 As MiniHtml = CardText
-			text1.up(body1).text(EscapeHtml(options1.BodyText))
+			text1.up(body1).text(options1.BodyText)
 		End If
 	End If
 
 	If options1.FooterText <> "" Then
 		Dim footer1 As MiniHtml = CardFooter
-		footer1.up(card1).text(EscapeHtml(options1.FooterText))
+		footer1.up(card1).text(options1.FooterText)
 	End If
 	If options1.Hidden Then card1.hidden
 	Return card1
@@ -750,7 +749,7 @@ Public Sub Badge (Options As PUIBadgeOptions) As MiniHtml
 	If options1.CssClass <> "" Then badge1.cls(EscapeHtml(options1.CssClass))
 	If options1.Id <> "" Then badge1.attr("id", EscapeHtml(options1.Id))
 	If options1.Hidden Then badge1.hidden
-	badge1.text(EscapeHtml(options1.Text))
+	badge1.text(options1.Text)
 	Return badge1
 End Sub
 
@@ -780,12 +779,12 @@ Public Sub Alert (Options As PUIAlertOptions) As MiniHtml
 
 	If options1.Title <> "" Then
 		Dim title1 As MiniHtml = Tag("h4").cls("alert-heading")
-		title1.text(EscapeHtml(options1.Title))
+		title1.text(options1.Title)
 		title1.up(alert1)
 	End If
 	If options1.Message <> "" Then
 		Dim message1 As MiniHtml = Tag("p").cls("mb-0")
-		message1.text(EscapeHtml(options1.Message))
+		message1.text(options1.Message)
 		message1.up(alert1)
 	End If
 	If options1.Dismissible Then
@@ -825,15 +824,15 @@ Public Sub Breadcrumb (Options As PUIBreadcrumbOptions) As MiniHtml
 				listItem.attr("aria-current", "page")
 			End If
 			If item.Active Or item.Href = "" Then
-				listItem.text(EscapeHtml(item.Text))
+				listItem.text(item.Text)
 			Else If IsSafeUrl(item.Href) Then
 				Dim link1 As MiniHtml = Tag("a")
 				link1.attr("href", EscapeHtml(item.Href))
-				link1.text(EscapeHtml(item.Text))
+				link1.text(item.Text)
 				link1.up(listItem)
 			Else
 				LogError("PakaiUI: rejected unsafe breadcrumb URL: " & item.Href)
-				listItem.text(EscapeHtml(item.Text))
+				listItem.text(item.Text)
 			End If
 			listItem.up(list1)
 		Next
@@ -852,11 +851,11 @@ Public Sub PageHeader (Options As PUIPageHeaderOptions) As MiniHtml
 	If options1.Hidden Then header1.hidden
 
 	Dim title1 As MiniHtml = Tag("h1").cls("h3")
-	title1.text(EscapeHtml(options1.Title))
+	title1.text(options1.Title)
 	title1.up(header1)
 	If options1.Subtitle <> "" Then
 		Dim subtitle1 As MiniHtml = Tag("p").cls("text-body-secondary mb-0")
-		subtitle1.text(EscapeHtml(options1.Subtitle))
+		subtitle1.text(options1.Subtitle)
 		subtitle1.up(header1)
 	End If
 	Return header1
@@ -922,7 +921,7 @@ Public Sub NavItem (Options As PUINavItemOptions) As MiniHtml
 		link1.attr("aria-disabled", "true")
 		link1.attr("tabindex", "-1")
 	End If
-	link1.text(EscapeHtml(options1.Text))
+	link1.text(options1.Text)
 	link1.up(listItem)
 	Return listItem
 End Sub
@@ -961,7 +960,7 @@ Public Sub Navbar (Options As PUINavbarOptions) As MiniHtml
 				LogError("PakaiUI: rejected unsafe navbar brand URL: " & options1.Href)
 			End If
 		End If
-		brand1.text(EscapeHtml(options1.Brand))
+		brand1.text(options1.Brand)
 		brand1.up(inner1)
 	End If
 
@@ -997,12 +996,12 @@ Public Sub EmptyState (Options As PUIEmptyStateOptions) As MiniHtml
 	End If
 	If options1.Title <> "" Then
 		Dim title1 As MiniHtml = Tag("h2").cls("h4")
-		title1.text(EscapeHtml(options1.Title))
+		title1.text(options1.Title)
 		title1.up(box1)
 	End If
 	If options1.Message <> "" Then
 		Dim message1 As MiniHtml = Tag("p").cls("text-body-secondary mb-0")
-		message1.text(EscapeHtml(options1.Message))
+		message1.text(options1.Message)
 		message1.up(box1)
 	End If
 	If options1.ActionText <> "" Then
@@ -1040,7 +1039,7 @@ Public Sub LoadingState (Options As PUILoadingStateOptions) As MiniHtml
 		label1.cls("visually-hidden")
 		label1.text("Loading...")
 	Else
-		label1.text(EscapeHtml(options1.Text))
+		label1.text(options1.Text)
 	End If
 	label1.up(box1)
 	Return box1
@@ -1111,7 +1110,7 @@ Public Sub Textarea (Options As PUITextareaOptions) As MiniHtml
 	If options1.ErrorText <> "" Then textarea1.attr("aria-invalid", "true")
 	Dim describedBy1 As String = DescribedBy(fieldId, options1.HelpText, options1.ErrorText)
 	If describedBy1 <> "" Then textarea1.attr("aria-describedby", EscapeHtml(describedBy1))
-	textarea1.text(EscapeHtml(options1.Value))
+	textarea1.text(options1.Value)
 	textarea1.up(group1)
 
 	AppendFieldFeedback(group1, fieldId, options1.HelpText, options1.ErrorText)
@@ -1153,7 +1152,7 @@ Public Sub SelectField (Options As PUISelectOptions) As MiniHtml
 		If Not(options1.Multiple) And options1.SelectedValue = "" And Not(HasSelectedItem(options1.Items)) Then
 			placeholder1.selected
 		End If
-		placeholder1.text(EscapeHtml(options1.Placeholder))
+		placeholder1.text(options1.Placeholder)
 		placeholder1.up(select1)
 	End If
 
@@ -1174,7 +1173,7 @@ Public Sub SelectField (Options As PUISelectOptions) As MiniHtml
 			End If
 			If itemSelected Then option1.selected
 			If item.Disabled Then option1.disabled
-			option1.text(EscapeHtml(item.Text))
+			option1.text(item.Text)
 			option1.up(select1)
 		Next
 	End If
@@ -1236,7 +1235,7 @@ Public Sub Table (Options As PUITableOptions) As MiniHtml
 
 	If options1.Caption <> "" Then
 		Dim caption1 As MiniHtml = Tag("caption")
-		caption1.text(EscapeHtml(options1.Caption))
+		caption1.text(options1.Caption)
 		caption1.up(table1)
 	End If
 
@@ -1251,7 +1250,7 @@ Public Sub Table (Options As PUITableOptions) As MiniHtml
 			th1.attr("scope", "col")
 			Dim align1 As String = NormalizeAlignClass(column.Align, "table column")
 			If align1 <> "" Then th1.cls(align1)
-			th1.text(EscapeHtml(column.Title))
+			th1.text(column.Title)
 			th1.up(headRow1)
 		Next
 	End If
@@ -1270,7 +1269,7 @@ Public Sub Table (Options As PUITableOptions) As MiniHtml
 		emptyCell1.cls("text-center text-body-secondary")
 		Dim emptyText1 As String = options1.EmptyText
 		If emptyText1 = "" Then emptyText1 = "No data."
-		emptyCell1.text(EscapeHtml(emptyText1))
+		emptyCell1.text(emptyText1)
 		emptyCell1.up(emptyRow1)
 	Else
 		For i = 0 To options1.Rows.Size - 1
@@ -1287,7 +1286,7 @@ Public Sub Table (Options As PUITableOptions) As MiniHtml
 					Dim td1 As MiniHtml = Tag("td")
 					Dim rowAlign As String = NormalizeAlignClass(rowColumn.Align, "table column")
 					If rowAlign <> "" Then td1.cls(rowAlign)
-					td1.text(EscapeHtml(CellText(rowData, rowColumn.Field)))
+					td1.text(CellText(rowData, rowColumn.Field))
 					td1.up(row1)
 				Next
 			End If
@@ -1472,7 +1471,7 @@ Public Sub Modal (Options As PUIModalOptions) As MiniHtml
 		header1.up(content1)
 		Dim title1 As MiniHtml = Tag("h2").cls("modal-title fs-5")
 		title1.attr("id", EscapeHtml(modalId & "-label"))
-		title1.text(EscapeHtml(options1.Title))
+		title1.text(options1.Title)
 		title1.up(header1)
 		Dim closeX1 As MiniHtml = Tag("button")
 		closeX1.attr("type", "button")
@@ -1483,7 +1482,7 @@ Public Sub Modal (Options As PUIModalOptions) As MiniHtml
 	End If
 
 	Dim body1 As MiniHtml = Tag("div").cls("modal-body")
-	body1.text(EscapeHtml(options1.BodyText))
+	body1.text(options1.BodyText)
 	body1.up(content1)
 
 	If options1.FooterText <> "" Or options1.CloseText <> "" Then
@@ -1491,7 +1490,7 @@ Public Sub Modal (Options As PUIModalOptions) As MiniHtml
 		footer1.up(content1)
 		If options1.FooterText <> "" Then
 			Dim footerText1 As MiniHtml = Tag("p").cls("mb-0 me-auto")
-			footerText1.text(EscapeHtml(options1.FooterText))
+			footerText1.text(options1.FooterText)
 			footerText1.up(footer1)
 		End If
 		If options1.CloseText <> "" Then
@@ -1499,7 +1498,7 @@ Public Sub Modal (Options As PUIModalOptions) As MiniHtml
 			closeButton1.attr("type", "button")
 			closeButton1.cls("btn btn-secondary")
 			closeButton1.attr("data-bs-dismiss", "modal")
-			closeButton1.text(EscapeHtml(options1.CloseText))
+			closeButton1.text(options1.CloseText)
 			closeButton1.up(footer1)
 		End If
 	End If
@@ -1563,7 +1562,7 @@ Public Sub Toast (Options As PUIToastOptions) As MiniHtml
 		header1.up(toast1)
 		If options1.Title <> "" Then
 			Dim title1 As MiniHtml = Tag("strong").cls("me-auto")
-			title1.text(EscapeHtml(options1.Title))
+			title1.text(options1.Title)
 			title1.up(header1)
 		End If
 		If options1.Dismissible Then
@@ -1581,7 +1580,7 @@ Public Sub Toast (Options As PUIToastOptions) As MiniHtml
 	End If
 
 	Dim body1 As MiniHtml = Tag("div").cls("toast-body")
-	body1.text(EscapeHtml(options1.Message))
+	body1.text(options1.Message)
 	body1.up(toast1)
 	Return toast1
 End Sub
@@ -1635,13 +1634,13 @@ Public Sub Sidebar (Options As PUISidebarOptions) As MiniHtml
 				LogError("PakaiUI: rejected unsafe sidebar brand URL: " & options1.Href)
 			End If
 		End If
-		brand1.text(EscapeHtml(options1.Brand))
+		brand1.text(options1.Brand)
 		brand1.up(aside1)
 	End If
 
 	If options1.Title <> "" Then
 		Dim title1 As MiniHtml = Tag("h2").cls("h6 text-uppercase text-body-secondary")
-		title1.text(EscapeHtml(options1.Title))
+		title1.text(options1.Title)
 		title1.up(aside1)
 	End If
 
@@ -1686,7 +1685,7 @@ Private Sub AppendFieldLabel (Wrapper As MiniHtml, LabelText As String, FieldId 
 	If LabelText = "" Then Return
 	Dim label1 As MiniHtml = Tag("label").cls("form-label")
 	label1.attr("for", EscapeHtml(FieldId))
-	label1.text(EscapeHtml(LabelText))
+	label1.text(LabelText)
 	If IsRequired Then
 		Dim mark1 As MiniHtml = Tag("span").cls("text-danger")
 		mark1.attr("aria-hidden", "true")
@@ -1702,13 +1701,13 @@ Private Sub AppendFieldFeedback (Wrapper As MiniHtml, FieldId As String, HelpTex
 	If HelpText <> "" Then
 		Dim help1 As MiniHtml = Tag("div").cls("form-text")
 		help1.attr("id", EscapeHtml(FieldId & "-help"))
-		help1.text(EscapeHtml(HelpText))
+		help1.text(HelpText)
 		help1.up(Wrapper)
 	End If
 	If ErrorText <> "" Then
 		Dim error1 As MiniHtml = Tag("div").cls("invalid-feedback")
 		error1.attr("id", EscapeHtml(FieldId & "-error"))
-		error1.text(EscapeHtml(ErrorText))
+		error1.text(ErrorText)
 		error1.up(Wrapper)
 	End If
 End Sub
@@ -1840,7 +1839,7 @@ Private Sub CheckControl (InputType As String, LabelText As String, Name As Stri
 	If LabelText <> "" Then
 		Dim label1 As MiniHtml = Tag("label").cls("form-check-label")
 		label1.attr("for", EscapeHtml(fieldId))
-		label1.text(EscapeHtml(LabelText))
+		label1.text(LabelText)
 		label1.up(wrapper1)
 	End If
 
@@ -1882,7 +1881,7 @@ Private Sub AppendPageItem (List As MiniHtml, Text As String, Page As Int, Enabl
 	If Not(Enabled) Then item1.cls("disabled")
 	If Active Then item1.attr("aria-current", "page")
 
-	Dim label1 As String = EscapeHtml(Text)
+	Dim label1 As String = Text
 	If Enabled And Not(Active) And Linkable And Page >= 1 Then
 		Dim href1 As String = Pattern.Replace("{page}", "" & Page)
 		If IsSafeUrl(href1) Then

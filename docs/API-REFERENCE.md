@@ -1,6 +1,6 @@
 # PakaiUI public API reference
 
-Version 0.15. This is the complete public surface of the `PUI` static module and its option types.
+Version 0.16. This is the complete public surface of the `PUI` static module and its option types.
 Component behavior, markup and accessibility notes live in:
 
 - [`M2-COMPONENTS.md`](M2-COMPONENTS.md) - badges, alerts, cards, breadcrumbs, headers, navigation, states
@@ -182,7 +182,7 @@ Type PUISidebarOptions (Brand As String, Href As String, Title As String, Items 
 
 | Group | Values |
 | --- | --- |
-| Version | `VERSION = "0.15"` |
+| Version | `VERSION = "0.16"` |
 | Variants | `VariantPrimary`, `VariantSecondary`, `VariantSuccess`, `VariantDanger`, `VariantWarning`, `VariantInfo`, `VariantLight`, `VariantDark`, `VariantLink` |
 | Outline variants | `VariantOutlinePrimary`, `VariantOutlineSecondary`, `VariantOutlineSuccess`, `VariantOutlineDanger`, `VariantOutlineWarning`, `VariantOutlineInfo`, `VariantOutlineLight`, `VariantOutlineDark` |
 | Sizes | `SizeSmall = "sm"`, `SizeDefault = ""`, `SizeLarge = "lg"` |

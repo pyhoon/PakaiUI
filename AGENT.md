@@ -5,16 +5,16 @@ Instructions for AI agents and contributors working in this repository.
 ## 1. What this project is
 
 **PakaiUI** is a reusable, server-rendered UI component library for B4J web applications. It is built on
-[MiniHTML 4.02](https://github.com/pyhoon/MiniHTML4) and Bootstrap 5.3, distributed as a `.b4xlib`, and
+[MiniHTML 4.05](https://github.com/pyhoon/MiniHTML4) and Bootstrap 5.3, distributed as a `.b4xlib`, and
 works without Pakai Server. HTMX 2.x and Alpine.js are optional enhancements only.
 
 | Item | Value |
 | --- | --- |
-| Library version | `0.15` (experimental; public API may change) |
+| Library version | `0.16` (experimental; public API may change) |
 | Current milestone | **M5 complete** - Pakai Server example, API reference, compatibility matrix, versioning/release policy |
 | B4J | 10.7 (`C:\Program Files\B4X\B4J`) |
 | JDK used for builds/runs | 19 (`C:\Java\jdk-19.0.2`) |
-| HTML foundation | MiniHTML 4.02 (`C:\B4X\Additional\B4X\MiniHTML.b4xlib`) |
+| HTML foundation | MiniHTML 4.05 (`C:\B4X\Additional\B4X\MiniHTML.b4xlib`); 4.04+ required |
 | CSS baseline | Bootstrap 5.3.8 |
 | Optional JS | HTMX 2.0.8, Alpine.js 3.15.8 |
 | License | MIT (`LICENSE`) |
@@ -45,7 +45,7 @@ source/                      PakaiUI library B4J project
   PUI.bas                    Public facade: options types, components, escaping, page primitives
   PakaiUI.b4j                Library project (smoke-test AppStart)
   manifest.txt               b4xlib manifest (version + dependencies)
-  libs.json                  External library pin (MiniHTML 4.02)
+  libs.json                  External library pin (MiniHTML 4.05)
   build_b4xlib.bat           Packages Objects\PakaiUI.b4xlib with jar.exe
 tests/m0-poc/                Console proof of concept (consumes the installed b4xlib)
 tests/m1-foundation/         M1 foundation API tests (35 assertions)
@@ -314,16 +314,17 @@ Remove unused locals, parameters and private subs. B4J 10.7 reports `unused vari
 These are proven by source inspection and the M0 PoC. Do not "fix" them inside PakaiUI by changing
 MiniHTML; handle them in `PUI`.
 
-- `MiniHtml.text` and `MiniHtml.attr` store raw strings. **Nothing is escaped** during `build`.
+- `MiniHtml.text` escapes its value by default from MiniHTML 4.04 onward; pass `escaped=False` only for trusted markup. `MiniHtml.attr` still stores raw strings, so PakaiUI escapes attribute and class values itself.
 - Attribute order comes from a B4X `Map`, so it is **not deterministic**. Never assert whole HTML strings;
   parse the output and assert on names, classes and attributes.
 - `attr(key, "")` emits a bare boolean attribute. Use `attrIfValue` / `attrIf` for optional values.
 - `add` returns the parent; `addChild` / `down` return the child; `up` / `addTo` return the child.
-- `text(value, wrap)` also sets the element's indentation flag.
+- `text(value, wrap, escaped)` also sets the element's indentation flag. `wrap` is the second argument;
+  `escaped` is the third and defaults to `True`. Use `.text(value, True, False)` for raw markup.
 - `build()` output starts with `CRLF` and contains indentation for non-flat tags. Use `setFlat(True)` when
   an exact fragment is required (see `PUI.RawHtml`).
 - Parsing preserves entity-escaped attribute and text values; `GetTextFromNode` is what unescapes them.
-  Never pass `GetTextFromNode` output to `text()` without escaping.
+  Pass that output to `text()` and let MiniHTML escape it; never pre-escape it.
 - The shipped `MH` helper snippet uses `MiniJs` (`MH.Toast`, `MH.CreateCustomEventScript`). PakaiUI must
   not call `MH`; `PUI` only uses the `MiniHtml` class.
 - B4X converts `Null` assigned to a `String` into the literal text `"null"`. Normalise application data

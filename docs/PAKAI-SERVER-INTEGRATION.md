@@ -1,6 +1,6 @@
 # PakaiUI on Pakai Server / EndsMeet
 
-Version 0.15. PakaiUI has no Pakai Server dependency and needs no adapter to run inside one. A host handler
+Version 0.16. PakaiUI has no Pakai Server dependency and needs no adapter to run inside one. A host handler
 builds a `MiniHtml` document with PUI, renders it with `page.build`, and writes the string to the servlet
 response. This document records the verified example and the integration rules.
 

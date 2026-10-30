@@ -1,6 +1,6 @@
 # PakaiUI compatibility matrix
 
-Version 0.15, verified 2026-10-30. Only the combinations below were built or run; anything else is
+Version 0.16, verified 2026-10-30. Only the combinations below were built or run; anything else is
 untested, not "probably fine".
 
 ## Supported stack
@@ -9,8 +9,8 @@ untested, not "probably fine".
 | --- | --- | --- |
 | B4J | 10.7 (B4JBuilder 10.70) | Compiler and IDE |
 | Java | 19 (`C:\Java\jdk-19.0.2`) | Build and run runtime |
-| MiniHTML | 4.02 | HTML tree, rendering, composition |
-| PakaiUI | 0.15 | This library |
+| MiniHTML | 4.05 (4.04+ required) | HTML tree, rendering, composition, text escaping |
+| PakaiUI | 0.16 | This library |
 | Bootstrap CSS | 5.3.8 | Required for component styling |
 | Bootstrap JavaScript | 5.3.8 | Optional: modal, toast dismissal |
 | Bootstrap Icons | 1.13.1 | Optional: empty-state icons |
@@ -25,7 +25,8 @@ EndsMeet, MiniJS, MiniCSS or MiniORMUtils. There is no Pakai Server runtime depe
 
 | PakaiUI | MiniHTML | Bootstrap | Icons | HTMX | Alpine | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| 0.15 (current) | 4.02 | 5.3.8 | 1.13.1 | 2.0.8 | 3.15.8 | Verified |
+| 0.16 (current) | 4.05 | 5.3.8 | 1.13.1 | 2.0.8 | 3.15.8 | Verified |
+| 0.15 | 4.02 | 5.3.8 | 1.13.1 | 2.0.8 | 3.15.8 | Superseded: double-escapes text on 4.04+ |
 | 0.14 | 4.02 | 5.3.8 | 1.13.1 | 2.0.8 | 3.15.8 | Verified |
 | 0.13 | 4.02 | 5.3.8 | 1.13.1 | 2.0.8 | not used | Verified |
 | 0.12 | 4.02 | 5.3.8 | 1.13.1 | 2.0.8 | not used | Verified |
@@ -33,7 +34,7 @@ EndsMeet, MiniJS, MiniCSS or MiniORMUtils. There is no Pakai Server runtime depe
 | 0.10 | 4.02 | 5.3.8 | not used | 2.0.8 baseline | not used | Verified |
 
 Bootstrap 5.3.x patch upgrades are expected to be compatible but were not re-tested. Bootstrap 4, 6,
-HTMX 1.x/4.x, Alpine 2.x, MiniHTML other than 4.02, B4J below 10.7 and Java below 19 are untested.
+HTMX 1.x/4.x, Alpine 2.x, MiniHTML 4.02/4.03, B4J below 10.7 and Java below 19 are untested. PakaiUI 0.16 requires MiniHTML 4.04 or newer because it relies on the default text escaping introduced in 4.04.
 
 ## Evidence
 
@@ -65,11 +66,11 @@ Total automated assertions: **563**. All suites exit 0.
 
 ## Version pins and artifacts
 
-- `source/PUI.bas`: `VERSION = "0.15"` and the file header.
-- `source/manifest.txt`: `Version=0.15`; dependencies `B4XCollections, Json, MiniHTML`.
-- `assets/res.json`: asset manifest `Version=0.15`.
-- `assets/css/pakaiui.css`: header version 0.15.
-- `PakaiUI.b4xlib` SHA-256: `AFB3E766F2F5CF703430D0B48A753CCD44A6CAFF991C6103D81ECAA39293092C`.
+- `source/PUI.bas`: `VERSION = "0.16"` and the file header.
+- `source/manifest.txt`: `Version=0.16`; dependencies `B4XCollections, Json, MiniHTML`.
+- `assets/res.json`: asset manifest `Version=0.16`.
+- `assets/css/pakaiui.css`: header version 0.16.
+- `PakaiUI.b4xlib` SHA-256: `4AF3253F1E66CC08EAA2C330E525FAFEF7E606E74233F1C87A28D51A1F86F2F3`.
 - Hashes: see `assets/README.md` and the artifact table in
   [`M0-RECONNAISSANCE.md`](M0-RECONNAISSANCE.md).
 

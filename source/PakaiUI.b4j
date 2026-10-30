@@ -12,9 +12,9 @@ NumberOfModules=1
 Version=10.7
 @EndOfDesignText@
 ' PakaiUI library project
-' Version: 0.15 (M5 integration and release readiness)
+' Version: 0.16 (MiniHTML 4.04+ escaping compatibility)
 ' License: MIT
-' HTML foundation: MiniHTML 4.02
+' HTML foundation: MiniHTML 4.05 (4.04 or newer required)
 #Region Project Attributes
 	#CommandLineArgs:
 	#MergeLibraries: True

@@ -1,14 +1,14 @@
 # PakaiUI
 
 A reusable, server-rendered UI component library for B4J web applications, built on
-[MiniHTML 4.02](https://github.com/pyhoon/MiniHTML4) and Bootstrap 5.3.
+[MiniHTML 4.05](https://github.com/pyhoon/MiniHTML4) and Bootstrap 5.3.
 
 PakaiUI is distributed as a `.b4xlib`, produces plain HTML, and works without Pakai Server. HTMX 2.x and
 Alpine.js are optional enhancements, never requirements.
 
 ## Status
 
-**v0.15 — M5 complete, release readiness (experimental API).**
+**v0.16 — MiniHTML 4.04+ escaping compatibility (experimental API).**
 
 M0 delivered the verified MiniHTML4 reconnaissance, the escaping/composition contract and a compiled
 proof of concept. M1 added theme tokens (light/dark via `data-bs-theme`), the document skeleton
@@ -31,7 +31,7 @@ Alpine.js or Pakai Server a core dependency. See [`docs/API-REFERENCE.md`](docs/
 | --- | --- |
 | B4J | 10.7 |
 | Java | 19 (build/run) |
-| MiniHTML | 4.02 (`MiniHTML.b4xlib`) |
+| MiniHTML | 4.05 (`MiniHTML.b4xlib`); 4.04+ required |
 | Bootstrap | 5.3.8 (for the rendered markup) |
 | HTMX | 2.0.8 (optional) |
 | Alpine.js | 3.15.8 (optional, not required) |
@@ -43,7 +43,7 @@ PakaiUI core does not depend on Pakai Server, MiniJS, MiniCSS, HTMX or Alpine.js
 
 Download `PakaiUI.b4xlib` from the [latest release](https://github.com/pyhoon/PakaiUI/releases/latest), copy it
 into `C:\B4X\Additional\B4J`, and restart B4J. Tick **PakaiUI** in the host project's libraries; B4J resolves
-MiniHTML 4.02 from the library manifest.
+MiniHTML 4.05 from the library manifest.
 
 Then sync the tracked frontend assets into the host project's web root:
 

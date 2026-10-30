@@ -3,6 +3,29 @@
 All notable changes to PakaiUI are recorded here. The project follows a `0.x` versioning policy: public
 APIs may change, and breaking changes are documented explicitly.
 
+## 0.16 - MiniHTML 4.04+ escaping compatibility
+
+### Changed
+
+- MiniHTML 4.04+ escapes `.text` values by default. PakaiUI no longer pre-escapes text values, so rendered
+  output stays single-escaped. Attribute and class values are still escaped by PakaiUI because MiniHTML
+  does not escape attributes.
+- `RawHtml` and `AddHtml` pass `escaped=False` explicitly. The second positional argument of
+  `MiniHtml.text` is `wrap`, not `escaped`, so the old two-argument form silently escaped trusted markup
+  on 4.04+.
+- Dependency pin raised to MiniHTML 4.05 via `source/libs.json`. MiniHTML 4.04 or newer is required;
+  4.02/4.03 are no longer supported because they would leave text values unescaped.
+
+### Fixed
+
+- Text, button labels, card and alert bodies, badges, table cells, form labels and feedback were
+  double-escaped (`&` rendered as `&amp;`, `<` as `&lt;`) when MiniHTML 4.04/4.05 was installed.
+
+### Verified
+
+- PakaiUI library smoke test: exit 0.
+- M0 PoC: 28 passed; M1: 35 passed; M2: 135 passed; M3: 203 passed; M4: 162 passed.
+
 ## Unreleased — Asadi-style demo and theme
 
 ### Added

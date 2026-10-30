@@ -1,4 +1,4 @@
 Author=Aeric Poon
-Version=0.15
+Version=0.16
 B4J.DependsOn=B4XCollections,Json,MiniHTML
 Supported Platforms=B4J
